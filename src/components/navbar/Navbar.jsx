@@ -5,26 +5,30 @@ import { CenterLinks } from "./CenterLinks";
 import { Outlet } from "react-router-dom";
 
 export const Navbar = () => {
+  return (
+    <>
+      <Flex
+        h={"57px"}
+        boxShadow={"lg"}
+        pos="fixed"
+        w={"100%"}
+        bg={"white"}
+        zIndex={2}
+      >
+        <Search />
 
-    return (
-        <>
-            <Flex h={'57px'} boxShadow={'lg'} pos="fixed" w={'100%'} bg={'white'} zIndex={2}>
+        <Spacer />
 
-                <Search />
+        <CenterLinks />
 
-                <Spacer />
+        <Spacer />
 
-                <CenterLinks />
+        <Option />
+      </Flex>
 
-                <Spacer />
-
-                <Option />
-
-            </Flex>
-
-            <Box pt={'57px'}>
-                <Outlet />
-            </Box>
-        </>
-    );
+      <Box pt={"57px"}>
+        <Outlet />
+      </Box>
+    </>
+  );
 };

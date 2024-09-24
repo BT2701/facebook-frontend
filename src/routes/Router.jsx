@@ -16,31 +16,35 @@ import { ProfileNav } from "../components/profile/ProfileNav";
 import { UserProfileNav } from "../components/userProfile/UserProfileNav";
 import { Groups } from "../components/groups/Groups";
 
-
 export const Router = () => {
   return (
-    <>
-
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Navbar />}>
-          <Route path="/" element={<Homepage />} />
-          <Route path="groups" element={<Groups />} />
-          <Route path="friends" element={<FriendRequest />} />
-          <Route path="profile" element={<ProfileNav />}>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/"
+        element={
+          // <PrivateRoute>
+          //   <Navbar />
+          // </PrivateRoute>
+          <Navbar />
+        }
+      >
+        <Route path="/" element={<Homepage />} />
+        <Route path="groups" element={<Groups />} />
+        <Route path="friends" element={<FriendRequest />} />
+        <Route path="profile" element={<ProfileNav />}>
           <Route path="" element={<Post />} />
           <Route path="about" element={<About />} />
           <Route path="friends" element={<Friends />} />
           <Route path="photos" element={<Photos />} />
-          </Route>
-          <Route path="userprofile" element={<UserProfileNav />}>
-            <Route path="" element={<UserPost />} />
-            <Route path="about" element={<UserAbout />} />
-            <Route path="photos" element={<UserPhotos />} />
-          </Route>
         </Route>
-        <Route path="*" element={<h1>Page not found</h1>} />
-      </Routes>
-    </>
+        <Route path="userprofile" element={<UserProfileNav />}>
+          <Route path="" element={<UserPost />} />
+          <Route path="about" element={<UserAbout />} />
+          <Route path="photos" element={<UserPhotos />} />
+        </Route>
+      </Route>
+      <Route path="*" element={<h1>Page not found</h1>} />
+    </Routes>
   );
 };
