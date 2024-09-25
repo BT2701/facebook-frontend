@@ -15,6 +15,7 @@ import { UserPhotos } from "../components/userProfile/UserPhotos";
 import { ProfileNav } from "../components/profile/ProfileNav";
 import { UserProfileNav } from "../components/userProfile/UserProfileNav";
 import { Groups } from "../components/groups/Groups";
+import SearchPage from "../components/filter/SearchPage";
 
 export const Router = () => {
   return (
@@ -32,6 +33,7 @@ export const Router = () => {
         <Route path="/" element={<Homepage />} />
         <Route path="groups" element={<Groups />} />
         <Route path="friends" element={<FriendRequest />} />
+        <Route path="search" element={<SearchPage />} />
         <Route path="profile" element={<ProfileNav />}>
           <Route path="" element={<Post />} />
           <Route path="about" element={<About />} />
