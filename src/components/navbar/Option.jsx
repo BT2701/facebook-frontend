@@ -24,6 +24,8 @@ import {
   TriangleDownIcon,
 } from "@chakra-ui/icons";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import ChatBox from "./ChatBox";
 
 const Item = ({ iconName, title }) => {
   return (
@@ -34,8 +36,20 @@ const Item = ({ iconName, title }) => {
 };
 
 export const Option = () => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const handleOpenChat = () => {
+    setIsChatOpen(true);
+  };
+
+  const handleCloseChat = () => {
+    setIsChatOpen(false);
+  };
+
   return (
     <>
+      <ChatBox isOpen={isChatOpen} handleCloseChat={handleCloseChat} />
+
       <Center mr={4}>
         <Link to={"/profile"}>
           <Tag
@@ -71,7 +85,7 @@ export const Option = () => {
             height="93vh"
             boxShadow="2xl"
             p={4}
-            overflowY="scroll"
+            overflowY="auto"
             position="absolute"
             left="-260px"
           >
@@ -80,7 +94,7 @@ export const Option = () => {
             </Heading>
 
             <VStack gap={2}>
-              <MenuItem borderRadius={10} p={3}>
+              <MenuItem borderRadius={10} p={3} onClick={handleOpenChat}>
                 <Avatar mr={5}>
                   <AvatarBadge boxSize="1.25em" bg="green.500" />
                 </Avatar>
