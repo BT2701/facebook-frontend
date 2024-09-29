@@ -9,6 +9,8 @@ import { Heroku } from '../../utils/herokuLink';
 export const EditProfilePic = ({ m, w, title, pic, setPic, mycpic, setMycpic }) => {
 
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const profile = useRef()
+    const coverpic=useRef()
 
     return (
         <>
@@ -27,7 +29,7 @@ export const EditProfilePic = ({ m, w, title, pic, setPic, mycpic, setMycpic }) 
                                 <Flex>
                                     <Heading fontSize={20}>Profile Pic</Heading>
                                     <Spacer />
-                                    <input ref={"profile"} type='file' accept="image/png, image/jpeg" name='mypic' />
+                                    <input ref={profile} type='file' accept="image/png, image/jpeg" name='mypic' />
                                     <Spacer />
                                     <Button type='submit' >Add</Button>
                                 </Flex>
@@ -44,7 +46,7 @@ export const EditProfilePic = ({ m, w, title, pic, setPic, mycpic, setMycpic }) 
                             <Flex>
                                 <Heading fontSize={20}>Cover Photo</Heading>
                                 <Spacer />
-                                <input id='profilePic' ref={"coverpic"} type='file' accept="image/png, image/jpeg" name="mycpic" />
+                                <input id='profilePic' ref={coverpic} type='file' accept="image/png, image/jpeg" name="mycpic" />
                                 <Spacer />
                                 <Button type='submit'>Add</Button>
                             </Flex>
