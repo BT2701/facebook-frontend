@@ -13,8 +13,12 @@ import {
 } from "@chakra-ui/react";
 import { BellIcon } from "@chakra-ui/icons";
 import './Notification.css'
+import { useEffect, useState } from "react";
+import axios from "axios";
+import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
 
 const NotificationItem = ({ avatarSrc, title, message, time }) => (
+    
     <MenuItem
         _hover={{ background: "#f0f2f5" }}
         p={3}
@@ -41,6 +45,23 @@ const NotificationItem = ({ avatarSrc, title, message, time }) => (
 );
 
 const Notifications = () => {
+    const [notificationList, setNotificationList]= useState([]);
+    const [currentUser, setCurrentUser]= useState(5);           //dat tam gia tri, doi co du lieu tu user service
+
+    useEffect(() => {
+        const fetchData = async () => {
+          try {
+    
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}/notification/receiver/`+currentUser);
+            setNotificationList(response.data);
+    
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          }
+        };
+    
+        fetchData();
+      }, []);
     return (
         <Center mr={4}>
             <Menu>
@@ -53,13 +74,20 @@ const Notifications = () => {
                 />
                 <MenuList w="360px" maxH="400px" overflowY="auto" p={2} boxShadow="lg">
                     <VStack align="stretch">
-                        <NotificationItem
+                    {notificationList.length === 0 ? (
+                <p>Empty</p>
+              ) : (
+                notificationList.map((notification) => (
+                    <NotificationItem
                             avatarSrc="https://via.placeholder.com/50"
-                            title="Trong Luc"
-                            message="liked your post"
-                            time="5 mins ago"
+                            title={notification.user}
+                            message={notification.content}
+                            time={formatTimeFromDatabase(notification.timeline)}
                         />
-                        <NotificationItem
+                ))
+            )}
+                        
+                        {/* <NotificationItem
                             avatarSrc="https://via.placeholder.com/50"
                             title="Van Du"
                             message="commented on your photo"
@@ -76,7 +104,7 @@ const Notifications = () => {
                             title="Trung Thien"
                             message="accept your friend request"
                             time="1 hour ago"
-                        />
+                        /> */}
                     </VStack>
                 </MenuList>
             </Menu>
