@@ -14,8 +14,8 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import ChatBox from "./ChatBox";
+import { getMessagesByUserId, getUserById } from "../../utils/getData";
 
 export default function ChatMenu() {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -31,58 +31,43 @@ export default function ChatMenu() {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      let currentUser = 1;
+    let currentUser = 1;
 
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/message/UserMessages/${currentUser}/latest`
-        );
-
-        console.log(response.data);
-
+    getMessagesByUserId(currentUser).then(async (response) => {
+      if (!!response.data) {
         let messageArray = [];
+        let userId, content;
         for (const msg of response.data) {
-          // Create obj msg
-          let message = { id: msg.id };
-
           if (msg.sender === currentUser && msg.receiver) {
-            // Fetch receiver data by msg.receiver
-            let data = {
-              name: msg.receiver,
-              avatar: "avatar",
-              isOnline: 1,
-            };
-            message.contactName = data.name;
-            message.avatar = data.avatar;
-            message.isOnline = data.isOnline;
-
-            message.content = `You: ${msg.content}`;
+            // User id not currentUser
+            userId = msg.receiver;
+            // Content of the message
+            content = `You: ${msg.content}`;
           } else if (msg.receiver === currentUser && msg.sender) {
-            // Fetch receiver data by msg.receiver
-            let data = {
-              name: msg.sender,
-              avatar: "avatar",
-              isOnline: 1,
-            };
-            message.contactName = data.name;
-            message.avatar = data.avatar;
-            message.isOnline = data.isOnline;
-
-            message.content = msg.content;
+            // User id not currentUser
+            userId = msg.sender;
+            // Content of the message
+            content = msg.content;
           }
 
+          // Get user data by user id
+          let userData = await getUserById(userId);
+
           //   Add message to array
-          messageArray.push(message);
+          if (!!userData.data) {
+            messageArray.push({
+              id: msg.id,
+              contactName: userData.data.name,
+              avatar: userData.data.avatar,
+              isOnline: userData.data.isOnline,
+              content,
+            });
+          }
         }
 
         setMessages(messageArray);
-      } catch (error) {
-        console.error("Error fetching data:", error);
       }
-    };
-
-    fetchMessages();
+    });
   }, []);
 
   return (
