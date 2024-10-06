@@ -20,3 +20,10 @@
     margin-left: 0.5em;
     max-width: 11em;
 }
+.notification-read-all{
+    background-color: white !important;
+    color: rgb(1, 57, 92) !important;
+}
+.notification-read-all:hover{
+    color: rgb(87, 174, 228) !important;
+}
