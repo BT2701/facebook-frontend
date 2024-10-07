@@ -39,7 +39,15 @@ const dummyMessages = [
   },
 ];
 
-export default function ChatBox({ isOpen, handleCloseChat }) {
+export default function ChatBox({
+  isOpen,
+  handleCloseChat,
+  avatar,
+  isOnline,
+  contactId,
+  contactName,
+  status,
+}) {
   return (
     <Box
       w="338px"
@@ -61,16 +69,16 @@ export default function ChatBox({ isOpen, handleCloseChat }) {
         borderTopRadius={10}
       >
         <Box display="flex" alignItems="center">
-          <Avatar size="sm" ml={1}>
-            <AvatarBadge boxSize="1.25em" bg="green.500" />
+          <Avatar size="sm" ml={1} src={avatar} name={contactName}>
+            {isOnline === 1 && <AvatarBadge boxSize="1.25em" bg="green.500" />}
           </Avatar>
 
           <Box ml={5}>
             <Text as="b" fontSize="lg" display="block" mb="-5px">
-              User 1
+              {contactName}
             </Text>
-            <Text fontSize="sm" opacity="85%">
-              Active 20 minutes ago
+            <Text fontSize="sm" opacity="85%" mb={0}>
+              {status}
             </Text>
           </Box>
         </Box>
