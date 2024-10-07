@@ -26,7 +26,7 @@ export default function ChatMessage({ message, isFromYou }) {
         p={2}
         maxWidth="70%" // Control the width of the message bubble
       >
-        <Text>{message.text}</Text>
+        <Text m={0}>{message.text}</Text>
       </Box>
     </Box>
   );

@@ -38,8 +38,8 @@ export default function ChatMenu() {
 
     const response = await getMessagesByUserId(currentUser);
 
-    if (!!response.data) {
-      let messageArray = [];
+    if (response && response.data) {
+      const messageArray = [];
       let userId, content;
       for (const msg of response.data) {
         if (msg.sender === currentUser && msg.receiver) {

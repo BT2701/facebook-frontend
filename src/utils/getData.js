@@ -68,3 +68,15 @@ export const getMessagesByUserId = async (userId) => {
     console.error("Error fetching data:", error);
   }
 };
+
+export const getMessagesByUserIdAndContactId = async (userId, contactId) => {
+  try {
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/message/UserMessages/${userId}/${contactId}`
+    );
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
