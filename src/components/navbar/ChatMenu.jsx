@@ -20,7 +20,12 @@ import { getMessagesByUserId, getUserById } from "../../utils/getData";
 export default function ChatMenu() {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  const handleOpenChat = () => {
+  const [messages, setMessages] = useState([]);
+
+  const [dataChatBox, setDataChatBox] = useState({});
+
+  const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
+    setDataChatBox({ avatar, isOnline, contactId, contactName, status });
     setIsChatOpen(true);
   };
 
@@ -28,52 +33,63 @@ export default function ChatMenu() {
     setIsChatOpen(false);
   };
 
-  const [messages, setMessages] = useState([]);
-
-  useEffect(() => {
+  const getDataForChatMenu = async () => {
     let currentUser = 1;
 
-    getMessagesByUserId(currentUser).then(async (response) => {
-      if (!!response.data) {
-        let messageArray = [];
-        let userId, content;
-        for (const msg of response.data) {
-          if (msg.sender === currentUser && msg.receiver) {
-            // User id not currentUser
-            userId = msg.receiver;
-            // Content of the message
-            content = `You: ${msg.content}`;
-          } else if (msg.receiver === currentUser && msg.sender) {
-            // User id not currentUser
-            userId = msg.sender;
-            // Content of the message
-            content = msg.content;
-          }
+    const response = await getMessagesByUserId(currentUser);
 
-          // Get user data by user id
-          let userData = await getUserById(userId);
-
-          //   Add message to array
-          if (!!userData.data) {
-            messageArray.push({
-              id: msg.id,
-              contactName: userData.data.name,
-              avatar: userData.data.avatar,
-              isOnline: userData.data.isOnline,
-              content,
-            });
-          }
+    if (!!response.data) {
+      let messageArray = [];
+      let userId, content;
+      for (const msg of response.data) {
+        if (msg.sender === currentUser && msg.receiver) {
+          // User id not currentUser
+          userId = msg.receiver;
+          // Content of the message
+          content = `You: ${msg.content}`;
+        } else if (msg.receiver === currentUser && msg.sender) {
+          // User id not currentUser
+          userId = msg.sender;
+          // Content of the message
+          content = msg.content;
         }
 
-        setMessages(messageArray);
+        // Get user data by user id
+        let userData = await getUserById(userId);
+
+        //   Add message to array
+        if (!!userData.data) {
+          messageArray.push({
+            id: msg.id,
+            contactId: userId,
+            contactName: userData.data.name,
+            avatar: userData.data.avatar,
+            isOnline: userData.data.isOnline,
+            content,
+          });
+        }
       }
-    });
+
+      setMessages(messageArray);
+    }
+  };
+
+  useEffect(() => {
+    getDataForChatMenu();
   }, []);
 
   return (
     <>
       {/* Chat Box */}
-      <ChatBox isOpen={isChatOpen} handleCloseChat={handleCloseChat} />
+      <ChatBox
+        isOpen={isChatOpen}
+        handleCloseChat={handleCloseChat}
+        avatar={dataChatBox.avatar}
+        isOnline={dataChatBox.isOnline}
+        contactId={dataChatBox.contactId}
+        contactName={dataChatBox.contactName}
+        status={dataChatBox.status}
+      />
 
       <Center mr={4}>
         <Menu>
@@ -102,9 +118,17 @@ export default function ChatMenu() {
                   key={msg.id}
                   borderRadius={10}
                   p={3}
-                  onClick={handleOpenChat}
+                  onClick={() =>
+                    handleOpenChat(
+                      msg.avatar,
+                      msg.isOnline,
+                      msg.contactId,
+                      msg.contactName,
+                      "Active"
+                    )
+                  }
                 >
-                  <Avatar mr={5} src={msg.avatar}>
+                  <Avatar mr={5} src={msg.avatar} name={msg.contactName}>
                     {msg.isOnline === 1 && (
                       <AvatarBadge boxSize="1.25em" bg="green.500" />
                     )}
