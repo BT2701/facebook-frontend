@@ -10,34 +10,8 @@ import {
 
 import { FiSend, FiSmile, FiPaperclip } from "react-icons/fi";
 import ChatMessage from "./ChatMessage";
-
-const dummyMessages = [
-  {
-    id: 1,
-    message: {
-      senderName: "test 1",
-      senderAvatar: "image 1",
-      text: "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Quae, adipisci aspernatur. Praesentium a delectus quibusdam quae beatae doloribus dolorum debitis accusantium sapiente illo laborum quaerat vero voluptatibus id, eum officiis.",
-    },
-    isFromYou: false,
-  },
-  {
-    id: 2,
-    message: {
-      text: "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Quae, adipisci aspernatur. Praesentium a delectus quibusdam quae beatae doloribus dolorum debitis accusantium sapiente illo laborum quaerat vero voluptatibus id, eum officiis.",
-    },
-    isFromYou: true,
-  },
-  {
-    id: 3,
-    message: {
-      senderName: "test 1",
-      senderAvatar: "image 1",
-      text: "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Quae, adipisci aspernatur. Praesentium a delectus quibusdam quae beatae doloribus dolorum debitis accusantium sapiente illo laborum quaerat vero voluptatibus id, eum officiis.",
-    },
-    isFromYou: false,
-  },
-];
+import { useEffect, useState } from "react";
+import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 
 export default function ChatBox({
   isOpen,
@@ -48,6 +22,51 @@ export default function ChatBox({
   contactName,
   status,
 }) {
+  const [messages, setMessages] = useState([]);
+
+  const getMessages = async () => {
+    const currentUser = 1;
+
+    const response = await getMessagesByUserIdAndContactId(
+      currentUser,
+      contactId
+    );
+
+    if (response && response.data) {
+      const tempMsg = [];
+
+      for (const msg of response.data) {
+        // if sender is current user
+        if (msg.sender === currentUser) {
+          tempMsg.push({
+            id: msg.id,
+            message: { text: msg.content },
+            isFromYou: true,
+          });
+        } else {
+          tempMsg.push({
+            id: msg.id,
+            message: {
+              senderName: contactName,
+              senderAvatar: avatar,
+              text: msg.content,
+            },
+            isFromYou: false,
+          });
+        }
+      }
+
+      setMessages(tempMsg);
+    }
+  };
+
+  useEffect(() => {
+    // If this component have contactId then get data from server
+    if (contactId) {
+      getMessages();
+    }
+  }, [contactId]);
+
   return (
     <Box
       w="338px"
@@ -93,7 +112,7 @@ export default function ChatBox({
 
       {/* Chat Message */}
       <Box overflowY="auto" flex={1} p={2}>
-        {dummyMessages.map((data) => (
+        {messages.map((data) => (
           <ChatMessage
             key={data.id}
             message={data.message}
