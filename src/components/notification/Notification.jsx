@@ -63,12 +63,12 @@ const Notifications = () => {
         };
 
         fetchData();
-        // setReadNotification(0);
+        setReadNotification(0);
     }, [readNotification]);
 
     const markAllAsRead = async () => {
         try {
-            await axios.put(`${process.env.REACT_APP_API_URL}/notification/markAllAsRead/` + currentUser);
+            await axios.put(`${process.env.REACT_APP_API_URL}/notification/markAllAsRead/` + currentUser,{},{withCredentials:true});
             setReadNotification(1);
         } catch (error) {
             console.error('Error marking all as read:', error);
@@ -76,7 +76,7 @@ const Notifications = () => {
     };
     const markAsRead = async (id) => {
         try {
-            await axios.put(`${process.env.REACT_APP_API_URL}/notification/${id}`);
+            await axios.put(`${process.env.REACT_APP_API_URL}/notification/${id}`,{},{withCredentials:true});
             setReadNotification(1);
         } catch (error) {
             console.error('Error marking notification as read:', error);
