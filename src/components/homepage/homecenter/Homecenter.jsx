@@ -10,13 +10,13 @@ export const Homecenter = () => {
     <div className="Homecenter">
       <StoryReel />
 
-      <Box mb={"7px"}>
-        <MessageSender />
+      <Box mb={"7px"} w={"143%"}>
+        <MessageSender wid={"100%"}/>
       </Box>
 
       <div key={"e._id"}>
         <Feed
-          wid={"70%"}
+          wid={"100%"}
           mgtop={"7px"}
           ProfilePic={`uploadImgs/${"e.userimg"}`}
           message={"e.title"}

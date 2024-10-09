@@ -26,3 +26,165 @@
     color:white;
 
 }
+
+
+#facebook .system-fonts--body div {
+    font-family: inherit;
+}
+.xl56j7k {
+    justify-content: center;
+}
+.x78zum5 {
+    display: flex;
+}
+.x6s0dn4 {
+    align-items: center;
+}
+.x1td3qas {
+    width: 32px;
+}
+.x10w6t97 {
+    height: 32px;
+}
+.xlid4zk {
+    border-top-left-radius: 100%;
+}
+.xl56j7k {
+    justify-content: center;
+}
+.xipx5yg {
+    border-bottom-left-radius: 100%;
+}
+.x78zum5 {
+    display: flex;
+}
+.x6s0dn4 {
+    align-items: center;
+}
+.x1qns1p2 {
+    border-bottom-right-radius: 100%;
+}
+.x13tp074 {
+    border-top-right-radius: 100%;
+}
+.x1td3qas {
+    width: 32px;
+}
+.x10w6t97 {
+    height: 32px;
+}
+.xwnonoy {
+    background-color: var(--accent);
+}
+.xlid4zk {
+    border-top-left-radius: 100%;
+}
+.xl56j7k {
+    justify-content: center;
+}
+.xipx5yg {
+    border-bottom-left-radius: 100%;
+}
+.x78zum5 {
+    display: flex;
+}
+.x6s0dn4 {
+    align-items: center;
+}
+.x1qns1p2 {
+    border-bottom-right-radius: 100%;
+}
+.x13tp074 {
+    border-top-right-radius: 100%;
+}
+.x78zum5 {
+    display: flex;
+}
+.x1td3qas {
+    width: 32px;
+}
+.x10w6t97 {
+    height: 32px;
+}
+.xwnonoy {
+    background-color: var(--accent);
+}
+.xlid4zk {
+    border-top-left-radius: 100%;
+}
+.xl56j7k {
+    justify-content: center;
+}
+.xipx5yg {
+    border-bottom-left-radius: 100%;
+}
+.x78zum5 {
+    display: flex;
+}
+.x6s0dn4 {
+    align-items: center;
+}
+.x1qns1p2 {
+    border-bottom-right-radius: 100%;
+}
+.x13tp074 {
+    border-top-right-radius: 100%;
+}
+.xlid4zk {
+    border-top-left-radius: 100%;
+}
+.xl56j7k {
+    justify-content: center;
+}
+.xipx5yg {
+    border-bottom-left-radius: 100%;
+}
+.x78zum5 {
+    display: flex;
+}
+.x6s0dn4 {
+    align-items: center;
+}
+.x1qns1p2 {
+    border-bottom-right-radius: 100%;
+}
+
+.x13tp074 {
+    border-top-right-radius: 100%;
+}
+
+
+.story-seeMore {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 10px; 
+}
+.storyReel {
+    display: flex;
+    align-items: center; 
+    position: relative; 
+}
+
+.story-seeLess,
+.story-seeMore {
+    position: absolute; 
+    top: 50%; 
+    transform: translateY(-50%);
+    cursor: pointer; 
+    z-index: 1; 
+    color: rgba(128, 128, 128, 0.7); 
+    transition: color 0.3s; 
+}
+.story-seeLess:hover,
+.story-seeMore:hover {
+    color: rgba(128, 128, 128, 1); 
+}
+.story-seeLess {
+    left: 20%; 
+}
+
+.story-seeMore {
+    right: 0; 
+}
