@@ -4,6 +4,7 @@ import "./storyReel.css";
 import CreateStory from "./CreateStory";
 import { FaArrowRight, FaArrowLeft } from 'react-icons/fa'; // Thêm icon mũi tên trái và phải
 import axios from "axios";
+import { fetchDataForStory } from "../../../utils/getData";
 
 export const StoryReel = () => {
     // Mảng chứa danh sách các story
@@ -11,7 +12,7 @@ export const StoryReel = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/story`);
+                const response = await fetchDataForStory();
                 setStories(response.data);
             } catch (error) {
                 console.error('Error fetching data:', error);

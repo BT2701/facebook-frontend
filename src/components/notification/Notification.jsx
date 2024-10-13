@@ -18,6 +18,7 @@ import './Notification.css'
 import { useEffect, useState } from "react";
 import axios from "axios";
 import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
+import { fetchDataForNotification, markAllAsReadNotification, markAsReadNotification } from "../../utils/getData";
 
 const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick }) => (
     <MenuItem
@@ -50,25 +51,25 @@ const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick })
 const Notifications = () => {
     const [notificationList, setNotificationList] = useState([]);
     const [currentUser, setCurrentUser] = useState(5); //dat tam gia tri, doi co du lieu tu user service
-    const [readNotification, setReadNotification]= useState(0);
+    const [readNotification, setReadNotification] = useState(0);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/notification/receiver/` + currentUser);
+            const response = await fetchDataForNotification({ currentUser });
+            if (response) {
                 setNotificationList(response.data);
-            } catch (error) {
-                console.error('Error fetching data:', error);
+                const unreadCount = response.data.filter(item => item.is_read === 0).length;
+                setUnreadCount(unreadCount);
             }
         };
-
         fetchData();
         setReadNotification(0);
     }, [readNotification]);
 
     const markAllAsRead = async () => {
         try {
-            await axios.put(`${process.env.REACT_APP_API_URL}/notification/markAllAsRead/` + currentUser,{},{withCredentials:true});
+            await markAllAsReadNotification(currentUser);
             setReadNotification(1);
         } catch (error) {
             console.error('Error marking all as read:', error);
@@ -76,7 +77,7 @@ const Notifications = () => {
     };
     const markAsRead = async (id) => {
         try {
-            await axios.put(`${process.env.REACT_APP_API_URL}/notification/${id}`,{},{withCredentials:true});
+            await markAsReadNotification(id);
             setReadNotification(1);
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -89,10 +90,32 @@ const Notifications = () => {
                 <MenuButton
                     as={IconButton}
                     aria-label="Notifications"
-                    icon={<BellIcon />}
                     rounded="full"
                     position="relative"
-                />
+                >
+                    <BellIcon
+                        transform="translateY(-1px)" />
+                    {/* Số đếm thông báo chưa đọc */}
+                    {unreadCount > 0 && (
+                        <Box
+                            position="absolute"
+                            top="-1"
+                            right="-1"
+                            bg="red.500"
+                            color="white"
+                            borderRadius="full"
+                            width="20px"
+                            height="20px"
+                            fontSize="xs"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            zIndex={99}
+                        >
+                            {unreadCount}
+                        </Box>
+                    )}
+                </MenuButton>
                 <MenuList w="360px" maxH="400px" p={0} boxShadow="lg">
                     {/* Tiêu đề và nút "Đánh dấu đã đọc" */}
                     <Box p={3} borderBottom="1px solid #e2e8f0">
