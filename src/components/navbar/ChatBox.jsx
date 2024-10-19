@@ -13,6 +13,8 @@ import ChatMessage from "./ChatMessage";
 import { useEffect, useState } from "react";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
+import { startConnection } from "../../services/chatService";
+import connection from "../../services/chatService";
 
 export default function ChatBox({
   isOpen,
@@ -73,11 +75,26 @@ export default function ChatBox({
             },
           ]);
 
-          setMsgInput("");
+          // Send message to Signal R
+          await connection.invoke(
+            "SendMessage",
+            response.data.id,
+            currentUser,
+            contactId,
+            msgInput
+          );
+          console.log("Message sent!");
+          setMsgInput(""); // Reset message input
         }
       } catch (error) {
         console.error("Error sending message:", error);
       }
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSendMsg();
     }
   };
 
@@ -119,7 +136,29 @@ export default function ChatBox({
   useEffect(() => {
     // If this component have contactId then get data from server
     if (contactId) {
+      // Get messages between user and contacter
       getMessages();
+      // Start Signal R connection
+      startConnection();
+      // Listening from server
+      connection.on("ReceiveMessage", (msgId, fromId, sentToId, message) => {
+        // If user is chatting sent to this current user
+        if (fromId === contactId && sentToId === currentUser) {
+          // Set incoming message
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: msgId,
+              message: {
+                senderName: contactName,
+                senderAvatar: avatar,
+                text: message,
+              },
+              isFromYou: false,
+            },
+          ]);
+        }
+      });
     }
   }, [contactId]);
 
@@ -203,6 +242,7 @@ export default function ChatBox({
           placeholder="Type a message..."
           value={msgInput}
           onChange={(e) => setMsgInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           size="md"
           borderRadius="none"
           flex={1}
