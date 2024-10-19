@@ -12,6 +12,9 @@ import { FiSend, FiSmile, FiPaperclip } from "react-icons/fi";
 import ChatMessage from "./ChatMessage";
 import { useEffect, useState } from "react";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
+import axios from "axios";
+import { startConnection } from "../../services/chatService";
+import connection from "../../services/chatService";
 
 export default function ChatBox({
   isOpen,
@@ -22,11 +25,81 @@ export default function ChatBox({
   contactName,
   status,
 }) {
+  const currentUser = 1;
+
+  // State for all messages
   const [messages, setMessages] = useState([]);
 
-  const getMessages = async () => {
-    const currentUser = 1;
+  // State for message input
+  const [msgInput, setMsgInput] = useState("");
 
+  // Add message to db
+  const postMsg = async (msg) => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/message`,
+        msg,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return response;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  // Handle send message
+  const handleSendMsg = async () => {
+    if (msgInput) {
+      try {
+        // Add message to database
+        const response = await postMsg({
+          Sender: currentUser,
+          Receiver: contactId,
+          CreatedAt: new Date().toISOString().split(".")[0],
+          Content: msgInput,
+        });
+
+        if (response && response.data && response.data.id) {
+          // Update messages
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: response.data.id,
+              message: { text: msgInput },
+              isFromYou: true,
+            },
+          ]);
+
+          // Send message to Signal R
+          await connection.invoke(
+            "SendMessage",
+            response.data.id,
+            currentUser,
+            contactId,
+            msgInput
+          );
+          console.log("Message sent!");
+          setMsgInput(""); // Reset message input
+        }
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSendMsg();
+    }
+  };
+
+  // Get messages from server
+  const getMessages = async () => {
     const response = await getMessagesByUserIdAndContactId(
       currentUser,
       contactId
@@ -63,7 +136,29 @@ export default function ChatBox({
   useEffect(() => {
     // If this component have contactId then get data from server
     if (contactId) {
+      // Get messages between user and contacter
       getMessages();
+      // Start Signal R connection
+      startConnection();
+      // Listening from server
+      connection.on("ReceiveMessage", (msgId, fromId, sentToId, message) => {
+        // If user is chatting sent to this current user
+        if (fromId === contactId && sentToId === currentUser) {
+          // Set incoming message
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: msgId,
+              message: {
+                senderName: contactName,
+                senderAvatar: avatar,
+                text: message,
+              },
+              isFromYou: false,
+            },
+          ]);
+        }
+      });
     }
   }, [contactId]);
 
@@ -145,6 +240,9 @@ export default function ChatBox({
         <Input
           variant="unstyled"
           placeholder="Type a message..."
+          value={msgInput}
+          onChange={(e) => setMsgInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           size="md"
           borderRadius="none"
           flex={1}
@@ -157,6 +255,7 @@ export default function ChatBox({
           colorScheme="blue"
           variant="ghost"
           aria-label="Send message"
+          onClick={handleSendMsg}
         />
       </Box>
       {/* End Chat Input */}
