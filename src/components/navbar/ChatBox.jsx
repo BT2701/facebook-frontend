@@ -13,8 +13,7 @@ import ChatMessage from "./ChatMessage";
 import { useEffect, useState } from "react";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
-import { startConnection } from "../../services/chatService";
-import connection from "../../services/chatService";
+import { useSignalR } from "../../context/SignalRContext";
 
 export default function ChatBox({
   isOpen,
@@ -25,6 +24,7 @@ export default function ChatBox({
   contactName,
   status,
 }) {
+  const { connect, connection } = useSignalR();
   const currentUser = 1;
 
   // State for all messages
@@ -134,16 +134,14 @@ export default function ChatBox({
   };
 
   useEffect(() => {
-    // If this component have contactId then get data from server
-    if (contactId) {
-      // Get messages between user and contacter
-      getMessages();
-      // Start Signal R connection
-      startConnection();
-      // Listening from server
-      connection.on("ReceiveMessage", (msgId, fromId, sentToId, message) => {
-        // If user is chatting sent to this current user
-        if (fromId === contactId && sentToId === currentUser) {
+    const initializeConnection = async () => {
+      // This will be after login
+      await connect(currentUser);
+      // End
+
+      if (connection) {
+        // Listening from server
+        connection.on("ReceiveMessage", (msgId, fromId, message) => {
           // Set incoming message
           setMessages((prev) => [
             ...prev,
@@ -157,8 +155,26 @@ export default function ChatBox({
               isFromYou: false,
             },
           ]);
-        }
-      });
+        });
+      }
+    };
+
+    initializeConnection();
+
+    return () => {
+      if (connection) {
+        connection.off("ReceiveMessage", (msgId, fromId, message) => {
+          console.log("off listener");
+        });
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // If this component have contactId then get data from server
+    if (contactId) {
+      // Get messages between user and contacter
+      getMessages();
     }
   }, [contactId]);
 
