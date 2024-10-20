@@ -3,32 +3,40 @@ import { Search } from "./Search";
 import { Option } from "./Option";
 import { CenterLinks } from "./CenterLinks";
 import { Outlet } from "react-router-dom";
+import { SignalRProvider } from "../../context/SignalRContext";
+import { ChatBoxProvider } from "../../context/ChatBoxContext";
+import ChatBox from "./ChatBox";
 
 export const Navbar = () => {
   return (
-    <>
-      <Flex
-        h={"57px"}
-        boxShadow={"lg"}
-        pos="fixed"
-        w={"100%"}
-        bg={"white"}
-        zIndex={2}
-      >
-        <Search />
+    <SignalRProvider>
+      <ChatBoxProvider>
+        {/* Chat Box */}
+        <ChatBox />
 
-        <Spacer />
+        <Flex
+          h={"57px"}
+          boxShadow={"lg"}
+          pos="fixed"
+          w={"100%"}
+          bg={"white"}
+          zIndex={2}
+        >
+          <Search />
 
-        <CenterLinks />
+          <Spacer />
 
-        <Spacer />
+          <CenterLinks />
 
-        <Option />
-      </Flex>
+          <Spacer />
 
-      <Box pt={"57px"}>
-        <Outlet />
-      </Box>
-    </>
+          <Option />
+        </Flex>
+
+        <Box pt={"57px"}>
+          <Outlet />
+        </Box>
+      </ChatBoxProvider>
+    </SignalRProvider>
   );
 };

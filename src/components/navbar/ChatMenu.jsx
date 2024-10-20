@@ -14,23 +14,23 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import ChatBox from "./ChatBox";
 import { getMessagesByUserId, getUserById } from "../../utils/getData";
+import { useChatBox } from "../../context/ChatBoxContext";
 
 export default function ChatMenu() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const { setChatInfo } = useChatBox();
 
   const [messages, setMessages] = useState([]);
 
-  const [dataChatBox, setDataChatBox] = useState({});
-
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
-    setDataChatBox({ avatar, isOnline, contactId, contactName, status });
-    setIsChatOpen(true);
-  };
-
-  const handleCloseChat = () => {
-    setIsChatOpen(false);
+    setChatInfo({
+      isOpen: true,
+      avatar,
+      isOnline,
+      contactId,
+      contactName,
+      status,
+    });
   };
 
   const getDataForChatMenu = async () => {
@@ -80,17 +80,6 @@ export default function ChatMenu() {
 
   return (
     <>
-      {/* Chat Box */}
-      <ChatBox
-        isOpen={isChatOpen}
-        handleCloseChat={handleCloseChat}
-        avatar={dataChatBox.avatar}
-        isOnline={dataChatBox.isOnline}
-        contactId={dataChatBox.contactId}
-        contactName={dataChatBox.contactName}
-        status={dataChatBox.status}
-      />
-
       <Center mr={4}>
         <Menu>
           <MenuButton

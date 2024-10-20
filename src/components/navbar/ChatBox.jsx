@@ -14,16 +14,14 @@ import { useEffect, useState } from "react";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
 import { useSignalR } from "../../context/SignalRContext";
+import { useChatBox } from "../../context/ChatBoxContext";
 
-export default function ChatBox({
-  isOpen,
-  handleCloseChat,
-  avatar,
-  isOnline,
-  contactId,
-  contactName,
-  status,
-}) {
+export default function ChatBox() {
+  const {
+    chatInfo: { isOpen, avatar, isOnline, contactId, contactName, status },
+    setChatInfo,
+  } = useChatBox();
+
   const { connect, connection } = useSignalR();
   const currentUser = 1;
 
@@ -130,35 +128,42 @@ export default function ChatBox({
       }
 
       setMessages(tempMsg);
+    } else {
+      setMessages([]);
     }
   };
 
-  useEffect(() => {
-    const initializeConnection = async () => {
+  const initializeConnection = async () => {
+    if (!connection) {
       // This will be after login
       await connect(currentUser);
+      console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
       // End
 
       if (connection) {
         // Listening from server
         connection.on("ReceiveMessage", (msgId, fromId, message) => {
-          // Set incoming message
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: msgId,
-              message: {
-                senderName: contactName,
-                senderAvatar: avatar,
-                text: message,
+          if (fromId === contactId) {
+            // Set incoming message
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: msgId,
+                message: {
+                  senderName: contactName,
+                  senderAvatar: avatar,
+                  text: message,
+                },
+                isFromYou: false,
               },
-              isFromYou: false,
-            },
-          ]);
+            ]);
+          }
         });
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     initializeConnection();
 
     return () => {
@@ -173,6 +178,7 @@ export default function ChatBox({
   useEffect(() => {
     // If this component have contactId then get data from server
     if (contactId) {
+      console.log("H;;;;;;;");
       // Get messages between user and contacter
       getMessages();
     }
@@ -189,6 +195,7 @@ export default function ChatBox({
       right={2}
       bottom={0}
       borderTopRadius={10}
+      zIndex={1}
     >
       {/* Chat header */}
       <Box
@@ -216,7 +223,9 @@ export default function ChatBox({
         <IconButton
           colorScheme=""
           icon={<CloseIcon />}
-          onClick={handleCloseChat}
+          onClick={() => {
+            setChatInfo((prev) => ({ ...prev, isOpen: false }));
+          }}
         />
       </Box>
       {/* End Chat Header */}
