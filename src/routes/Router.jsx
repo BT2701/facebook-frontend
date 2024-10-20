@@ -1,13 +1,12 @@
 import { Routes, Route } from "react-router-dom";
 import { Homepage } from "../components/homepage/home";
 import { Login } from "../components/auth/login";
-import { PrivateRoute } from "../components/auth/PrivateRouter";
+// import { PrivateRoute } from "../components/auth/PrivateRouter";
 import { Navbar } from "../components/navbar/Navbar";
 import { Post } from "../components/profile/Post";
 import { About } from "../components/profile/About";
 import { Friends } from "../components/profile/Friends";
 import { Photos } from "../components/profile/Photos";
-import { Bkwas } from "../components/bkwas";
 import { FriendRequest } from "../components/friends/FriendRequest";
 import { UserPost } from "../components/userProfile/UserPost";
 import { UserAbout } from "../components/userProfile/UserAbout";
@@ -16,6 +15,8 @@ import { ProfileNav } from "../components/profile/ProfileNav";
 import { UserProfileNav } from "../components/userProfile/UserProfileNav";
 import { Groups } from "../components/groups/Groups";
 import SearchPage from "../components/filter/SearchPage";
+import { ChatConnProvider } from "../context/ChatConnContext";
+import { ChatBoxProvider } from "../context/ChatBoxContext";
 
 export const Router = () => {
   return (
@@ -27,7 +28,11 @@ export const Router = () => {
           // <PrivateRoute>
           //   <Navbar />
           // </PrivateRoute>
-          <Navbar />
+          <ChatConnProvider>
+            <ChatBoxProvider>
+              <Navbar />
+            </ChatBoxProvider>
+          </ChatConnProvider>
         }
       >
         <Route path="/" element={<Homepage />} />

@@ -1,4 +1,5 @@
 import "./App.css";
+import { UserProvider } from "./context/UserContext";
 import { Router } from "./routes/Router";
 // import { NotificationProvider } from './context/NotificationContext';
 function App() {
@@ -7,7 +8,9 @@ function App() {
       {/* <NotificationProvider>
         <Router />
       </NotificationProvider> */}
-      <Router />
+      <UserProvider>
+        <Router />
+      </UserProvider>
     </div>
   );
 }

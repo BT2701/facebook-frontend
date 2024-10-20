@@ -2,6 +2,7 @@ import { ChatIcon } from "@chakra-ui/icons";
 import {
   Avatar,
   AvatarBadge,
+  Badge,
   Box,
   Center,
   Heading,
@@ -16,11 +17,16 @@ import {
 import { useEffect, useState } from "react";
 import { getMessagesByUserId, getUserById } from "../../utils/getData";
 import { useChatBox } from "../../context/ChatBoxContext";
+import { useChatConn } from "../../context/ChatConnContext";
 
 export default function ChatMenu() {
   const { setChatInfo } = useChatBox();
 
+  const { chatConn } = useChatConn();
+
   const [messages, setMessages] = useState([]);
+
+  const [unreadChat, setUnreadChat] = useState(2);
 
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
     setChatInfo({
@@ -76,6 +82,21 @@ export default function ChatMenu() {
 
   useEffect(() => {
     getDataForChatMenu();
+
+    // Listening from server for chat notification
+    if (chatConn) {
+      chatConn.on("ReceiveMsgNotification", () => {
+        setUnreadChat((prev) => prev + 1);
+      });
+    }
+
+    return () => {
+      if (chatConn) {
+        chatConn.off("ReceiveMsgNotification", () => {
+          console.log("off listener");
+        });
+      }
+    };
   }, []);
 
   return (
@@ -87,8 +108,20 @@ export default function ChatMenu() {
             aria-label="Options"
             icon={<ChatIcon />}
             rounded="full"
-            position="relative"
-          />
+          ></MenuButton>
+
+          {/* Chat notification */}
+          {unreadChat > 0 && (
+            <Box position="relative">
+              <Box position="absolute" bottom="5px" right="0px" zIndex="1">
+                <Badge colorScheme="red" borderRadius="full" px={2} py={0.5}>
+                  {unreadChat}
+                </Badge>
+              </Box>
+            </Box>
+          )}
+          {/* Chat notification */}
+
           <MenuList
             w="360px"
             maxHeight="93vh"

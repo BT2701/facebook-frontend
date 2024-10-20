@@ -22,7 +22,7 @@ export default function ChatBox() {
     setChatInfo,
   } = useChatBox();
 
-  const { chatConn, connectChat } = useChatConn();
+  const { chatConn } = useChatConn();
   const currentUser = 1;
 
   // State for all messages
@@ -133,14 +133,9 @@ export default function ChatBox() {
     }
   };
 
-  const initializeConnection = async () => {
-    // This will be after login
-    await connectChat(currentUser);
-    console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-    // End
-
+  useEffect(() => {
+    // Listening from server
     if (chatConn) {
-      // Listening from server
       chatConn.on("ReceiveMessage", (msgId, fromId, message) => {
         if (fromId === contactId) {
           // Set incoming message
@@ -159,10 +154,6 @@ export default function ChatBox() {
         }
       });
     }
-  };
-
-  useEffect(() => {
-    initializeConnection();
 
     return () => {
       if (chatConn) {

@@ -4,39 +4,51 @@ import { Option } from "./Option";
 import { CenterLinks } from "./CenterLinks";
 import { Outlet } from "react-router-dom";
 import ChatBox from "./ChatBox";
-import { ChatConnProvider } from "../../context/ChatConnContext";
-import { ChatBoxProvider } from "../../context/ChatBoxContext";
+import { useChatConn } from "../../context/ChatConnContext";
+import { useEffect } from "react";
+import { useUser } from "../../context/UserContext";
 
 export const Navbar = () => {
+  const { connectChat } = useChatConn();
+  const { currentUser } = useUser();
+
+  const initializeConnection = async () => {
+    // This will be after login
+    await connectChat(currentUser);
+    console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+  };
+
+  useEffect(() => {
+    initializeConnection();
+  }, []);
+
   return (
-    <ChatConnProvider>
-      <ChatBoxProvider>
-        {/* Chat Box */}
-        <ChatBox />
+    <>
+      {/* Chat Box */}
+      <ChatBox />
 
-        <Flex
-          h={"57px"}
-          boxShadow={"lg"}
-          pos="fixed"
-          w={"100%"}
-          bg={"white"}
-          zIndex={2}
-        >
-          <Search />
+      <Flex
+        h={"57px"}
+        boxShadow={"lg"}
+        pos="fixed"
+        w={"100%"}
+        bg={"white"}
+        zIndex={2}
+      >
+        <Search />
 
-          <Spacer />
+        <Spacer />
 
-          <CenterLinks />
+        <CenterLinks />
 
-          <Spacer />
+        <Spacer />
 
-          <Option />
-        </Flex>
+        <Option />
+      </Flex>
 
-        <Box pt={"57px"}>
-          <Outlet />
-        </Box>
-      </ChatBoxProvider>
-    </ChatConnProvider>
+      <Box pt={"57px"}>
+        <Outlet />
+      </Box>
+    </>
   );
 };
