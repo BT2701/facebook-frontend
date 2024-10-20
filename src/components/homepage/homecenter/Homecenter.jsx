@@ -62,7 +62,7 @@ export const Homecenter = () => {
               timeStamp={post.timeline}
               userName={post.userId}
               postImage={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_FWF2judaujT30K9sMf-tZFhMWpgP6xCemw&s"}
-              likedByCurrentUser={post.likedByCurrectUser}
+              likedByCurrentUser={post.likedByCurrentUser}
               likeCount={post.reactions.$values.length}
               commentList={post.comments.$values}
               currentUserId={currentUserId}
