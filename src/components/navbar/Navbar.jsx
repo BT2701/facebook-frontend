@@ -3,13 +3,13 @@ import { Search } from "./Search";
 import { Option } from "./Option";
 import { CenterLinks } from "./CenterLinks";
 import { Outlet } from "react-router-dom";
-import { SignalRProvider } from "../../context/SignalRContext";
-import { ChatBoxProvider } from "../../context/ChatBoxContext";
 import ChatBox from "./ChatBox";
+import { ChatConnProvider } from "../../context/ChatConnContext";
+import { ChatBoxProvider } from "../../context/ChatBoxContext";
 
 export const Navbar = () => {
   return (
-    <SignalRProvider>
+    <ChatConnProvider>
       <ChatBoxProvider>
         {/* Chat Box */}
         <ChatBox />
@@ -37,6 +37,6 @@ export const Navbar = () => {
           <Outlet />
         </Box>
       </ChatBoxProvider>
-    </SignalRProvider>
+    </ChatConnProvider>
   );
 };

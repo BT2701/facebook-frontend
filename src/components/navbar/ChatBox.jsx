@@ -13,7 +13,7 @@ import ChatMessage from "./ChatMessage";
 import { useEffect, useState } from "react";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
-import { useSignalR } from "../../context/SignalRContext";
+import { useChatConn } from "../../context/ChatConnContext";
 import { useChatBox } from "../../context/ChatBoxContext";
 
 export default function ChatBox() {
@@ -22,7 +22,7 @@ export default function ChatBox() {
     setChatInfo,
   } = useChatBox();
 
-  const { connect, connection } = useSignalR();
+  const { chatConn, connectChat } = useChatConn();
   const currentUser = 1;
 
   // State for all messages
@@ -74,7 +74,7 @@ export default function ChatBox() {
           ]);
 
           // Send message to Signal R
-          await connection.invoke(
+          await chatConn.invoke(
             "SendMessage",
             response.data.id,
             currentUser,
@@ -134,32 +134,30 @@ export default function ChatBox() {
   };
 
   const initializeConnection = async () => {
-    if (!connection) {
-      // This will be after login
-      await connect(currentUser);
-      console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-      // End
+    // This will be after login
+    await connectChat(currentUser);
+    console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    // End
 
-      if (connection) {
-        // Listening from server
-        connection.on("ReceiveMessage", (msgId, fromId, message) => {
-          if (fromId === contactId) {
-            // Set incoming message
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: msgId,
-                message: {
-                  senderName: contactName,
-                  senderAvatar: avatar,
-                  text: message,
-                },
-                isFromYou: false,
+    if (chatConn) {
+      // Listening from server
+      chatConn.on("ReceiveMessage", (msgId, fromId, message) => {
+        if (fromId === contactId) {
+          // Set incoming message
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: msgId,
+              message: {
+                senderName: contactName,
+                senderAvatar: avatar,
+                text: message,
               },
-            ]);
-          }
-        });
-      }
+              isFromYou: false,
+            },
+          ]);
+        }
+      });
     }
   };
 
@@ -167,8 +165,8 @@ export default function ChatBox() {
     initializeConnection();
 
     return () => {
-      if (connection) {
-        connection.off("ReceiveMessage", (msgId, fromId, message) => {
+      if (chatConn) {
+        chatConn.off("ReceiveMessage", (msgId, fromId, message) => {
           console.log("off listener");
         });
       }
