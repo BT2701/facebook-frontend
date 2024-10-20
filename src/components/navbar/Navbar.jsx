@@ -3,10 +3,30 @@ import { Search } from "./Search";
 import { Option } from "./Option";
 import { CenterLinks } from "./CenterLinks";
 import { Outlet } from "react-router-dom";
+import ChatBox from "./ChatBox";
+import { useChatConn } from "../../context/ChatConnContext";
+import { useEffect } from "react";
+import { useUser } from "../../context/UserContext";
 
 export const Navbar = () => {
+  const { connectChat } = useChatConn();
+  const { currentUser } = useUser();
+
+  const initializeConnection = async () => {
+    // This will be after login
+    await connectChat(currentUser);
+    console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+  };
+
+  useEffect(() => {
+    initializeConnection();
+  }, []);
+
   return (
     <>
+      {/* Chat Box */}
+      <ChatBox />
+
       <Flex
         h={"57px"}
         boxShadow={"lg"}

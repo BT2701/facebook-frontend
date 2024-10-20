@@ -13,18 +13,16 @@ import ChatMessage from "./ChatMessage";
 import { useEffect, useState } from "react";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
-import { useSignalR } from "../../context/SignalRContext";
+import { useChatConn } from "../../context/ChatConnContext";
+import { useChatBox } from "../../context/ChatBoxContext";
 
-export default function ChatBox({
-  isOpen,
-  handleCloseChat,
-  avatar,
-  isOnline,
-  contactId,
-  contactName,
-  status,
-}) {
-  const { connect, connection } = useSignalR();
+export default function ChatBox() {
+  const {
+    chatInfo: { isOpen, avatar, isOnline, contactId, contactName, status },
+    setChatInfo,
+  } = useChatBox();
+
+  const { chatConn } = useChatConn();
   const currentUser = 1;
 
   // State for all messages
@@ -76,7 +74,7 @@ export default function ChatBox({
           ]);
 
           // Send message to Signal R
-          await connection.invoke(
+          await chatConn.invoke(
             "SendMessage",
             response.data.id,
             currentUser,
@@ -130,18 +128,16 @@ export default function ChatBox({
       }
 
       setMessages(tempMsg);
+    } else {
+      setMessages([]);
     }
   };
 
   useEffect(() => {
-    const initializeConnection = async () => {
-      // This will be after login
-      await connect(currentUser);
-      // End
-
-      if (connection) {
-        // Listening from server
-        connection.on("ReceiveMessage", (msgId, fromId, message) => {
+    // Listening from server
+    if (chatConn) {
+      chatConn.on("ReceiveMessage", (msgId, fromId, message) => {
+        if (fromId === contactId) {
           // Set incoming message
           setMessages((prev) => [
             ...prev,
@@ -155,15 +151,13 @@ export default function ChatBox({
               isFromYou: false,
             },
           ]);
-        });
-      }
-    };
-
-    initializeConnection();
+        }
+      });
+    }
 
     return () => {
-      if (connection) {
-        connection.off("ReceiveMessage", (msgId, fromId, message) => {
+      if (chatConn) {
+        chatConn.off("ReceiveMessage", (msgId, fromId, message) => {
           console.log("off listener");
         });
       }
@@ -173,6 +167,7 @@ export default function ChatBox({
   useEffect(() => {
     // If this component have contactId then get data from server
     if (contactId) {
+      console.log("H;;;;;;;");
       // Get messages between user and contacter
       getMessages();
     }
@@ -189,6 +184,7 @@ export default function ChatBox({
       right={2}
       bottom={0}
       borderTopRadius={10}
+      zIndex={1}
     >
       {/* Chat header */}
       <Box
@@ -216,7 +212,9 @@ export default function ChatBox({
         <IconButton
           colorScheme=""
           icon={<CloseIcon />}
-          onClick={handleCloseChat}
+          onClick={() => {
+            setChatInfo((prev) => ({ ...prev, isOpen: false }));
+          }}
         />
       </Box>
       {/* End Chat Header */}

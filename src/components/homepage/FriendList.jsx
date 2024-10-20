@@ -6,8 +6,8 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import ChatBox from "../navbar/ChatBox";
+import { useChatBox } from "../../context/ChatBoxContext";
 
 const friends = [
   {
@@ -55,29 +55,23 @@ const friends = [
 ];
 
 export default function FriendList() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
-
-  const [dataChatBox, setDataChatBox] = useState({});
+  const { setChatInfo } = useChatBox();
 
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
-    setDataChatBox({ avatar, isOnline, contactId, contactName, status });
-    setIsChatOpen(true);
+    setChatInfo({
+      isOpen: true,
+      avatar,
+      isOnline,
+      contactId,
+      contactName,
+      status,
+    });
   };
 
-  const handleCloseChat = () => {
-    setIsChatOpen(false);
-  };
   return (
     <>
-      <ChatBox
-        isOpen={isChatOpen}
-        handleCloseChat={handleCloseChat}
-        avatar={dataChatBox.avatar}
-        isOnline={dataChatBox.isOnline}
-        contactId={dataChatBox.contactId}
-        contactName={dataChatBox.contactName}
-        status={dataChatBox.status}
-      />
+      <ChatBox />
+
       <Box h="100vh" overflowY="auto" p={4} borderRadius="md" w="300px">
         <Stack>
           {friends.map((friend) => (
