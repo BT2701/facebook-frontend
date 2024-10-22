@@ -29,7 +29,7 @@ export default function ChatMenu() {
 
   const [messages, setMessages] = useState([]);
 
-  const [unreadChat, setUnreadChat] = useState(2);
+  const [unreadChat, setUnreadChat] = useState(0);
 
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
     setChatInfo({
@@ -82,8 +82,6 @@ export default function ChatMenu() {
   };
 
   useEffect(() => {
-    getDataForChatMenu();
-
     // Listening from server for chat notification
     if (chatConn) {
       chatConn.on("ReceiveMsgNotification", () => {
@@ -98,7 +96,7 @@ export default function ChatMenu() {
         });
       }
     };
-  }, []);
+  }, [chatConn]);
 
   return (
     <>
@@ -109,6 +107,10 @@ export default function ChatMenu() {
             aria-label="Options"
             icon={<ChatIcon />}
             rounded="full"
+            onClick={() => {
+              setUnreadChat(0);
+              getDataForChatMenu();
+            }}
           ></MenuButton>
 
           {/* Chat notification */}
@@ -160,7 +162,13 @@ export default function ChatMenu() {
                     <Text fontSize="lg" mb={0}>
                       {msg.contactName}
                     </Text>
-                    <Text fontSize="sm" mb={0} noOfLines={1} opacity="85%">
+                    <Text
+                      fontSize="sm"
+                      mb={0}
+                      noOfLines={1}
+                      opacity="85%"
+                      sx={{ wordBreak: "break-word" }}
+                    >
                       {msg.content}
                     </Text>
                   </Box>

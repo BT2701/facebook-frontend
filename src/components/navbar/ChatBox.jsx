@@ -10,7 +10,7 @@ import {
 
 import { FiSend, FiSmile, FiPaperclip } from "react-icons/fi";
 import ChatMessage from "./ChatMessage";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
 import { useChatConn } from "../../context/ChatConnContext";
@@ -25,6 +25,11 @@ export default function ChatBox() {
 
   const { chatConn } = useChatConn();
   const { currentUser } = useUser();
+
+  // Ref
+  const contactIdRef = useRef(contactId);
+  const contactNameRef = useRef(contactName);
+  const avatarRef = useRef(avatar);
 
   // State for all messages
   const [messages, setMessages] = useState([]);
@@ -135,40 +140,36 @@ export default function ChatBox() {
   };
 
   useEffect(() => {
-    // Listening from server
-    if (chatConn) {
-      chatConn.on("ReceiveMessage", (msgId, fromId, message) => {
-        if (fromId === contactId) {
-          // Set incoming message
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: msgId,
-              message: {
-                senderName: contactName,
-                senderAvatar: avatar,
-                text: message,
-              },
-              isFromYou: false,
+    console.log("chatCon changes: " + chatConn);
+    const listenFromServer = (msgId, fromId, message) => {
+      if (fromId === contactIdRef.current) {
+        // Set incoming message
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: msgId,
+            message: {
+              senderName: contactNameRef.current,
+              senderAvatar: avatarRef.current,
+              text: message,
             },
-          ]);
-        }
-      });
-    }
-
-    return () => {
-      if (chatConn) {
-        chatConn.off("ReceiveMessage", (msgId, fromId, message) => {
-          console.log("off listener");
-        });
+            isFromYou: false,
+          },
+        ]);
       }
     };
-  }, []);
+    // Listening from server
+    if (chatConn) {
+      chatConn.on("ReceiveMessage", listenFromServer);
+    }
+  }, [chatConn]);
 
   useEffect(() => {
     // If this component have contactId then get data from server
     if (contactId) {
-      console.log("H;;;;;;;");
+      contactIdRef.current = contactId;
+      contactNameRef.current = contactName;
+      avatarRef.current = avatar;
       // Get messages between user and contacter
       getMessages();
     }
