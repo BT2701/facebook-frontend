@@ -15,6 +15,7 @@ import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
 import { useChatConn } from "../../context/ChatConnContext";
 import { useChatBox } from "../../context/ChatBoxContext";
+import { useUser } from "../../context/UserContext";
 
 export default function ChatBox() {
   const {
@@ -23,7 +24,7 @@ export default function ChatBox() {
   } = useChatBox();
 
   const { chatConn } = useChatConn();
-  const currentUser = 1;
+  const { currentUser } = useUser();
 
   // State for all messages
   const [messages, setMessages] = useState([]);

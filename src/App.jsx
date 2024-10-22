@@ -8,9 +8,7 @@ function App() {
       {/* <NotificationProvider>
         <Router />
       </NotificationProvider> */}
-      <UserProvider>
-        <Router />
-      </UserProvider>
+      <Router />
     </div>
   );
 }

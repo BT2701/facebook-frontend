@@ -18,11 +18,14 @@ import { useEffect, useState } from "react";
 import { getMessagesByUserId, getUserById } from "../../utils/getData";
 import { useChatBox } from "../../context/ChatBoxContext";
 import { useChatConn } from "../../context/ChatConnContext";
+import { useUser } from "../../context/UserContext";
 
 export default function ChatMenu() {
   const { setChatInfo } = useChatBox();
 
   const { chatConn } = useChatConn();
+
+  const { currentUser } = useUser();
 
   const [messages, setMessages] = useState([]);
 
@@ -40,8 +43,6 @@ export default function ChatMenu() {
   };
 
   const getDataForChatMenu = async () => {
-    let currentUser = 1;
-
     const response = await getMessagesByUserId(currentUser);
 
     if (response && response.data) {
