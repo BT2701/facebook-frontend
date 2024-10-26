@@ -17,6 +17,7 @@ const startConnection = async (userId) => {
   } catch (err) {
     console.error("Kết nối thất bại:", err);
     setTimeout(() => startConnection(userId), 5000);
+    return null;
   }
 };
 

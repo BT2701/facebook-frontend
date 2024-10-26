@@ -7,15 +7,17 @@ import ChatBox from "./ChatBox";
 import { useChatConn } from "../../context/ChatConnContext";
 import { useEffect } from "react";
 import { useUser } from "../../context/UserContext";
+import { useCallConn } from "../../context/CallConnContext";
 
 export const Navbar = () => {
   const { connectChat } = useChatConn();
+  const { connectCall } = useCallConn();
   const { currentUser } = useUser();
 
   const initializeConnection = async () => {
     // This will be after login
     await connectChat(currentUser);
-    console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    await connectCall(currentUser);
   };
 
   useEffect(() => {

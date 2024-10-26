@@ -20,6 +20,8 @@ import axios from "axios";
 import { useChatConn } from "../../context/ChatConnContext";
 import { useChatBox } from "../../context/ChatBoxContext";
 import { useUser } from "../../context/UserContext";
+import { useCallConn } from "../../context/CallConnContext";
+import { startAudioCall, startVideoCall } from "../../services/callService";
 
 export default function ChatBox() {
   const {
@@ -28,6 +30,7 @@ export default function ChatBox() {
   } = useChatBox();
 
   const { chatConn } = useChatConn();
+  const { callConn } = useCallConn();
   const { currentUser } = useUser();
 
   // Ref
@@ -97,6 +100,24 @@ export default function ChatBox() {
         console.error("Error sending message:", error);
       }
       setMsgInput(""); // Reset message input
+    }
+  };
+
+  // Handle audio call
+  const handleAudioCall = () => {
+    if (callConn) {
+      startAudioCall(callConn, contactId);
+    } else {
+      console.log("Chưa kết nối Call Service");
+    }
+  };
+
+  // Handle video call
+  const handleVideoCall = () => {
+    if (callConn) {
+      startVideoCall(callConn, contactId);
+    } else {
+      console.log("Chưa kết nối Call Service");
     }
   };
 
@@ -220,19 +241,13 @@ export default function ChatBox() {
             aria-label="Audio Call"
             colorScheme=""
             icon={<AiOutlinePhone />}
-            onClick={() => {
-              // Thêm logic xử lý cuộc gọi thoại tại đây
-              console.log("Audio call initiated");
-            }}
+            onClick={handleAudioCall}
           />
           <IconButton
             aria-label="Video Call"
             colorScheme=""
             icon={<IoVideocamOutline />}
-            onClick={() => {
-              // Thêm logic xử lý cuộc gọi video tại đây
-              console.log("Video call initiated");
-            }}
+            onClick={handleVideoCall}
           />
           <IconButton
             aria-label="Close button"
