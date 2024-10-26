@@ -8,54 +8,42 @@ import {
 } from "@chakra-ui/react";
 import ChatBox from "../navbar/ChatBox";
 import { useChatBox } from "../../context/ChatBoxContext";
-
-const friends = [
-  {
-    id: 1,
-    name: "Phan Duy",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 2,
-    name: "Ben Nguyen",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 3,
-    name: "Khuyen Huynh",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 4,
-    name: "Hoàng Thiện",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 5,
-    name: "To Thuong Kim",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 6,
-    name: "Nguyet Minh Phan",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 0,
-  },
-  {
-    id: 7,
-    name: "Tri Tran",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-];
+import { useUser } from "../../context/UserContext";
+import { getFriendsByUserId } from "../../utils/getData";
+import { useEffect, useState } from "react";
 
 export default function FriendList() {
   const { setChatInfo } = useChatBox();
+
+  // Get current login user
+  const { currentUser } = useUser();
+
+  const [friends, setFriends] = useState([]);
+
+  // Fetch current user's friends
+  const fetchCurrentUserFriends = async () => {
+    const response = await getFriendsByUserId(currentUser);
+
+    const friendList = [];
+
+    try {
+      if (response && response.data) {
+        response.data.forEach((friend) => {
+          friendList.push({
+            id: friend.id,
+            name: friend.name,
+            avatar: friend.avt,
+            isOnline: friend.isOnline,
+          });
+        });
+      }
+    } catch (error) {
+      console.log("Error from fetching friends: " + error);
+    }
+
+    console.log("AAAAAAAAAAAAAA: " + friendList);
+    setFriends(friendList);
+  };
 
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
     setChatInfo({
@@ -67,6 +55,10 @@ export default function FriendList() {
       status,
     });
   };
+
+  useEffect(() => {
+    fetchCurrentUserFriends();
+  }, []);
 
   return (
     <>

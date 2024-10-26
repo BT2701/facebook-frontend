@@ -88,11 +88,11 @@ export default function ChatBox() {
             msgInput
           );
           console.log("Message sent!");
-          setMsgInput(""); // Reset message input
         }
       } catch (error) {
         console.error("Error sending message:", error);
       }
+      setMsgInput(""); // Reset message input
     }
   };
 
