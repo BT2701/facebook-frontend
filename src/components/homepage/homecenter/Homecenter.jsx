@@ -31,7 +31,7 @@ export const Homecenter = () => {
     try {
       const response = await axios.delete(`http://localhost:8001/api/post/${idPost}`);
       if (response.status === 204) {
-        const updatePosts = posts.filter((post) => post.id !== idPost);
+        const updatePosts = posts?.filter((post) => post.id !== idPost);
         setPosts(updatePosts);
         alert("delete post thanh cong");
       } else {
@@ -51,7 +51,7 @@ export const Homecenter = () => {
         <MessageSender wid={"100%"} />
       </Box>
 
-      {posts.length > 0 ? (
+      {posts?.length > 0 ? (
         posts.map((post, index) => (
 
           <div>
