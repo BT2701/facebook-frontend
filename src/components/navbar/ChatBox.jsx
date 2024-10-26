@@ -3,10 +3,14 @@ import {
   Avatar,
   AvatarBadge,
   Box,
+  HStack,
   IconButton,
   Input,
   Text,
 } from "@chakra-ui/react";
+
+import { AiOutlinePhone } from "react-icons/ai";
+import { IoVideocamOutline } from "react-icons/io5";
 
 import { FiSend, FiSmile, FiPaperclip } from "react-icons/fi";
 import ChatMessage from "./ChatMessage";
@@ -211,13 +215,34 @@ export default function ChatBox() {
           </Box>
         </Box>
 
-        <IconButton
-          colorScheme=""
-          icon={<CloseIcon />}
-          onClick={() => {
-            setChatInfo((prev) => ({ ...prev, isOpen: false }));
-          }}
-        />
+        <HStack spacing={1}>
+          <IconButton
+            aria-label="Audio Call"
+            colorScheme=""
+            icon={<AiOutlinePhone />}
+            onClick={() => {
+              // Thêm logic xử lý cuộc gọi thoại tại đây
+              console.log("Audio call initiated");
+            }}
+          />
+          <IconButton
+            aria-label="Video Call"
+            colorScheme=""
+            icon={<IoVideocamOutline />}
+            onClick={() => {
+              // Thêm logic xử lý cuộc gọi video tại đây
+              console.log("Video call initiated");
+            }}
+          />
+          <IconButton
+            aria-label="Close button"
+            colorScheme=""
+            icon={<CloseIcon />}
+            onClick={() => {
+              setChatInfo((prev) => ({ ...prev, isOpen: false }));
+            }}
+          />
+        </HStack>
       </Box>
       {/* End Chat Header */}
 
