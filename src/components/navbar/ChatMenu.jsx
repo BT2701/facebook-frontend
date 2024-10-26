@@ -65,12 +65,12 @@ export default function ChatMenu() {
         let userData = await getUserById(userId);
 
         //   Add message to array
-        if (!!userData.data) {
+        if (userData && userData.data) {
           messageArray.push({
             id: msg.id,
             contactId: userId,
             contactName: userData.data.name,
-            avatar: userData.data.avatar,
+            avatar: userData.data.avt,
             isOnline: userData.data.isOnline,
             content,
           });
@@ -82,16 +82,16 @@ export default function ChatMenu() {
   };
 
   useEffect(() => {
-    // Listening from server for chat notification
+    // Listening from server for message to display notification
     if (chatConn) {
-      chatConn.on("ReceiveMsgNotification", () => {
+      chatConn.on("ReceiveMessage", () => {
         setUnreadChat((prev) => prev + 1);
       });
     }
 
     return () => {
       if (chatConn) {
-        chatConn.off("ReceiveMsgNotification", () => {
+        chatConn.off("ReceiveMessage", () => {
           console.log("off listener");
         });
       }
