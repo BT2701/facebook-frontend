@@ -41,7 +41,6 @@ export default function FriendList() {
       console.log("Error from fetching friends: " + error);
     }
 
-    console.log("AAAAAAAAAAAAAA: " + friendList);
     setFriends(friendList);
   };
 

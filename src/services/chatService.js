@@ -12,10 +12,10 @@ const startConnection = async (userId) => {
   try {
     const conn = connection(userId);
     await conn.start();
-    console.log("Kết nối thành công!");
+    console.log("Connect chat service successfully!");
     return conn;
   } catch (err) {
-    console.error("Kết nối thất bại:", err);
+    console.error("Cannot connect chat service:", err);
     setTimeout(() => startConnection(userId), 5000);
     return null;
   }

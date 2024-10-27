@@ -15,8 +15,9 @@ export const Navbar = () => {
   const { currentUser } = useUser();
 
   const initializeConnection = async () => {
-    // This will be after login
+    // Connect to chathub
     await connectChat(currentUser);
+    // Connect to callhub
     await connectCall(currentUser);
   };
 
