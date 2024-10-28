@@ -15,7 +15,7 @@ import { IoVideocamOutline } from "react-icons/io5";
 import { FiSend, FiSmile, FiPaperclip } from "react-icons/fi";
 import ChatMessage from "./ChatMessage";
 import { useChatBox } from "../../context/ChatBoxContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "../../context/UserContext";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
@@ -30,11 +30,6 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
   const { chatConn } = useChatConn();
 
   const { currentUser } = useUser();
-
-  // Ref
-  const contactIdRef = useRef(contactId);
-  const contactNameRef = useRef(contactName);
-  const avatarRef = useRef(avatar);
 
   // State for all messages
   const [messages, setMessages] = useState([]);
@@ -145,12 +140,8 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
   };
 
   useEffect(() => {
-    console.log("Chat box mounted ");
     // If this component have contactId then get data from server
     if (contactId) {
-      contactIdRef.current = contactId;
-      contactNameRef.current = contactName;
-      avatarRef.current = avatar;
       // Get messages between user and contacter
       getMessages();
     }
@@ -161,15 +152,15 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
     // Listening from server
     if (chatConn) {
       const listenFromServer = (msgId, fromId, message) => {
-        if (fromId === contactIdRef.current) {
+        if (fromId === contactId) {
           // Set incoming message
           setMessages((prev) => [
             ...prev,
             {
               id: msgId,
               message: {
-                senderName: contactNameRef.current,
-                senderAvatar: avatarRef.current,
+                senderName: contactName,
+                senderAvatar: avatar,
                 text: message,
               },
               isFromYou: false,
