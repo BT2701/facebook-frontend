@@ -13,72 +13,52 @@ export const CallConnProvider = ({ children }) => {
     }
   };
 
-  const startAudioCall = async (targetUserId) => {
+  const startCall = async (targetUserId, isVideoCall = false) => {
     if (!callConn) {
       console.error("No call connection available.");
       return null;
     }
 
-    const peerConnection = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
+    try {
+      const peerConnection = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      });
 
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        callConn.invoke(
-          "SendIceCandidate",
-          targetUserId,
-          JSON.stringify(event.candidate)
-        );
-      }
-    };
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          callConn.invoke(
+            "SendIceCandidate",
+            targetUserId,
+            JSON.stringify(event.candidate)
+          );
+        }
+      };
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream
-      .getTracks()
-      .forEach((track) => peerConnection.addTrack(track, stream));
+      // Request media stream based on the call type
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: isVideoCall, // Set video option based on the parameter
+      });
 
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-    await callConn.invoke("SendOffer", targetUserId, JSON.stringify(offer));
+      mediaStream
+        .getTracks()
+        .forEach((track) => peerConnection.addTrack(track, mediaStream));
 
-    return peerConnection;
-  };
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      await callConn.invoke("SendOffer", targetUserId, JSON.stringify(offer));
 
-  const startVideoCall = async (targetUserId) => {
-    if (!callConn) {
-      console.error("No call connection available.");
+      return peerConnection;
+    } catch (err) {
+      console.error(
+        `Error ${isVideoCall ? "starting video" : "audio"} call: ` + err
+      );
       return null;
     }
-
-    const peerConnection = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
-
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        callConn.invoke(
-          "SendIceCandidate",
-          targetUserId,
-          JSON.stringify(event.candidate)
-        );
-      }
-    };
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
-    stream
-      .getTracks()
-      .forEach((track) => peerConnection.addTrack(track, stream));
-
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-    await callConn.invoke("SendOffer", targetUserId, JSON.stringify(offer));
-
-    return peerConnection;
   };
+
+  const startAudioCall = (targetUserId) => startCall(targetUserId, false);
+  const startVideoCall = (targetUserId) => startCall(targetUserId, true);
 
   return (
     <CallConnContext.Provider

@@ -3,11 +3,11 @@ import { Search } from "./Search";
 import { Option } from "./Option";
 import { CenterLinks } from "./CenterLinks";
 import { Outlet } from "react-router-dom";
-import ChatBox from "./ChatBox";
 import { useChatConn } from "../../context/ChatConnContext";
 import { useEffect } from "react";
 import { useUser } from "../../context/UserContext";
 import { useCallConn } from "../../context/CallConnContext";
+import ChatManage from "./ChatManage";
 
 export const Navbar = () => {
   const { connectChat } = useChatConn();
@@ -27,8 +27,8 @@ export const Navbar = () => {
 
   return (
     <>
-      {/* Chat Box */}
-      <ChatBox />
+      {/* Chat Manage */}
+      <ChatManage />
 
       <Flex
         h={"57px"}
