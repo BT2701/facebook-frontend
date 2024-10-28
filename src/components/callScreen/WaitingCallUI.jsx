@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Button, Avatar, Text } from "@chakra-ui/react";
 
-export default function CallUI({ userAvatar, userName, onCancelCall }) {
+export default function WaitingCallUI({ userAvatar, userName, onCancelCall }) {
   return (
     <Box
       display="flex"
@@ -13,7 +13,7 @@ export default function CallUI({ userAvatar, userName, onCancelCall }) {
       pos="fixed"
       left={0}
       top={0}
-      zIndex={2}
+      zIndex="overlay"
     >
       <Box p={6} bg="white" borderRadius="lg" boxShadow="lg" textAlign="center">
         <Avatar size="2xl" name={userName} src={userAvatar} mb={4} />

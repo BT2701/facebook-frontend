@@ -61,8 +61,6 @@ export default function FriendList() {
 
   return (
     <>
-      <ChatBox />
-
       <Box h="100vh" overflowY="auto" p={4} borderRadius="md" w="300px">
         <Stack>
           {friends.map((friend) => (
