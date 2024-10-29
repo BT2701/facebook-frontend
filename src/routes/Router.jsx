@@ -40,7 +40,10 @@ export const Router = () => {
       >
         <Route path="/" element={<Homepage />} />
         <Route path="groups" element={<Groups />} />
-        <Route path="friends" element={<FriendRequest />} />
+        <Route path="friends" element={<FriendRequest />}>
+          <Route path="suggestions" element={<FriendRequest />} />
+          <Route path="all-friends" element={<FriendRequest />} />
+        </Route>
         <Route path="search" element={<SearchPage />} />
         <Route path="profile" element={<ProfileNav />}>
           <Route path="" element={<Post />} />
