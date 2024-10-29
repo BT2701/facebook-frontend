@@ -14,11 +14,6 @@ export default function CallScreen({
 
   const toggleMute = () => {
     setIsMuted((prev) => !prev);
-    if (localVideoRef.current && localVideoRef.current.srcObject) {
-      localVideoRef.current.srcObject.getAudioTracks().forEach((track) => {
-        track.enabled = !isMuted;
-      });
-    }
   };
 
   return (
@@ -48,6 +43,7 @@ export default function CallScreen({
             <video
               ref={remoteVideoRef}
               autoPlay
+              muted={isMuted}
               playsInline
               style={{
                 background: "white",
@@ -59,7 +55,7 @@ export default function CallScreen({
             <video
               ref={localVideoRef}
               autoPlay
-              muted
+              muted={isMuted}
               playsInline
               style={{
                 background: "black",
@@ -77,6 +73,8 @@ export default function CallScreen({
           <VStack align="center" spacing={3}>
             <Avatar size="2xl" name={userName} src={userAvatar} />
             <Text fontSize="xl">Calling {isVideoCall ? "Video" : "Audio"}</Text>
+            <audio ref={localVideoRef} autoPlay playsInline muted={isMuted} />
+            <audio ref={remoteVideoRef} autoPlay playsInline muted={isMuted} />
           </VStack>
         )}
 

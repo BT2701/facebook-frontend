@@ -45,110 +45,21 @@ export default function ChatManage() {
   // Track if it's a video call
   const [isVideoCall, setIsVideoCall] = useState(false);
 
-  const getMedia = () => {
-    navigator.mediaDevices
-      .getUserMedia({ video: isVideoCall, audio: true })
-      .then((stream) => {
-        setStream(stream);
-        if (isVideoCall) {
-          localVideoRef.current.srcObject = stream;
-        }
-      })
-      .catch((error) => {
-        console.error("Error accessing media devices.", error);
-      });
-  };
-
-  const callUser = async (callToUserId) => {
-    getMedia();
-    // Get user data by user id
-    const userData = await getUserById(currentUser);
-
-    let userName = "",
-      userAvatar = "";
-    //   Get current user name and avatar
-    if (userData && userData.data) {
-      userName = userData.data.name;
-      userAvatar = userData.data.avt;
-    }
-
-    const peer = new Peer({
-      initiator: true,
-      trickle: false,
-      stream: stream,
-    });
-    peer.on("signal", async (data) => {
-      try {
-        if (chatConn) {
-          await chatConn.invoke(
-            "CallUser",
-            currentUser,
-            userName,
-            userAvatar,
-            callToUserId,
-            JSON.stringify(data),
-            isVideoCall
-          );
-        } else {
-          console.log("Cannot connect to call service");
-        }
-      } catch (error) {
-        console.error("Error when call user " + error);
-      }
-    });
-    peer.on("stream", (stream) => {
-      remoteVideoRef.current.srcObject = stream;
-      console.log("Remote stream received", stream);
-    });
-    if (chatConn) {
-      chatConn.on("CallAccepted", (signal) => {
-        setIsCalling(true);
-        peer.signal(JSON.parse(signal));
-        console.log("aAAAAAAAAdjwofjwjfoeAjifjwojfoiwejofej");
-        console.log(JSON.parse(signal));
-      });
-    } else {
-      console.log("Cannot connect to call service");
-    }
-
-    connectionRef.current = peer;
-  };
-
-  const answerCall = () => {
-    getMedia();
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      stream: stream,
-    });
-    peer.on("signal", async (data) => {
-      try {
-        if (chatConn) {
-          await chatConn.invoke("AnswerCall", caller, JSON.stringify(data));
-        } else {
-          console.log("Cannot connect to call service");
-        }
-      } catch (error) {
-        console.error("Error when answering call " + error);
-      }
-    });
-    peer.on("stream", (stream) => {
-      remoteVideoRef.current.srcObject = stream;
-      console.log("Remote stream received", stream);
-    });
-
-    peer.signal(callerSignal);
-    connectionRef.current = peer;
-  };
-
   const leaveCall = () => {
     setIsWaiting(false);
     setIsIncomingCall(false);
     setCallAccepted(false);
     setIsCalling(false);
-    if (connectionRef.current) {
-      connectionRef.current.destroy();
-      connectionRef.current = null;
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop()); // Stop all tracks of the current stream
+    }
+    try {
+      if (connectionRef.current) {
+        connectionRef.current.destroy();
+        connectionRef.current = null;
+      }
+    } catch (error) {
+      console.error("Error during peer connection destruction:", error);
     }
   };
 
@@ -173,16 +84,131 @@ export default function ChatManage() {
   }, [chatConn]);
 
   useEffect(() => {
-    if (isWaiting) {
-      callUser(contactId);
+    // If user is waiting for a call then getMedia to ready call
+    if (isWaiting || callAccepted) {
+      navigator.mediaDevices
+        .getUserMedia({ video: isVideoCall, audio: true })
+        .then((stream) => {
+          setStream(stream);
+        })
+        .catch((error) => {
+          console.error("Error accessing media devices.", error);
+        });
     }
-  }, [isWaiting]);
+  }, [isWaiting, callAccepted, isVideoCall]);
 
   useEffect(() => {
-    if (callAccepted) {
+    if (stream && (isCalling || callAccepted)) {
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+    }
+  }, [stream, isCalling, callAccepted]);
+
+  useEffect(() => {
+    if (stream && isWaiting) {
+      const callUser = async (callToUserId) => {
+        // Get user data by user id
+        const userData = await getUserById(currentUser);
+
+        let userName = "",
+          userAvatar = "";
+        //   Get current user name and avatar
+        if (userData && userData.data) {
+          userName = userData.data.name;
+          userAvatar = userData.data.avt;
+        }
+
+        const peer = new Peer({
+          initiator: true,
+          trickle: false,
+          config: {
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              { urls: "stun:stun1.l.google.com:19302" },
+              { urls: "stun:stun2.l.google.com:19302" },
+            ],
+          },
+          stream: stream,
+        });
+        peer.on("signal", async (data) => {
+          try {
+            if (chatConn) {
+              await chatConn.invoke(
+                "CallUser",
+                currentUser,
+                userName,
+                userAvatar,
+                callToUserId,
+                JSON.stringify(data),
+                isVideoCall
+              );
+            } else {
+              console.log("Cannot connect to call service");
+            }
+          } catch (error) {
+            console.error("Error when call user " + error);
+          }
+        });
+        peer.on("stream", (stream) => {
+          remoteVideoRef.current.srcObject = stream;
+          console.log("Remote stream received", stream);
+        });
+        if (chatConn) {
+          chatConn.on("CallAccepted", (signal) => {
+            peer.signal(JSON.parse(signal));
+            setIsWaiting(false);
+            setIsCalling(true);
+          });
+        } else {
+          console.log("Cannot connect to call service");
+        }
+
+        connectionRef.current = peer;
+      };
+
+      callUser(contactId);
+    }
+  }, [stream, isWaiting]);
+
+  useEffect(() => {
+    if (stream && callAccepted) {
+      const answerCall = () => {
+        const peer = new Peer({
+          initiator: false,
+          trickle: false,
+          config: {
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              { urls: "stun:stun1.l.google.com:19302" },
+              { urls: "stun:stun2.l.google.com:19302" },
+            ],
+          },
+          stream: stream,
+        });
+        peer.on("signal", async (data) => {
+          try {
+            if (chatConn) {
+              await chatConn.invoke("AnswerCall", caller, JSON.stringify(data));
+            } else {
+              console.log("Cannot connect to call service");
+            }
+          } catch (error) {
+            console.error("Error when answering call " + error);
+          }
+        });
+        peer.on("stream", (stream) => {
+          remoteVideoRef.current.srcObject = stream;
+          console.log("Remote stream received", stream);
+        });
+
+        peer.signal(callerSignal);
+        connectionRef.current = peer;
+      };
+
       answerCall();
     }
-  }, [callAccepted]);
+  }, [stream, callAccepted]);
 
   //   If chat box is open and not calling then show chat box
   if (isOpen && !isCalling && !isIncomingCall && !isWaiting) {
