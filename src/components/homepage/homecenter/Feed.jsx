@@ -103,7 +103,7 @@ export const Feed = ({
     const handleMenuClick = async (action, commentid) => {
         if (action === "edit") {
             setEditingCommentId(commentid);
-            const commentToEdit = comments.find((comment) => comment.id === commentid);
+            const commentToEdit = comments?.find((comment) => comment.id === commentid);
             setEditedContent(commentToEdit.content);
         } else if (action === "delete") {
             const confirmDelete = window.confirm("Bạn muốn xóa comment?");
@@ -112,7 +112,7 @@ export const Feed = ({
             try {
                 const response = await axios.delete(`http://localhost:8001/api/comment/${commentid}`);
                 if (response.status === 204) {
-                    const updatedComments = comments.filter((comment) => comment.id !== commentid);
+                    const updatedComments = comments?.filter((comment) => comment.id !== commentid);
                     setComments(updatedComments);
                 } else {
                     console.error("Error deleting comment");
@@ -140,7 +140,7 @@ export const Feed = ({
             );
 
             if (response.status === 204) {
-                const updatedComments = comments.map((comment) =>
+                const updatedComments = comments?.map((comment) =>
                     comment.id === commentId ? { ...comment, content: editedContent } : comment
                 );
                 setComments(updatedComments);
@@ -204,7 +204,7 @@ export const Feed = ({
                         onClick={() => setCommentVisible(!commentVisible)}
                     >
                         <FaRegCommentAlt />
-                        <span style={{ paddingLeft: "10px" }}>{comments.length} Comment</span>
+                        <span style={{ paddingLeft: "10px" }}>{comments?.length} Comment</span>
                     </div>
                     <div className="feed__option">
                         <RiShareForwardLine />

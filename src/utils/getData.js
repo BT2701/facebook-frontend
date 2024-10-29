@@ -81,42 +81,65 @@ export const getMessagesByUserIdAndContactId = async (userId, contactId) => {
   }
 };
 
+// Get friend of current user
+export const getFriendsByUserId = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/friend/user/${userId}`
+    );
 
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
 
 // notification
-export const fetchDataForNotification = async ({currentUser}) => {
+export const fetchDataForNotification = async ({ currentUser }) => {
   try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/notification/receiver/` + currentUser);
-      return response;
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/notification/receiver/` + currentUser
+    );
+    return response;
   } catch (error) {
-      console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
   }
 };
 
 export const markAllAsReadNotification = async (currentUser) => {
   try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/notification/markAllAsRead/` + currentUser, {}, { withCredentials: true });
+    await axios.put(
+      `${process.env.REACT_APP_API_URL}/notification/markAllAsRead/` +
+        currentUser,
+      {},
+      { withCredentials: true }
+    );
   } catch (error) {
-      console.error('Error marking all as read:', error);
+    console.error("Error marking all as read:", error);
   }
 };
 export const markAsReadNotification = async (id) => {
   try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/notification/${id}`, {}, { withCredentials: true });
+    await axios.put(
+      `${process.env.REACT_APP_API_URL}/notification/${id}`,
+      {},
+      { withCredentials: true }
+    );
   } catch (error) {
-      console.error('Error marking notification as read:', error);
+    console.error("Error marking notification as read:", error);
   }
 };
 
 // story
 export const fetchDataForStory = async () => {
   try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/story`);
-      return response;
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/story`);
+    return response;
   } catch (error) {
-      console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
   }
 };
+
 
 //friend request
 // Hàm lấy danh sách yêu cầu
@@ -229,5 +252,4 @@ export const getFriendSuggestions = async (userId, pageNumber = 1) => {
       return null; // Trả về null nếu có lỗi
   }
 };
-
 

@@ -29,7 +29,7 @@ export default function ChatMenu() {
 
   const [messages, setMessages] = useState([]);
 
-  const [unreadChat, setUnreadChat] = useState(2);
+  const [unreadChat, setUnreadChat] = useState(0);
 
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
     setChatInfo({
@@ -65,12 +65,12 @@ export default function ChatMenu() {
         let userData = await getUserById(userId);
 
         //   Add message to array
-        if (!!userData.data) {
+        if (userData && userData.data) {
           messageArray.push({
             id: msg.id,
             contactId: userId,
             contactName: userData.data.name,
-            avatar: userData.data.avatar,
+            avatar: userData.data.avt,
             isOnline: userData.data.isOnline,
             content,
           });
@@ -82,23 +82,21 @@ export default function ChatMenu() {
   };
 
   useEffect(() => {
-    getDataForChatMenu();
-
-    // Listening from server for chat notification
+    // Listening from server for message to display notification
     if (chatConn) {
-      chatConn.on("ReceiveMsgNotification", () => {
+      const incrementUnreadChat = () => {
         setUnreadChat((prev) => prev + 1);
-      });
-    }
+      };
 
-    return () => {
-      if (chatConn) {
-        chatConn.off("ReceiveMsgNotification", () => {
-          console.log("off listener");
-        });
-      }
-    };
-  }, []);
+      chatConn.on("ReceiveMessage", incrementUnreadChat);
+
+      return () => {
+        if (chatConn) {
+          chatConn.off("ReceiveMessage", incrementUnreadChat);
+        }
+      };
+    }
+  }, [chatConn]);
 
   return (
     <>
@@ -109,6 +107,10 @@ export default function ChatMenu() {
             aria-label="Options"
             icon={<ChatIcon />}
             rounded="full"
+            onClick={() => {
+              setUnreadChat(0);
+              getDataForChatMenu();
+            }}
           ></MenuButton>
 
           {/* Chat notification */}
@@ -160,7 +162,13 @@ export default function ChatMenu() {
                     <Text fontSize="lg" mb={0}>
                       {msg.contactName}
                     </Text>
-                    <Text fontSize="sm" mb={0} noOfLines={1} opacity="85%">
+                    <Text
+                      fontSize="sm"
+                      mb={0}
+                      noOfLines={1}
+                      opacity="85%"
+                      sx={{ wordBreak: "break-word" }}
+                    >
                       {msg.content}
                     </Text>
                   </Box>
