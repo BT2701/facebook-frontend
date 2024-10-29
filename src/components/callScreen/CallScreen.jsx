@@ -1,25 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Box, VStack, Text, Avatar, IconButton } from "@chakra-ui/react";
 import { FaMicrophone, FaMicrophoneSlash, FaPhoneSlash } from "react-icons/fa";
-import { useCallConn } from "../../context/CallConnContext";
-import WaitingCallUI from "./WaitingCallUI";
-import { useUser } from "../../context/UserContext";
 
 export default function CallScreen({
   isVideoCall,
   userAvatar,
   userName,
+  localVideoRef,
+  remoteVideoRef,
   onCancelCall,
 }) {
-  // State for waiting call
-  const [isWaitingCall, setIsWaitingCall] = useState(true);
-
-  const { startAudioCall, startVideoCall } = useCallConn();
-  const { currentUser } = useUser();
-
   const [isMuted, setIsMuted] = useState(false);
-  const localVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
 
   const toggleMute = () => {
     setIsMuted((prev) => !prev);
@@ -30,42 +21,7 @@ export default function CallScreen({
     }
   };
 
-  useEffect(() => {
-    console.log("Call screen mounted");
-    const startCall = async () => {
-      try {
-        // const peerConnection = isVideoCall
-        //   ? await startVideoCall(currentUser)
-        //   : await startAudioCall(currentUser);
-        // setupStream(peerConnection);
-
-        setIsWaitingCall(false);
-      } catch (error) {
-        console.error("Error calling " + error);
-      }
-    };
-
-    const setupStream = (peerConnection) => {
-      peerConnection.ontrack = (event) => {
-        remoteVideoRef.current.srcObject = event.streams[0];
-      };
-    };
-
-    startCall();
-
-    return () => {
-      if (localVideoRef.current) localVideoRef.current.srcObject = null;
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-    };
-  }, [isVideoCall]);
-
-  return isWaitingCall ? (
-    <WaitingCallUI
-      userAvatar={userAvatar}
-      userName={userName}
-      onCancelCall={onCancelCall}
-    />
-  ) : (
+  return (
     <Box
       display="flex"
       alignItems="center"

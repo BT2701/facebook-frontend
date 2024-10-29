@@ -173,10 +173,8 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
 
       // component unmount
       return () => {
-        if (chatConn) {
-          console.log("Off listener chat message");
-          chatConn.off("ReceiveMessage", listenFromServer);
-        }
+        console.log("Off listener chat message");
+        chatConn.off("ReceiveMessage", listenFromServer);
       };
     }
   }, [chatConn]);

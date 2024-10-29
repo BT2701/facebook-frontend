@@ -1,19 +1,37 @@
 import { useEffect, useRef, useState } from "react";
+import ChatBox from "./ChatBox";
+import Peer from "simple-peer";
+import { getUserById } from "../../utils/getData";
+import { useUser } from "../../context/UserContext";
+import { useChatConn } from "../../context/ChatConnContext";
 import { useChatBox } from "../../context/ChatBoxContext";
-import { useCallConn } from "../../context/CallConnContext";
 import CallScreen from "../callScreen/CallScreen";
 import IncomingCallScreen from "../callScreen/IncomingCallScreen";
-import ChatBox from "./ChatBox";
+import WaitingCallScreen from "../callScreen/WaitingCallScreen";
 
 export default function ChatManage() {
   const {
     chatInfo: { isOpen, contactId, contactName, avatar },
   } = useChatBox();
 
-  const { callConn } = useCallConn();
+  const { chatConn } = useChatConn();
+  const { currentUser } = useUser();
 
   // Ref
-  const contactIdRef = useRef(contactId);
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  const connectionRef = useRef(null);
+
+  // State for the caller call to this
+  const [caller, setCaller] = useState(null);
+  const [callerSignal, setCallerSignal] = useState(null);
+  const [callerName, setCallerName] = useState(null);
+  const [callerAvatar, setCallerAvatar] = useState(null);
+
+  const [stream, setStream] = useState(null);
+
+  // State for waiting call
+  const [isWaiting, setIsWaiting] = useState(false);
 
   // State for call screen
   const [isCalling, setIsCalling] = useState(false);
@@ -21,72 +39,174 @@ export default function ChatManage() {
   // State for incoming call
   const [isIncomingCall, setIsIncomingCall] = useState(false);
 
+  // State for accepting incoming call
+  const [callAccepted, setCallAccepted] = useState(false);
+
   // Track if it's a video call
   const [isVideoCall, setIsVideoCall] = useState(false);
 
-  useEffect(() => {
-    if (contactId) {
-      contactIdRef.current = contactId;
+  const getMedia = () => {
+    navigator.mediaDevices
+      .getUserMedia({ video: isVideoCall, audio: true })
+      .then((stream) => {
+        setStream(stream);
+        if (isVideoCall) {
+          localVideoRef.current.srcObject = stream;
+        }
+      })
+      .catch((error) => {
+        console.error("Error accessing media devices.", error);
+      });
+  };
+
+  const callUser = async (callToUserId) => {
+    getMedia();
+    // Get user data by user id
+    const userData = await getUserById(currentUser);
+
+    let userName = "",
+      userAvatar = "";
+    //   Get current user name and avatar
+    if (userData && userData.data) {
+      userName = userData.data.name;
+      userAvatar = userData.data.avt;
     }
-  }, [contactId]);
 
-  // Use effect for call connection
-  //   useEffect(() => {
-  //     if (callConn) {
-  //       // Create a peer connection using stun google
-  //       const peerConnection = new RTCPeerConnection({
-  //         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-  //       });
+    const peer = new Peer({
+      initiator: true,
+      trickle: false,
+      stream: stream,
+    });
+    peer.on("signal", async (data) => {
+      try {
+        if (chatConn) {
+          await chatConn.invoke(
+            "CallUser",
+            currentUser,
+            userName,
+            userAvatar,
+            callToUserId,
+            JSON.stringify(data),
+            isVideoCall
+          );
+        } else {
+          console.log("Cannot connect to call service");
+        }
+      } catch (error) {
+        console.error("Error when call user " + error);
+      }
+    });
+    peer.on("stream", (stream) => {
+      remoteVideoRef.current.srcObject = stream;
+      console.log("Remote stream received", stream);
+    });
+    if (chatConn) {
+      chatConn.on("CallAccepted", (signal) => {
+        setIsCalling(true);
+        peer.signal(JSON.parse(signal));
+        console.log("aAAAAAAAAdjwofjwjfoeAjifjwojfoiwejofej");
+        console.log(JSON.parse(signal));
+      });
+    } else {
+      console.log("Cannot connect to call service");
+    }
 
-  //       const handleReceiveOffer = async (offer) => {
-  //         await peerConnection.setRemoteDescription(
-  //           new RTCSessionDescription(JSON.parse(offer))
-  //         );
-  //         const answer = await peerConnection.createAnswer();
-  //         await peerConnection.setLocalDescription(answer);
+    connectionRef.current = peer;
+  };
 
-  //         callConn.invoke(
-  //           "SendAnswer",
-  //           contactIdRef.current,
-  //           JSON.stringify(answer)
-  //         );
-  //       };
+  const answerCall = () => {
+    getMedia();
+    const peer = new Peer({
+      initiator: false,
+      trickle: false,
+      stream: stream,
+    });
+    peer.on("signal", async (data) => {
+      try {
+        if (chatConn) {
+          await chatConn.invoke("AnswerCall", caller, JSON.stringify(data));
+        } else {
+          console.log("Cannot connect to call service");
+        }
+      } catch (error) {
+        console.error("Error when answering call " + error);
+      }
+    });
+    peer.on("stream", (stream) => {
+      remoteVideoRef.current.srcObject = stream;
+      console.log("Remote stream received", stream);
+    });
 
-  //       const handleReceiveAnswer = async (answer) => {
-  //         await peerConnection.setRemoteDescription(
-  //           new RTCSessionDescription(JSON.parse(answer))
-  //         );
-  //       };
+    peer.signal(callerSignal);
+    connectionRef.current = peer;
+  };
 
-  //       // Listening on for acceting offer
-  //       callConn.on("ReceiveOffer", handleReceiveOffer);
+  const leaveCall = () => {
+    setIsWaiting(false);
+    setIsIncomingCall(false);
+    setCallAccepted(false);
+    setIsCalling(false);
+    if (connectionRef.current) {
+      connectionRef.current.destroy();
+      connectionRef.current = null;
+    }
+  };
 
-  //       // Listening on receiving answer
-  //       callConn.on("ReceiveAnswer", handleReceiveAnswer);
+  useEffect(() => {
+    if (chatConn) {
+      // Listening to receive a call
+      chatConn.on("ReceiveCall", (data) => {
+        setIsIncomingCall(true);
+        // Set info of the person who calls to this
+        setCallerSignal(data.signalData);
+        setCaller(data.fromUserId);
+        setCallerName(data.userName);
+        setCallerAvatar(data.userAvt);
+        setIsVideoCall(data.isVideoCall);
+      });
 
-  //       // component unmount
-  //       return () => {
-  //         if (callConn) {
-  //           console.log("Off listener call");
-  //           callConn.off("ReceiveOffer", handleReceiveOffer);
-  //           callConn.off("ReceiveAnswer", handleReceiveAnswer);
-  //         }
-  //       };
-  //     }
-  //   }, [callConn]);
+      return () => {
+        console.log("Off listener receive call");
+        chatConn.off("ReceiveCall");
+      };
+    }
+  }, [chatConn]);
+
+  useEffect(() => {
+    if (isWaiting) {
+      callUser(contactId);
+    }
+  }, [isWaiting]);
+
+  useEffect(() => {
+    if (callAccepted) {
+      answerCall();
+    }
+  }, [callAccepted]);
 
   //   If chat box is open and not calling then show chat box
-  if (isOpen && !isCalling && !isIncomingCall) {
+  if (isOpen && !isCalling && !isIncomingCall && !isWaiting) {
     return (
       <ChatBox
         onCallAudio={() => {
-          setIsCalling(true);
           setIsVideoCall(false);
+          setIsWaiting(true);
         }}
         onCallVideo={() => {
-          setIsCalling(true);
           setIsVideoCall(true);
+          setIsWaiting(true);
         }}
+      />
+    );
+  }
+
+  // If the user is wating for call
+  else if (isWaiting) {
+    return (
+      <WaitingCallScreen
+        userAvatar={avatar}
+        userName={contactName}
+        onCancelCall={() => leaveCall()}
       />
     );
   }
@@ -98,20 +218,37 @@ export default function ChatManage() {
         isVideoCall={isVideoCall}
         userAvatar={avatar}
         userName={contactName}
-        onCancelCall={() => setIsCalling(false)}
+        localVideoRef={localVideoRef}
+        remoteVideoRef={remoteVideoRef}
+        onCancelCall={() => leaveCall()}
       />
     );
   }
 
   //   If user receive a call
   else if (isIncomingCall) {
+    // If they accept the receiving call
+    if (callAccepted) {
+      return (
+        <CallScreen
+          isVideoCall={isVideoCall}
+          userAvatar={callerAvatar}
+          userName={callerName}
+          localVideoRef={localVideoRef}
+          remoteVideoRef={remoteVideoRef}
+          onCancelCall={() => leaveCall()}
+        />
+      );
+    }
+
     return (
       <IncomingCallScreen
-        userAvatar={avatar}
-        userName={contactName}
-        onDecline={() => {
-          setIsIncomingCall(false);
+        userAvatar={callerAvatar}
+        userName={callerName}
+        onAccept={() => {
+          setCallAccepted(true);
         }}
+        onDecline={() => leaveCall()}
       />
     );
   }

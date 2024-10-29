@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Box, Button, Text, VStack, Avatar, HStack } from "@chakra-ui/react";
 import { PhoneIcon, CloseIcon } from "@chakra-ui/icons";
 
@@ -8,10 +8,6 @@ export default function IncomingCallScreen({
   onAccept,
   onDecline,
 }) {
-  useEffect(() => {
-    console.log("Incoming mounted");
-  }, []);
-
   return (
     <Box
       position="fixed"
