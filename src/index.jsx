@@ -10,7 +10,7 @@ import { BrowserRouter } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <StrictMode>
+  // <StrictMode>
     <ReduxProvider store={store}>
       <BrowserRouter>
         <ChakraProvider>
@@ -20,7 +20,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </ChakraProvider>
       </BrowserRouter>
     </ReduxProvider>
-  </StrictMode>
+  // </StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
