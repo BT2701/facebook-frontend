@@ -52,6 +52,7 @@ export default function ChatManage() {
     setIsCalling(false);
     if (stream) {
       stream.getTracks().forEach((track) => track.stop()); // Stop all tracks of the current stream
+      setStream(null);
     }
     try {
       if (connectionRef.current) {
@@ -103,7 +104,7 @@ export default function ChatManage() {
         localVideoRef.current.srcObject = stream;
       }
     }
-  }, [stream, isCalling, callAccepted]);
+  }, [stream, isCalling, callAccepted, localVideoRef]);
 
   useEffect(() => {
     if (stream && isWaiting) {
@@ -151,8 +152,10 @@ export default function ChatManage() {
           }
         });
         peer.on("stream", (stream) => {
-          remoteVideoRef.current.srcObject = stream;
-          console.log("Remote stream received", stream);
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = stream;
+            console.log("Remote stream received", stream);
+          }
         });
         if (chatConn) {
           chatConn.on("CallAccepted", (signal) => {
@@ -198,8 +201,10 @@ export default function ChatManage() {
           }
         });
         peer.on("stream", (stream) => {
-          remoteVideoRef.current.srcObject = stream;
-          console.log("Remote stream received", stream);
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = stream;
+            console.log("Remote stream received", stream);
+          }
         });
 
         peer.signal(callerSignal);
@@ -244,6 +249,7 @@ export default function ChatManage() {
         isVideoCall={isVideoCall}
         userAvatar={avatar}
         userName={contactName}
+        stream={stream}
         localVideoRef={localVideoRef}
         remoteVideoRef={remoteVideoRef}
         onCancelCall={() => leaveCall()}
@@ -260,6 +266,7 @@ export default function ChatManage() {
           isVideoCall={isVideoCall}
           userAvatar={callerAvatar}
           userName={callerName}
+          stream={stream}
           localVideoRef={localVideoRef}
           remoteVideoRef={remoteVideoRef}
           onCancelCall={() => leaveCall()}
