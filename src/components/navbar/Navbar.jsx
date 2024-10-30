@@ -15,7 +15,7 @@ export const Navbar = () => {
   const initializeConnection = async () => {
     // This will be after login
     await connectChat(currentUser);
-    console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF: " + currentUser);
   };
 
   useEffect(() => {

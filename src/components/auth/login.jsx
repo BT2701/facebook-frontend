@@ -16,6 +16,7 @@ import { Signup } from "./Signup";
 import axios from "axios";
 import { useUser } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
+
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +27,7 @@ export const Login = () => {
   const handleChangeEmail = (e) => {
     setEmail(e.target.value);
   };
+
   const handleChangePassword = (e) => {
     setPassword(e.target.value);
   };
@@ -42,15 +44,23 @@ export const Login = () => {
           headers: {
             "Content-Type": "application/json",
           },
+          withCredentials: true,
         }
       );
 
       if (response.status === 200) {
-        // Lưu userId vào context
-        console.log(response);
-        setCurrentUser(response.data.id);
+        // Lấy userId từ session
+        const sessionResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}/user/sessionInfo`,
+          { withCredentials: true }
+        );
 
-        console.log("Logged in userId:", response.data.userId);
+        // Lấy userId từ session và log ra console coi chơi
+        const userId = sessionResponse.data.userId;
+        console.log("Session userId:", userId);
+
+        // Lưu userId vào context
+        setCurrentUser(response.data.id); // Lưu userId vào context
 
         toast({
           title: "Login successful!",
@@ -58,7 +68,7 @@ export const Login = () => {
           duration: 3000,
           isClosable: true,
         });
-        navigate("/");
+        navigate("/"); // Điều hướng về trang chính
       }
     } catch (error) {
       toast({
@@ -126,7 +136,11 @@ export const Login = () => {
               >
                 Log In
               </Button>
-              <Text>Forgotten password?</Text>
+              {/* <Link to="/">
+                <Text color="blue.500" _hover={{ textDecoration: "underline" }}>
+                  Forgotten password?
+                </Text>
+              </Link> */}
               <Divider />
             </VStack>
             <Flex justify={"center"} mt={6}>
