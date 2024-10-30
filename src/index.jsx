@@ -8,18 +8,22 @@ import { Provider as ReduxProvider } from "react-redux";
 import { store } from "./featuresRedux/store";
 import { BrowserRouter } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
+import * as process from "process";
+window.global = window;
+window.process = process;
+window.Buffer = [];
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   // <StrictMode>
-    <ReduxProvider store={store}>
-      <BrowserRouter>
-        <ChakraProvider>
-          <UserProvider>
-            <App />
-          </UserProvider>
-        </ChakraProvider>
-      </BrowserRouter>
-    </ReduxProvider>
+  <ReduxProvider store={store}>
+    <BrowserRouter>
+      <ChakraProvider>
+        <UserProvider>
+          <App />
+        </UserProvider>
+      </ChakraProvider>
+    </BrowserRouter>
+  </ReduxProvider>
   // </StrictMode>
 );
 
