@@ -17,7 +17,6 @@ import { Groups } from "../components/groups/Groups";
 import SearchPage from "../components/filter/SearchPage";
 import { ChatConnProvider } from "../context/ChatConnContext";
 import { ChatBoxProvider } from "../context/ChatBoxContext";
-import { CallConnProvider } from "../context/CallConnContext";
 
 export const Router = () => {
   return (
@@ -29,13 +28,11 @@ export const Router = () => {
           // <PrivateRoute>
           //   <Navbar />
           // </PrivateRoute>
-          <CallConnProvider>
-            <ChatConnProvider>
-              <ChatBoxProvider>
-                <Navbar />
-              </ChatBoxProvider>
-            </ChatConnProvider>
-          </CallConnProvider>
+          <ChatConnProvider>
+            <ChatBoxProvider>
+              <Navbar />
+            </ChatBoxProvider>
+          </ChatConnProvider>
         }
       >
         <Route path="/" element={<Homepage />} />

@@ -1,7 +1,11 @@
 import React from "react";
 import { Box, Button, Avatar, Text } from "@chakra-ui/react";
 
-export default function WaitingCallUI({ userAvatar, userName, onCancelCall }) {
+export default function WaitingCallScreen({
+  userAvatar,
+  userName,
+  onCancelCall,
+}) {
   return (
     <Box
       display="flex"
