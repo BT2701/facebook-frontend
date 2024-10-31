@@ -54,6 +54,11 @@ export default function ChatManage() {
       stream.getTracks().forEach((track) => track.stop()); // Stop all tracks of the current stream
       setStream(null);
     }
+
+    // Off listener CallAccepted
+    if (chatConn) {
+      chatConn.off("CallAccepted");
+    }
     try {
       if (connectionRef.current) {
         connectionRef.current.destroy();
