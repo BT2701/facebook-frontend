@@ -7,6 +7,7 @@ import { RiShareForwardLine } from "react-icons/ri";
 import { FaEllipsisH } from 'react-icons/fa';
 import "./feed.css";
 import axios from "axios";
+import { useNotification } from "../../../context/NotificationContext";
 
 export const Feed = ({
     postId,
@@ -29,12 +30,14 @@ export const Feed = ({
     const [numberLiked, setNumberLiked] = useState(likeCount);
     const [editingCommentId, setEditingCommentId] = useState(null); // Track the comment currently being edited
     const [editedContent, setEditedContent] = useState(""); // Track the content of the comment being edited
+    const { createNotification, deleteNotification } = useNotification();
 
     const handleLikeClicked = async () => {
         currentUserLiked ? handleUnLike() : handleLike();
     };
 
     const handleLike = async () => {
+        createNotification(userCreatePost, postId, "đã thích bài viết của bạn");
         const data = {
             UserId: currentUserId,
             Timeline: "2024-10-16T00:00:00Z",
@@ -58,6 +61,7 @@ export const Feed = ({
     };
 
     const handleUnLike = async () => {
+        // deleteNotification()
         try {
             const response = await axios.delete(
                 `http://localhost:8001/api/reaction/${postId}/${currentUserId}`
