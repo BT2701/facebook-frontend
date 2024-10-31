@@ -1,4 +1,4 @@
-import React, { StrictMode } from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
@@ -14,7 +14,6 @@ window.process = process;
 window.Buffer = [];
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  // <StrictMode>
   <ReduxProvider store={store}>
     <BrowserRouter>
       <ChakraProvider>
@@ -24,7 +23,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       </ChakraProvider>
     </BrowserRouter>
   </ReduxProvider>
-  // </StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

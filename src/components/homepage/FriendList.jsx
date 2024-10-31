@@ -6,7 +6,6 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import ChatBox from "../navbar/ChatBox";
 import { useChatBox } from "../../context/ChatBoxContext";
 import { useUser } from "../../context/UserContext";
 import { getFriendsByUserId } from "../../utils/getData";
