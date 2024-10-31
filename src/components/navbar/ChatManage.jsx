@@ -77,9 +77,13 @@ export default function ChatManage() {
         setIsVideoCall(data.isVideoCall);
       });
 
+      // Listening to receive end call
+      chatConn.on("ReceiveEndCall", leaveCall);
+
       return () => {
         console.log("Off listener receive call");
         chatConn.off("ReceiveCall");
+        chatConn.off("ReceiveEndCall", leaveCall);
       };
     }
   }, [chatConn]);
@@ -237,7 +241,11 @@ export default function ChatManage() {
       <WaitingCallScreen
         userAvatar={avatar}
         userName={contactName}
-        onCancelCall={() => leaveCall()}
+        onCancelCall={async () => {
+          // Send end call signal
+          await chatConn.invoke("EndCall", contactId);
+          leaveCall();
+        }}
       />
     );
   }
@@ -252,7 +260,11 @@ export default function ChatManage() {
         stream={stream}
         localVideoRef={localVideoRef}
         remoteVideoRef={remoteVideoRef}
-        onCancelCall={() => leaveCall()}
+        onCancelCall={async () => {
+          // Send end call signal
+          await chatConn.invoke("EndCall", contactId);
+          leaveCall();
+        }}
       />
     );
   }
@@ -269,7 +281,11 @@ export default function ChatManage() {
           stream={stream}
           localVideoRef={localVideoRef}
           remoteVideoRef={remoteVideoRef}
-          onCancelCall={() => leaveCall()}
+          onCancelCall={async () => {
+            // Send end call signal
+            await chatConn.invoke("EndCall", caller);
+            leaveCall();
+          }}
         />
       );
     }
@@ -281,7 +297,11 @@ export default function ChatManage() {
         onAccept={() => {
           setCallAccepted(true);
         }}
-        onDecline={() => leaveCall()}
+        onDecline={async () => {
+          // Send end call signal
+          await chatConn.invoke("EndCall", caller);
+          leaveCall();
+        }}
       />
     );
   }
