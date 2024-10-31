@@ -3,7 +3,9 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
 
-const PrivateRoute = () => {
+import React from "react";
+
+export default function PrivateRoute() {
   const { currentUser, setCurrentUser } = useUser();
   const [loading, setLoading] = useState(true);
 
@@ -14,7 +16,9 @@ const PrivateRoute = () => {
           `${process.env.REACT_APP_API_URL}/user/sessionInfo`,
           { withCredentials: true }
         );
-        setCurrentUser(parseInt(sessionResponse.data.userId));
+
+        const userId = parseInt(sessionResponse.data.userId);
+        setCurrentUser(userId);
       } catch (error) {
         console.error("Error fetching session info:", error);
         setCurrentUser(null);
@@ -45,6 +49,4 @@ const PrivateRoute = () => {
     );
 
   return currentUser ? <Outlet /> : <Navigate to="/login" />;
-};
-
-export default PrivateRoute;
+}
