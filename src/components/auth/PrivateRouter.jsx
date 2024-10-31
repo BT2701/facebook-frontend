@@ -1,9 +1,12 @@
 import { Outlet, Navigate } from "react-router-dom";
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { useUser } from "../../context/UserContext";
 
-const PrivateRoute = () => {
-  const [userId, setUserId] = useState(null);
+import React from "react";
+
+export default function PrivateRoute() {
+  const { currentUser, setCurrentUser } = useUser();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,10 +16,12 @@ const PrivateRoute = () => {
           `${process.env.REACT_APP_API_URL}/user/sessionInfo`,
           { withCredentials: true }
         );
-        setUserId(sessionResponse.data.userId);
+
+        const userId = parseInt(sessionResponse.data.userId);
+        setCurrentUser(userId);
       } catch (error) {
         console.error("Error fetching session info:", error);
-        setUserId(null);
+        setCurrentUser(null);
       } finally {
         setLoading(false);
       }
@@ -43,7 +48,5 @@ const PrivateRoute = () => {
       </div>
     );
 
-  return userId ? <Outlet /> : <Navigate to="/login" />;
-};
-
-export default PrivateRoute;
+  return currentUser ? <Outlet /> : <Navigate to="/login" />;
+}

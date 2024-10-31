@@ -34,7 +34,6 @@ export const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(email, password);
 
     try {
       const response = await axios.post(
@@ -60,7 +59,7 @@ export const Login = () => {
         console.log("Session userId:", userId);
 
         // Lưu userId vào context
-        setCurrentUser(response.data.id); // Lưu userId vào context
+        setCurrentUser(parseInt(userId)); // Lưu userId vào context
 
         toast({
           title: "Login successful!",
