@@ -54,7 +54,7 @@ const Notifications = () => {
     const [readNotification, setReadNotification] = useState(0);
     const [unreadCount, setUnreadCount] = useState(0);
     const [userNames, setUserNames] = useState({});
-    const { currentUser } = useUser();
+    const { currentUser, setCurrentUser } = useUser();
 
 
     const fetchUserName = async (id) => {
@@ -63,7 +63,26 @@ const Notifications = () => {
     };
 
     useEffect(() => {
+        const fetchUserData = async () => {
+          try {
+            const sessionResponse = await axios.get(
+              `${process.env.REACT_APP_API_URL}/user/sessionInfo`,
+              { withCredentials: true }
+            );
+            const userId = sessionResponse.data.userId;
+            setCurrentUser(userId);
+          } catch (error) {
+            console.error("Failed to fetch user data from session:", error);
+          }
+        };
+    
+        if (currentUser) {
+          fetchUserData();
+        }
+      }, [currentUser]);
+    useEffect(() => {
         const fetchData = async () => {
+            console.log("abc",currentUser)
             const response = await fetchDataForNotification({ currentUser });
             if (response) {
                 setNotificationList(response.data);

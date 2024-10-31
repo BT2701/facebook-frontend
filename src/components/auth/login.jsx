@@ -11,7 +11,7 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Signup } from "./Signup";
 import axios from "axios";
 import { useUser } from "../../context/UserContext";
@@ -20,7 +20,7 @@ import { useNavigate } from "react-router-dom";
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { setCurrentUser } = useUser();
+  const { currentUser,setCurrentUser } = useUser();
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -54,13 +54,13 @@ export const Login = () => {
           `${process.env.REACT_APP_API_URL}/user/sessionInfo`,
           { withCredentials: true }
         );
-
-        // Lấy userId từ session và log ra console coi chơi
+        
         const userId = sessionResponse.data.userId;
+        // Lấy userId từ session và log ra console coi chơi
         console.log("Session userId:", userId);
 
         // Lưu userId vào context
-        setCurrentUser(response.data.id); // Lưu userId vào context
+        setCurrentUser(userId); // Lưu userId vào context
 
         toast({
           title: "Login successful!",
@@ -80,7 +80,7 @@ export const Login = () => {
       });
     }
   };
-
+  
   return (
     <Box bg={"#f0f2f5"} h={"700px"}>
       <Grid
