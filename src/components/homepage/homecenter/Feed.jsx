@@ -37,7 +37,6 @@ export const Feed = ({
     };
 
     const handleLike = async () => {
-        createNotification(userCreatePost, postId, "đã thích bài viết của bạn");
         const data = {
             UserId: currentUserId,
             Timeline: "2024-10-16T00:00:00Z",
@@ -55,13 +54,13 @@ export const Feed = ({
             } else {
                 console.error("Error liking post");
             }
+            createNotification(userCreatePost, postId, "đã thích bài viết của bạn");
         } catch (error) {
             console.error("Error: ", error);
         }
     };
 
     const handleUnLike = async () => {
-        // deleteNotification()
         try {
             const response = await axios.delete(
                 `http://localhost:8001/api/reaction/${postId}/${currentUserId}`
@@ -72,6 +71,7 @@ export const Feed = ({
             } else {
                 console.error("Error unliking post");
             }
+            deleteNotification(userCreatePost, postId, 1);
         } catch (error) {
             console.error("Error: ", error);
         }
@@ -98,6 +98,7 @@ export const Feed = ({
                 } else {
                     console.error("Error submitting comment");
                 }
+                createNotification(userCreatePost, postId, "đã bình luận bài viết của bạn");
             } catch (error) {
                 console.error("Error: ", error);
             }
