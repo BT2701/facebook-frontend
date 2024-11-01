@@ -18,7 +18,8 @@ import './Notification.css'
 import { useEffect, useState } from "react";
 import axios from "axios";
 import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
-import { fetchDataForNotification, markAllAsReadNotification, markAsReadNotification } from "../../utils/getData";
+import { fetchDataForNotification, getUserById, markAllAsReadNotification, markAsReadNotification } from "../../utils/getData";
+import { useUser } from "../../context/UserContext";
 
 const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick }) => (
     <MenuItem
@@ -50,17 +51,35 @@ const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick })
 
 const Notifications = () => {
     const [notificationList, setNotificationList] = useState([]);
-    const [currentUser, setCurrentUser] = useState(5); //dat tam gia tri, doi co du lieu tu user service
     const [readNotification, setReadNotification] = useState(0);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [userNames, setUserNames] = useState({});
+    const { currentUser, setCurrentUser } = useUser();
+
+
+    const fetchUserName = async (id) => {
+        const user = await getUserById(id);
+        return user?.data?.name || 'Unknown';
+    };
 
     useEffect(() => {
         const fetchData = async () => {
+            console.log("abc",currentUser)
             const response = await fetchDataForNotification({ currentUser });
             if (response) {
                 setNotificationList(response.data);
                 const unreadCount = response.data.filter(item => item.is_read === 0).length;
                 setUnreadCount(unreadCount);
+
+                const names = await Promise.all(
+                    response.data.map(async (notification) => {
+                        const name = await fetchUserName(notification.user);
+                        return { [notification.user]: name };
+                    })
+                );
+
+                // Combine each result into a single object with user IDs as keys
+                setUserNames(Object.assign({}, ...names));
             }
         };
         fetchData();
@@ -140,7 +159,7 @@ const Notifications = () => {
                                     <NotificationItem
                                         key={notification.id}
                                         avatarSrc="https://via.placeholder.com/50"
-                                        title={notification.user}
+                                        title={userNames[notification.user] || 'Loading...'}
                                         message={notification.content}
                                         time={formatTimeFromDatabase(notification.timeline)}
                                         is_read={notification.is_read}
