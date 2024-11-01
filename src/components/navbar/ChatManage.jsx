@@ -71,7 +71,7 @@ export default function ChatManage() {
     if (chatConn) {
       chatConnRef.current = chatConn;
       // Listening to receive a call
-      chatConn.on("ReceiveCall", (data) => {
+      chatConnRef.current.on("ReceiveCall", (data) => {
         setIsIncomingCall(true);
         // Set info of the person who calls to this
         setCallerSignal(data.signalData);
@@ -82,12 +82,12 @@ export default function ChatManage() {
       });
 
       // Listening to receive end call
-      chatConn.on("ReceiveEndCall", leaveCall);
+      chatConnRef.current.on("ReceiveEndCall", leaveCall);
 
       return () => {
         console.log("Off listener receive call");
-        chatConn.off("ReceiveCall");
-        chatConn.off("ReceiveEndCall", leaveCall);
+        chatConnRef.current.off("ReceiveCall");
+        chatConnRef.current.off("ReceiveEndCall", leaveCall);
       };
     }
   }, [chatConn]);
@@ -135,8 +135,8 @@ export default function ChatManage() {
         });
         peer.on("signal", async (data) => {
           try {
-            if (chatConn) {
-              await chatConn.invoke(
+            if (chatConnRef.current) {
+              await chatConnRef.current.invoke(
                 "CallUser",
                 currentUser,
                 userName,
@@ -157,8 +157,8 @@ export default function ChatManage() {
             remoteVideoRef.current.srcObject = stream;
           }
         });
-        if (chatConn) {
-          chatConn.on("CallAccepted", (signal) => {
+        if (chatConnRef.current) {
+          chatConnRef.current.on("CallAccepted", (signal) => {
             peer.signal(JSON.parse(signal));
             setIsWaiting(false);
             setIsCalling(true);
@@ -184,8 +184,12 @@ export default function ChatManage() {
         });
         peer.on("signal", async (data) => {
           try {
-            if (chatConn) {
-              await chatConn.invoke("AnswerCall", caller, JSON.stringify(data));
+            if (chatConnRef.current) {
+              await chatConnRef.current.invoke(
+                "AnswerCall",
+                caller,
+                JSON.stringify(data)
+              );
             } else {
               console.log("Cannot connect to call service");
             }
@@ -231,7 +235,7 @@ export default function ChatManage() {
         userName={contactName}
         onCancelCall={async () => {
           // Send end call signal
-          await chatConn.invoke("EndCall", contactId);
+          await chatConnRef.current.invoke("EndCall", contactId);
           leaveCall();
         }}
       />
@@ -250,7 +254,7 @@ export default function ChatManage() {
         remoteVideoRef={remoteVideoRef}
         onCancelCall={async () => {
           // Send end call signal
-          await chatConn.invoke("EndCall", contactId);
+          await chatConnRef.current.invoke("EndCall", contactId);
           leaveCall();
         }}
       />
@@ -271,7 +275,7 @@ export default function ChatManage() {
           remoteVideoRef={remoteVideoRef}
           onCancelCall={async () => {
             // Send end call signal
-            await chatConn.invoke("EndCall", caller);
+            await chatConnRef.current.invoke("EndCall", caller);
             leaveCall();
           }}
         />
@@ -287,7 +291,7 @@ export default function ChatManage() {
         }}
         onDecline={async () => {
           // Send end call signal
-          await chatConn.invoke("EndCall", caller);
+          await chatConnRef.current.invoke("EndCall", caller);
           leaveCall();
         }}
       />
