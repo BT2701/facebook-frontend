@@ -21,6 +21,7 @@ export default function ChatManage() {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const connectionRef = useRef(null);
+  const chatConnRef = useRef(null);
 
   // State for the caller call to this
   const [caller, setCaller] = useState(null);
@@ -50,14 +51,11 @@ export default function ChatManage() {
     setIsIncomingCall(false);
     setCallAccepted(false);
     setIsCalling(false);
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop()); // Stop all tracks of the current stream
-      setStream(null);
-    }
+    setStream(null);
 
     // Off listener CallAccepted
-    if (chatConn) {
-      chatConn.off("CallAccepted");
+    if (chatConnRef.current) {
+      chatConnRef.current.off("CallAccepted");
     }
     try {
       if (connectionRef.current) {
@@ -71,6 +69,7 @@ export default function ChatManage() {
 
   useEffect(() => {
     if (chatConn) {
+      chatConnRef.current = chatConn;
       // Listening to receive a call
       chatConn.on("ReceiveCall", (data) => {
         setIsIncomingCall(true);
@@ -132,13 +131,6 @@ export default function ChatManage() {
         const peer = new Peer({
           initiator: true,
           trickle: false,
-          config: {
-            iceServers: [
-              { urls: "stun:stun.l.google.com:19302" },
-              { urls: "stun:stun1.l.google.com:19302" },
-              { urls: "stun:stun2.l.google.com:19302" },
-            ],
-          },
           stream: stream,
         });
         peer.on("signal", async (data) => {
@@ -163,7 +155,6 @@ export default function ChatManage() {
         peer.on("stream", (stream) => {
           if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = stream;
-            console.log("Remote stream received", stream);
           }
         });
         if (chatConn) {
@@ -189,13 +180,6 @@ export default function ChatManage() {
         const peer = new Peer({
           initiator: false,
           trickle: false,
-          config: {
-            iceServers: [
-              { urls: "stun:stun.l.google.com:19302" },
-              { urls: "stun:stun1.l.google.com:19302" },
-              { urls: "stun:stun2.l.google.com:19302" },
-            ],
-          },
           stream: stream,
         });
         peer.on("signal", async (data) => {
@@ -212,7 +196,6 @@ export default function ChatManage() {
         peer.on("stream", (stream) => {
           if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = stream;
-            console.log("Remote stream received", stream);
           }
         });
 

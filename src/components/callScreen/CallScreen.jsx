@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, VStack, Text, Avatar, IconButton } from "@chakra-ui/react";
 import {
   FaMicrophone,
@@ -46,6 +46,14 @@ export default function CallScreen({
       setIsVideoOff((prev) => !prev);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop()); // Stop all tracks of the current stream
+      }
+    };
+  }, []);
 
   return (
     <Box
