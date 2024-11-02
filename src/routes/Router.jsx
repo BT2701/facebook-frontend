@@ -4,7 +4,6 @@ import { Login } from "../components/auth/login";
 // import { PrivateRoute } from "../components/auth/PrivateRouter";
 import { Navbar } from "../components/navbar/Navbar";
 import { Post } from "../components/profile/Post";
-import { About } from "../components/profile/About";
 import { Friends } from "../components/profile/Friends";
 import { Photos } from "../components/profile/Photos";
 import { FriendRequest } from "../components/friends/FriendRequest";
@@ -44,15 +43,14 @@ export const Router = () => {
         <Route path="search" element={<SearchPage />} />
         <Route path="profile" element={<ProfileNav />}>
           <Route path="" element={<Post />} />
-          <Route path="about" element={<About />} />
           <Route path="friends" element={<Friends />} />
           <Route path="photos" element={<Photos />} />
         </Route>
-        <Route path="userprofile" element={<UserProfileNav />}>
+        {/* <Route path="userprofile" element={<UserProfileNav />}>
           <Route path="" element={<UserPost />} />
           <Route path="about" element={<UserAbout />} />
           <Route path="photos" element={<UserPhotos />} />
-        </Route>
+        </Route> */}
       </Route>
       <Route path="*" element={<h1>Page not found</h1>} />
     </Routes>

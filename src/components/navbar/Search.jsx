@@ -1,20 +1,23 @@
 import { Search2Icon } from "@chakra-ui/icons";
 import {
-  Avatar,
   Center,
-  Container,
-  Flex,
   Image,
   Input,
   InputGroup,
   InputLeftElement,
-  Text,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 export const Search = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("text");
+  const [inputValue, setInputValue] = useState("");
+  const navigate = useNavigate();
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && inputValue !== "") {
+      navigate(`/search?keywords="${inputValue}"`);
+    }
+  };
 
   return (
     <>
@@ -40,36 +43,10 @@ export const Search = () => {
             bg={"#f0f2f5"}
             w={"270px"}
             onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown} // Thêm sự kiện onKeyDown
           />
         </InputGroup>
       </Center>
-      <Container
-        id="style-3"
-        display={isOpen ? "block" : "none"}
-        w={"350px"}
-        minH={"300px"}
-        maxH={"300px"}
-        top={"50px"}
-        pos="fixed"
-        p={5}
-        rounded={8}
-        bg={"white"}
-        boxShadow={"xl"}
-        overflow={"auto"}
-      >
-        <Flex
-          p={2}
-          my={1}
-          key={"_id"}
-          cursor={"pointer"}
-          _hover={{ bg: "#ebebeb" }}
-        >
-          <Avatar size={"sm"} />
-          <Text ml={4} fontSize={17}>
-            {"firstName"} {"lastName"}
-          </Text>
-        </Flex>
-      </Container>
     </>
   );
 };

@@ -48,9 +48,9 @@ export const Login = () => {
       if (response.status === 200) {
         // Lưu userId vào context
         console.log(response);
-        setCurrentUser(response.data.id);
+        setCurrentUser(response?.data?.id);
 
-        console.log("Logged in userId:", response.data.userId);
+        console.log("Logged in userId:", response?.data?.id);
 
         toast({
           title: "Login successful!",
@@ -58,7 +58,7 @@ export const Login = () => {
           duration: 3000,
           isClosable: true,
         });
-        navigate("/");
+        navigate("/profile?id=" + response?.data?.id);
       }
     } catch (error) {
       toast({

@@ -1,73 +1,92 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './search.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faNewspaper, faUser, faBorderAll } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom';
+import { Feed } from '../homepage/homecenter/Feed';
 
 function SearchPage() {
+    const [users, setUsers] = useState([]);
+    const [posts, setPosts] = useState([]);
+    const [keywords, setKeywords] = useState('');
+
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const keywordsFromUrl = urlParams.get('keywords');
+        if (keywordsFromUrl) {
+            setKeywords(keywordsFromUrl.replace(/"/g, '')); // Loại bỏ dấu nháy
+            fetchData(keywordsFromUrl.replace(/"/g, '')); // Gọi API với từ khóa
+        }
+    }, [keywords]);
+
+    const fetchData = async (keywords) => {
+        try {
+            const userResponse = await fetch(`http://localhost:8001/api/user/search?name=${keywords}`);
+            const userData = await userResponse.json();
+            setUsers(userData);
+
+            const postResponse = await fetch(`http://localhost:8001/api/post/search?content=${keywords}`);
+            const postData = await postResponse.json();
+            setPosts(postData.$values); 
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    const handleDeletePost = (postId) => {
+        alert(postId);
+    }
+
     return (
         <div className="search-container">
-            <div className="search-left">
-                <div className="search-left-title">
-                    <h2>Search Results</h2>
-                </div>
-                <div className="search-left-content">
-                    <h3>Filters</h3>
-                    <button className="btn" >
-                        <FontAwesomeIcon icon={faBorderAll} /> All
-                    </button>
-                    <button className="btn" >
-                        <FontAwesomeIcon icon={faNewspaper} /> Post
-                    </button>
-                    <button className="btn" >
-                        <FontAwesomeIcon icon={faUser} /> People
-                    </button>
-                </div>
-            </div>
             <div className="search-content" id="search-content">
+                <div className="search-mid-title">
+                    <h2>Search Results for "{keywords}"</h2>
+                </div>
                 {/* Render Users */}
-                <div className="search-content-user">
-                    
-                        <div key={"user.id"} className="search-content-user-box">
-                            <div className="search-content-user-box-left">
-                                <img src={`/Static/Images/${"user.avt"}`} alt={"user.name"} />
-                            </div>
-                            <div className="search-content-user-box-mid">
-                                <div className="search-content-user-box-mid-name">
-                                    <a href={`/profile?userId=${"user.id"}`}>{"user.name"}</a>
+                <div className='search-content-user-scroll'>
+                    <div className="search-content-user">
+                        {users.map(user => (
+                            <div key={user.id} className="search-content-user-box">
+                                <div className="search-content-user-box-left">
+                                    <img src={user.avt} alt={user.name} />
                                 </div>
-                                <div className="search-content-user-box-mid-bonus">
-                                    <li>{"user.friendsCount"} {"user.friendsCount" > 1 ? 'Friends' : 'Friend'}</li>
-                                    <li>{"user.education "|| 'Unknown'}</li>
+                                <div className="search-content-user-box-mid">
+                                    <div className="search-content-user-box-mid-name">
+                                        <Link to={`/profile?id=${user.id}`}>{user.name}</Link>
+                                    </div>
+                                    <div className="search-content-user-box-mid-bonus">
+                                        <li>{user.friendsCount} {user.friendsCount > 1 ? 'Friends' : 'Friend'}</li>
+                                        <li>{user.education || 'Unknown'}</li>
+                                    </div>
                                 </div>
+                                {/* <div className="search-content-user-box-right">
+                                    <button className="btn btn-primary handle-request">
+                                        Add friend
+                                    </button>
+                                </div> */}
                             </div>
-                            <div className="search-content-user-box-right">
-                                <button className="btn btn-primary handle-request" >
-                                    Add friend
-                                </button>
-                            </div>
-                        </div>
-                    
+                        ))}
+                    </div>
                 </div>
                 {/* Render Posts */}
                 <div className="search-content-post">
-                    
-                        <div key={"post.id"} className="search-content-post-box">
-                            <div className="search-content-post-header">
-                                <div className="search-content-post-header-left">
-                                    <img src={`/Static/Images/${"post.user.avt"}`} alt={"post.user.name"} />
-                                </div>
-                                <div className="search-content-post-header-mid">
-                                    <a href={`/profile?userId=${"post.user.id"}`}>{"post.user.name"}</a>
-                                    <li>{"post.getTimePost()"}</li>
-                                </div>
-                            </div>
-                            <div className="search-content-post-mid">
-                                <p>{"post.content"}</p>
-                                <img src={`/Static/Images/${"post.image"}`} alt="post-img" />
-                            </div>
-                        </div>
-                    
+                    {posts.map(post => (
+                        <Feed
+                            key={post.id}
+                            postId={post.id}
+                            profilePic={post.image} 
+                            postImage={post.image}
+                            userName={post.userId} 
+                            timeStamp={new Date(post.timeline).toLocaleString()} 
+                            content={post.content}
+                            likedByCurrentUser={post.likedByCurrentUser} 
+                            likeCount={post.reactions?.$values.length || 0}
+                            commentList={post.comments.$values} 
+                            currentUserId={1} 
+                            userCreatePost={post.userId} 
+                            handleDeletePost={handleDeletePost} 
+                        />
+                    ))}
                 </div>
             </div>
         </div>
