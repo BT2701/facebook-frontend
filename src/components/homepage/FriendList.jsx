@@ -6,78 +6,60 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { useState } from "react";
-import ChatBox from "../navbar/ChatBox";
-
-const friends = [
-  {
-    id: 1,
-    name: "Phan Duy",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 2,
-    name: "Ben Nguyen",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 3,
-    name: "Khuyen Huynh",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 4,
-    name: "Hoàng Thiện",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 5,
-    name: "To Thuong Kim",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-  {
-    id: 6,
-    name: "Nguyet Minh Phan",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 0,
-  },
-  {
-    id: 7,
-    name: "Tri Tran",
-    avatar: "https://via.placeholder.com/50",
-    isOnline: 1,
-  },
-];
+import { useChatBox } from "../../context/ChatBoxContext";
+import { useUser } from "../../context/UserContext";
+import { getFriendsByUserId } from "../../utils/getData";
+import { useEffect, useState } from "react";
 
 export default function FriendList() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const { setChatInfo } = useChatBox();
 
-  const [dataChatBox, setDataChatBox] = useState({});
+  // Get current login user
+  const { currentUser } = useUser();
+
+  const [friends, setFriends] = useState([]);
+
+  // Fetch current user's friends
+  const fetchCurrentUserFriends = async () => {
+    const response = await getFriendsByUserId(currentUser);
+
+    const friendList = [];
+
+    try {
+      if (response && response.data) {
+        response.data.forEach((friend) => {
+          friendList.push({
+            id: friend.id,
+            name: friend.name,
+            avatar: friend.avt,
+            isOnline: friend.isOnline,
+          });
+        });
+      }
+    } catch (error) {
+      console.log("Error from fetching friends: " + error);
+    }
+
+    setFriends(friendList);
+  };
 
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
-    setDataChatBox({ avatar, isOnline, contactId, contactName, status });
-    setIsChatOpen(true);
+    setChatInfo({
+      isOpen: true,
+      avatar,
+      isOnline,
+      contactId,
+      contactName,
+      status,
+    });
   };
 
-  const handleCloseChat = () => {
-    setIsChatOpen(false);
-  };
+  useEffect(() => {
+    fetchCurrentUserFriends();
+  }, []);
+
   return (
     <>
-      <ChatBox
-        isOpen={isChatOpen}
-        handleCloseChat={handleCloseChat}
-        avatar={dataChatBox.avatar}
-        isOnline={dataChatBox.isOnline}
-        contactId={dataChatBox.contactId}
-        contactName={dataChatBox.contactName}
-        status={dataChatBox.status}
-      />
       <Box h="100vh" overflowY="auto" p={4} borderRadius="md" w="300px">
         <Stack>
           {friends.map((friend) => (

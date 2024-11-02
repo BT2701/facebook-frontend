@@ -42,24 +42,36 @@ export const Post = () => {
                         <Box minH={20}>
                             
                                 <div key={"e._id"}>
-                                    <Feed mgtop={'7px'}
-                                        ProfilePic={`uploadImgs/${"e.userimg"}`}
-                                        message={"e.title"}
-                                        timestamp={"e.createdAt"}
-                                        username={"e.username"}
-                                        image={`uploadImgs/${"e.img"}`}
-                                        likeCount={2}
-                                    />
+                                <Feed key={"index"}
+                                    postId={"post.id"}
+                                    profilePic={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_FWF2judaujT30K9sMf-tZFhMWpgP6xCemw&s"}
+                                    content={"post.content"}
+                                    timeStamp={"post.timeline"}
+                                    userName={"post.userId"}
+                                    postImage={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_FWF2judaujT30K9sMf-tZFhMWpgP6xCemw&s"}
+                                    likedByCurrentUser={"post.likedByCurrentUser"}
+                                    likeCount={"post.reactions.$values.length"}
+                                    commentList={"post.comments.$values"}
+                                    currentUserId={"currentUserId"}
+                                    userCreatePost={"post.userId"}
+                                    handleDeletePost={"handleDeletePost"}
+                                />
                                 </div>
                                 <div key={"e._id"}>
-                                    <Feed mgtop={'7px'}
-                                        ProfilePic={`uploadImgs/${"e.userimg"}`}
-                                        message={"e.title"}
-                                        timestamp={"e.createdAt"}
-                                        username={"e.username"}
-                                        image={`uploadImgs/${"e.img"}`}
-                                        likeCount={2}
-                                    />
+                                <Feed key={"index"}
+                                    postId={"post.id"}
+                                    profilePic={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_FWF2judaujT30K9sMf-tZFhMWpgP6xCemw&s"}
+                                    content={"post.content"}
+                                    timeStamp={"post.timeline"}
+                                    userName={"post.userId"}
+                                    postImage={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_FWF2judaujT30K9sMf-tZFhMWpgP6xCemw&s"}
+                                    likedByCurrentUser={"post.likedByCurrentUser"}
+                                    likeCount={"post.reactions.$values.length"}
+                                    commentList={"post.comments.$values"}
+                                    currentUserId={"currentUserId"}
+                                    userCreatePost={"post.userId"}
+                                    handleDeletePost={"handleDeletePost"}
+                                />
                                 </div>
                         </Box>
                     </Grid>
