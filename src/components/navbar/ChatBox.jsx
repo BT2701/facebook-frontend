@@ -15,7 +15,7 @@ import { IoVideocamOutline } from "react-icons/io5";
 import { FiSend, FiSmile, FiPaperclip } from "react-icons/fi";
 import ChatMessage from "./ChatMessage";
 import { useChatBox } from "../../context/ChatBoxContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "../../context/UserContext";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
@@ -30,6 +30,8 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
   const { chatConn } = useChatConn();
 
   const { currentUser } = useUser();
+
+  const chatConnRef = useRef(null);
 
   // State for all messages
   const [messages, setMessages] = useState([]);
@@ -116,15 +118,19 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
             },
           ]);
 
-          // Send message to Signal R
-          await chatConn.invoke(
-            "SendMessage",
-            response.data.id,
-            currentUser,
-            contactId,
-            msgInput
-          );
-          console.log("Message sent!");
+          if (chatConnRef.current) {
+            // Send message to Signal R
+            await chatConnRef.current.invoke(
+              "SendMessage",
+              response.data.id,
+              currentUser,
+              contactId,
+              msgInput
+            );
+            console.log("Message sent!");
+          } else {
+            console.log("Cannot send message!");
+          }
         }
       } catch (error) {
         console.error("Error sending message:", error);
@@ -151,6 +157,7 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
   useEffect(() => {
     // Listening from server
     if (chatConn) {
+      chatConnRef.current = chatConn;
       const listenFromServer = (msgId, fromId, message) => {
         if (fromId === contactId) {
           // Set incoming message
@@ -169,12 +176,12 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
         }
       };
 
-      chatConn.on("ReceiveMessage", listenFromServer);
+      chatConnRef.current.on("ReceiveMessage", listenFromServer);
 
       // component unmount
       return () => {
         console.log("Off listener chat message");
-        chatConn.off("ReceiveMessage", listenFromServer);
+        chatConnRef.current.off("ReceiveMessage", listenFromServer);
       };
     }
   }, [chatConn]);
