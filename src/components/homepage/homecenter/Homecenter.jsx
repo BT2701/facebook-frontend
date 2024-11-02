@@ -84,7 +84,9 @@ export const Homecenter = () => {
       <Box mb={"7px"} w={"143%"}>
         <MessageSender wid={"100%"} setPosts={setPosts} currentUserId={currentUserId} fetchPosts={fetchPosts} />
       </Box>
-      {posts.length > 0 ? (
+
+
+      {posts?.length > 0 ? (
         posts.map((post, index) => (
           <div key={post.id}>
             <Feed

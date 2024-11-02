@@ -3,35 +3,78 @@ import {
   Avatar,
   AvatarBadge,
   Box,
+  HStack,
   IconButton,
   Input,
   Text,
 } from "@chakra-ui/react";
 
+import { AiOutlinePhone } from "react-icons/ai";
+import { IoVideocamOutline } from "react-icons/io5";
+
 import { FiSend, FiSmile, FiPaperclip } from "react-icons/fi";
 import ChatMessage from "./ChatMessage";
-import { useEffect, useState } from "react";
+import { useChatBox } from "../../context/ChatBoxContext";
+import { useEffect, useRef, useState } from "react";
+import { useUser } from "../../context/UserContext";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
-import { useSignalR } from "../../context/SignalRContext";
+import { useChatConn } from "../../context/ChatConnContext";
 
-export default function ChatBox({
-  isOpen,
-  handleCloseChat,
-  avatar,
-  isOnline,
-  contactId,
-  contactName,
-  status,
-}) {
-  const { connect, connection } = useSignalR();
-  const currentUser = 1;
+export default function ChatBox({ onCallAudio, onCallVideo }) {
+  const {
+    chatInfo: { avatar, isOnline, contactId, contactName, status },
+    setChatInfo,
+  } = useChatBox();
+
+  const { chatConn } = useChatConn();
+
+  const { currentUser } = useUser();
+
+  const chatConnRef = useRef(null);
 
   // State for all messages
   const [messages, setMessages] = useState([]);
 
   // State for message input
   const [msgInput, setMsgInput] = useState("");
+
+  // Get messages from server
+  const getMessages = async () => {
+    const response = await getMessagesByUserIdAndContactId(
+      currentUser,
+      contactId
+    );
+
+    if (response && response.data) {
+      const tempMsg = [];
+
+      for (const msg of response.data) {
+        // if sender is current user
+        if (msg.sender === currentUser) {
+          tempMsg.push({
+            id: msg.id,
+            message: { text: msg.content },
+            isFromYou: true,
+          });
+        } else {
+          tempMsg.push({
+            id: msg.id,
+            message: {
+              senderName: contactName,
+              senderAvatar: avatar,
+              text: msg.content,
+            },
+            isFromYou: false,
+          });
+        }
+      }
+
+      setMessages(tempMsg);
+    } else {
+      setMessages([]);
+    }
+  };
 
   // Add message to db
   const postMsg = async (msg) => {
@@ -75,20 +118,24 @@ export default function ChatBox({
             },
           ]);
 
-          // Send message to Signal R
-          await connection.invoke(
-            "SendMessage",
-            response.data.id,
-            currentUser,
-            contactId,
-            msgInput
-          );
-          console.log("Message sent!");
-          setMsgInput(""); // Reset message input
+          if (chatConnRef.current) {
+            // Send message to Signal R
+            await chatConnRef.current.invoke(
+              "SendMessage",
+              response.data.id,
+              currentUser,
+              contactId,
+              msgInput
+            );
+            console.log("Message sent!");
+          } else {
+            console.log("Cannot send message!");
+          }
         }
       } catch (error) {
         console.error("Error sending message:", error);
       }
+      setMsgInput(""); // Reset message input
     }
   };
 
@@ -98,50 +145,21 @@ export default function ChatBox({
     }
   };
 
-  // Get messages from server
-  const getMessages = async () => {
-    const response = await getMessagesByUserIdAndContactId(
-      currentUser,
-      contactId
-    );
-
-    if (response && response.data) {
-      const tempMsg = [];
-
-      for (const msg of response.data) {
-        // if sender is current user
-        if (msg.sender === currentUser) {
-          tempMsg.push({
-            id: msg.id,
-            message: { text: msg.content },
-            isFromYou: true,
-          });
-        } else {
-          tempMsg.push({
-            id: msg.id,
-            message: {
-              senderName: contactName,
-              senderAvatar: avatar,
-              text: msg.content,
-            },
-            isFromYou: false,
-          });
-        }
-      }
-
-      setMessages(tempMsg);
-    }
-  };
-
   useEffect(() => {
-    const initializeConnection = async () => {
-      // This will be after login
-      await connect(currentUser);
-      // End
+    // If this component have contactId then get data from server
+    if (contactId) {
+      // Get messages between user and contacter
+      getMessages();
+    }
+  }, [contactId]);
 
-      if (connection) {
-        // Listening from server
-        connection.on("ReceiveMessage", (msgId, fromId, message) => {
+  // useEffect for chat connection
+  useEffect(() => {
+    // Listening from server
+    if (chatConn) {
+      chatConnRef.current = chatConn;
+      const listenFromServer = (msgId, fromId, message) => {
+        if (fromId === contactId) {
           // Set incoming message
           setMessages((prev) => [
             ...prev,
@@ -155,40 +173,31 @@ export default function ChatBox({
               isFromYou: false,
             },
           ]);
-        });
-      }
-    };
+        }
+      };
 
-    initializeConnection();
+      chatConnRef.current.on("ReceiveMessage", listenFromServer);
 
-    return () => {
-      if (connection) {
-        connection.off("ReceiveMessage", (msgId, fromId, message) => {
-          console.log("off listener");
-        });
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    // If this component have contactId then get data from server
-    if (contactId) {
-      // Get messages between user and contacter
-      getMessages();
+      // component unmount
+      return () => {
+        console.log("Off listener chat message");
+        chatConnRef.current.off("ReceiveMessage", listenFromServer);
+      };
     }
-  }, [contactId]);
+  }, [chatConn]);
 
   return (
     <Box
       w="338px"
       h="450px"
-      display={isOpen ? "flex" : "none"}
+      display="flex"
       flexDirection="column"
       position="fixed"
       bgColor="gray.300"
       right={2}
       bottom={0}
       borderTopRadius={10}
+      zIndex={1}
     >
       {/* Chat header */}
       <Box
@@ -213,11 +222,35 @@ export default function ChatBox({
           </Box>
         </Box>
 
-        <IconButton
-          colorScheme=""
-          icon={<CloseIcon />}
-          onClick={handleCloseChat}
-        />
+        <HStack spacing={1}>
+          <IconButton
+            aria-label="Audio Call"
+            colorScheme=""
+            icon={<AiOutlinePhone />}
+            onClick={onCallAudio}
+          />
+          <IconButton
+            aria-label="Video Call"
+            colorScheme=""
+            icon={<IoVideocamOutline />}
+            onClick={onCallVideo}
+          />
+          <IconButton
+            aria-label="Close button"
+            colorScheme=""
+            icon={<CloseIcon />}
+            onClick={() => {
+              setChatInfo({
+                isOpen: false,
+                avatar: null,
+                isOnline: null,
+                contactId: null,
+                contactName: null,
+                status: null,
+              });
+            }}
+          />
+        </HStack>
       </Box>
       {/* End Chat Header */}
 

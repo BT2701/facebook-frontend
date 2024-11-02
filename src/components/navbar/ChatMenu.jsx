@@ -2,6 +2,7 @@ import { ChatIcon } from "@chakra-ui/icons";
 import {
   Avatar,
   AvatarBadge,
+  Badge,
   Box,
   Center,
   Heading,
@@ -14,28 +15,34 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import ChatBox from "./ChatBox";
 import { getMessagesByUserId, getUserById } from "../../utils/getData";
+import { useChatBox } from "../../context/ChatBoxContext";
+import { useChatConn } from "../../context/ChatConnContext";
+import { useUser } from "../../context/UserContext";
 
 export default function ChatMenu() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const { setChatInfo } = useChatBox();
+
+  const { chatConn } = useChatConn();
+
+  const { currentUser } = useUser();
 
   const [messages, setMessages] = useState([]);
 
-  const [dataChatBox, setDataChatBox] = useState({});
+  const [unreadChat, setUnreadChat] = useState(0);
 
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
-    setDataChatBox({ avatar, isOnline, contactId, contactName, status });
-    setIsChatOpen(true);
-  };
-
-  const handleCloseChat = () => {
-    setIsChatOpen(false);
+    setChatInfo({
+      isOpen: true,
+      avatar,
+      isOnline,
+      contactId,
+      contactName,
+      status,
+    });
   };
 
   const getDataForChatMenu = async () => {
-    let currentUser = 1;
-
     const response = await getMessagesByUserId(currentUser);
 
     if (response && response.data) {
@@ -58,12 +65,12 @@ export default function ChatMenu() {
         let userData = await getUserById(userId);
 
         //   Add message to array
-        if (!!userData.data) {
+        if (userData && userData.data) {
           messageArray.push({
             id: msg.id,
             contactId: userId,
             contactName: userData.data.name,
-            avatar: userData.data.avatar,
+            avatar: userData.data.avt,
             isOnline: userData.data.isOnline,
             content,
           });
@@ -75,22 +82,24 @@ export default function ChatMenu() {
   };
 
   useEffect(() => {
-    getDataForChatMenu();
-  }, []);
+    // Listening from server for message to display notification
+    if (chatConn) {
+      const incrementUnreadChat = () => {
+        setUnreadChat((prev) => prev + 1);
+      };
+
+      chatConn.on("ReceiveMessage", incrementUnreadChat);
+
+      return () => {
+        if (chatConn) {
+          chatConn.off("ReceiveMessage", incrementUnreadChat);
+        }
+      };
+    }
+  }, [chatConn]);
 
   return (
     <>
-      {/* Chat Box */}
-      <ChatBox
-        isOpen={isChatOpen}
-        handleCloseChat={handleCloseChat}
-        avatar={dataChatBox.avatar}
-        isOnline={dataChatBox.isOnline}
-        contactId={dataChatBox.contactId}
-        contactName={dataChatBox.contactName}
-        status={dataChatBox.status}
-      />
-
       <Center mr={4}>
         <Menu>
           <MenuButton
@@ -98,8 +107,24 @@ export default function ChatMenu() {
             aria-label="Options"
             icon={<ChatIcon />}
             rounded="full"
-            position="relative"
-          />
+            onClick={() => {
+              setUnreadChat(0);
+              getDataForChatMenu();
+            }}
+          ></MenuButton>
+
+          {/* Chat notification */}
+          {unreadChat > 0 && (
+            <Box position="relative">
+              <Box position="absolute" bottom="5px" right="0px" zIndex="1">
+                <Badge colorScheme="red" borderRadius="full" px={2} py={0.5}>
+                  {unreadChat}
+                </Badge>
+              </Box>
+            </Box>
+          )}
+          {/* Chat notification */}
+
           <MenuList
             w="360px"
             maxHeight="93vh"
@@ -137,7 +162,13 @@ export default function ChatMenu() {
                     <Text fontSize="lg" mb={0}>
                       {msg.contactName}
                     </Text>
-                    <Text fontSize="sm" mb={0} noOfLines={1} opacity="85%">
+                    <Text
+                      fontSize="sm"
+                      mb={0}
+                      noOfLines={1}
+                      opacity="85%"
+                      sx={{ wordBreak: "break-word" }}
+                    >
                       {msg.content}
                     </Text>
                   </Box>

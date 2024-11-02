@@ -8,6 +8,7 @@ import { RiShareForwardLine } from "react-icons/ri";
 import { CreatePost } from "./CreatePost";
 import "./feed.css";
 import axios from "axios";
+import { useNotification } from "../../../context/NotificationContext";
 
 export const Feed = ({
     postId,
@@ -37,6 +38,7 @@ export const Feed = ({
     const { isOpen, onOpen, onClose } = useDisclosure();
     const toast = useToast();
     const [isDeleting, setIsDeleting] = useState(false);
+    const { createNotification, deleteNotification } = useNotification();
 
     const handleLikeClicked = async () => {
         currentUserLiked ? handleUnLike() : handleLike();
@@ -73,6 +75,7 @@ export const Feed = ({
             } else {
                 console.error("Error liking post");
             }
+            createNotification(userCreatePost, postId, "đã thích bài viết của bạn");
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
@@ -102,6 +105,7 @@ export const Feed = ({
             } else {
                 console.error("Error unliking post");
             }
+            deleteNotification(userCreatePost, postId, 1);
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
@@ -142,6 +146,8 @@ export const Feed = ({
             } else {
                 console.error("Error submitting comment");
             }
+            createNotification(userCreatePost, postId, "đã bình luận bài viết của bạn");
+
         } catch (error) {
             console.error("Error: ", error);
         }
@@ -159,7 +165,7 @@ export const Feed = ({
             try {
                 const response = await axios.delete(`http://localhost:8001/api/comment/${commentId}`);
                 if (response.status === 204) {
-                    const updatedComments = comments.filter((comment) => comment.id !== commentId);
+                    const updatedComments = comments?.filter((comment) => comment.id !== commentid);
                     setComments(updatedComments);
                     updateComments(postId, updatedComments); // Call update function
                 } else {
@@ -197,8 +203,9 @@ export const Feed = ({
             );
 
             if (response.status === 204) {
-                const updatedComments = comments.map((comment) =>
+                const updatedComments = comments?.map((comment) =>
                     comment.id === commentEditId ? { ...comment, content: editedContentComment } : comment
+
                 );
                 setComments(updatedComments);
                 setEditingCommentId(null);
@@ -290,7 +297,7 @@ export const Feed = ({
                         onClick={() => { setCommentVisible(!commentVisible), setEditingCommentId(null) }}
                     >
                         <FaRegCommentAlt />
-                        <span style={{ paddingLeft: "10px", userSelect: "none", webkitUserSelect: "none", mozUserSelect: "none" }}>{comments.length} Comment</span>
+                        <span style={{ paddingLeft: "10px", userSelect: "none", webkitUserSelect: "none", mozUserSelect: "none" }}>{comments?.length} Comment</span>
                     </div>
                     <div className="feed__option">
                         <RiShareForwardLine />

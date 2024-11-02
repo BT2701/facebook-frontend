@@ -1,5 +1,4 @@
 import "./App.css";
-import { SignalRProvider } from "./context/SignalRContext";
 import { Router } from "./routes/Router";
 // import { NotificationProvider } from './context/NotificationContext';
 function App() {
@@ -8,9 +7,7 @@ function App() {
       {/* <NotificationProvider>
         <Router />
       </NotificationProvider> */}
-      <SignalRProvider>
-        <Router />
-      </SignalRProvider>
+      <Router />
     </div>
   );
 }
