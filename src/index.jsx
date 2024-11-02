@@ -9,15 +9,15 @@ import { store } from "./featuresRedux/store";
 import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <ReduxProvider store={store}>
-      <BrowserRouter>
-        <ChakraProvider>
-          <App />
-        </ChakraProvider>
-      </BrowserRouter>
-    </ReduxProvider>
-  </StrictMode>
+  // <StrictMode>
+  <ReduxProvider store={store}>
+    <BrowserRouter>
+      <ChakraProvider>
+        <App />
+      </ChakraProvider>
+    </BrowserRouter>
+  </ReduxProvider>
+  // </StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

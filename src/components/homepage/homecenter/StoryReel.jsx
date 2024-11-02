@@ -55,7 +55,7 @@ export const StoryReel = () => {
 
     return (
         <div className="storyReel">
-            <CreateStory />
+            {/* <CreateStory />
             {stories.slice(startIndex, visibleStoriesCount).map((story, index) => (
                 <Story
                     key={index}
@@ -65,18 +65,18 @@ export const StoryReel = () => {
                     title={"story.title"}
                 />
             ))}
-            {/* Hiển thị mũi tên trái nếu có story để hiển thị */}
+            Hiển thị mũi tên trái nếu có story để hiển thị
             {startIndex > 0 && (
                 <div className="story-seeLess" onClick={handleSeeLess}>
                     <FaArrowLeft size={30} />
                 </div>
             )}
-            {/* Hiển thị mũi tên phải nếu còn story để xem */}
+            Hiển thị mũi tên phải nếu còn story để xem
             {visibleStoriesCount < stories.length && (
                 <div className="story-seeMore" onClick={handleSeeMore}>
                     <FaArrowRight size={30} />
                 </div>
-            )}
+            )} */}
         </div>
     );
 };
