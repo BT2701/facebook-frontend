@@ -55,6 +55,7 @@ export const StoryReel = () => {
 
     return (
         <div className="storyReel">
+
             <CreateStory />
             {Array.isArray(stories) && stories.slice(startIndex, visibleStoriesCount).map((story, index) => (
                 <Story
@@ -71,6 +72,7 @@ export const StoryReel = () => {
                     <FaArrowLeft size={30} />
                 </div>
             )}
+
             {/* Hiển thị mũi tên phải nếu còn story để xem */}
             {visibleStoriesCount < stories?.length && (
                 <div className="story-seeMore" onClick={handleSeeMore}>
