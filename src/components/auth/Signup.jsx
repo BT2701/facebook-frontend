@@ -90,7 +90,7 @@ export const Signup = () => {
       Social: "", // Tương tự với Social
       Education: "", // Tương tự với Education
       Relationship: "", // Tương tự với Relationship
-      TimeJoin: "", // Cập nhật TimeJoin với thời gian hiện tại
+      TimeJoin: "2010-10-10T00:00:00", // Cập nhật TimeJoin với thời gian hiện tại
     };
 
     // Kiểm tra tính hợp lệ
@@ -143,7 +143,8 @@ export const Signup = () => {
       if (response.status === 200) {
         toast({
           title: "Account created.",
-          description: "Your account has been successfully created.",
+          description:
+            "Your account has been successfully created. Please verify your email to log in.",
           status: "success",
           duration: 5000,
           isClosable: true,
