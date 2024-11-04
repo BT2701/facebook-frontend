@@ -48,7 +48,7 @@ export const Homecenter = () => {
   // Initial fetch of posts
   useEffect(() => {
     fetchPosts();
-  }, []); // Only run once on mount
+  }, [lastPostId]); // Only run once on mount
 
   // Update comments for a specific post
   const updateCommentsForPost = (postId, updatedComments) => {
@@ -57,11 +57,7 @@ export const Homecenter = () => {
         post.id === postId ? { ...post, comments: { $values: updatedComments } } : post
       )
     );
-  };
-
-
-
-  // Handle scrolling to load more posts
+  };  // Handle scrolling to load more posts
   const handleScroll = useCallback(() => {
     const bottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
     if (bottom && !loading) {
@@ -82,7 +78,7 @@ export const Homecenter = () => {
     <div className="Homecenter">
       <StoryReel />
       <Box mb={"7px"} w={"143%"}>
-        <MessageSender wid={"100%"} setPosts={setPosts} currentUserId={currentUserId} fetchPosts={fetchPosts} />
+        <MessageSender wid={"100%"} setPosts={setPosts} currentUserId={currentUserId} fetchPosts={fetchPosts} setLastPostId={setLastPostId} />
       </Box>
 
 

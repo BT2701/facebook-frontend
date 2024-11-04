@@ -294,7 +294,10 @@ export const Feed = ({
                     </div>
                     <div
                         className="feed__option"
-                        // onClick={() => { setCommentVisible(!commentVisible), setEditingCommentId(null) }}
+                        onClick={() => {
+                            setCommentVisible(!commentVisible);
+                            setEditingCommentId(null);
+                        }}
                     >
                         <FaRegCommentAlt />
                         <span style={{ paddingLeft: "10px", userSelect: "none", webkitUserSelect: "none", mozUserSelect: "none" }}>{comments?.length} Comment</span>

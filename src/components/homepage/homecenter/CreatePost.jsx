@@ -19,7 +19,7 @@ import { useState } from "react";
 import axios from "axios";
 import { CloseIcon } from "@chakra-ui/icons";
 
-export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditContent, postEditImage, currentUserId }) => {
+export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditContent, postEditImage, currentUserId, setLastPostId }) => {
     const [postContent, setPostContent] = useState(postEditContent ? postEditContent : "");
     const [image, setImage] = useState(postEditImage);
     //0 : không tác động đến image, 1: xóa image, 2: thay đổi image. 
@@ -80,7 +80,12 @@ export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditCont
                     );
                 } else {
 
-                    setPosts((prevPosts) => [response.data, ...prevPosts]);
+                    setPosts((prevPosts) => {
+                        if (prevPosts.length === 0) {
+                            setLastPostId(response.data.id);
+                        }
+                        return [response.data, ...prevPosts];
+                    })
 
                 }
 
