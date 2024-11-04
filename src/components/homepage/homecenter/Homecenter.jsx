@@ -48,6 +48,7 @@ export const Homecenter = () => {
   // Initial fetch of posts
   useEffect(() => {
     fetchPosts();
+    // alert("hello");
   }, [lastPostId]); // Only run once on mount
 
   // Update comments for a specific post
