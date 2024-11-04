@@ -38,7 +38,7 @@ export const Feed = ({
     const { isOpen, onOpen, onClose } = useDisclosure();
     const toast = useToast();
     const [isDeleting, setIsDeleting] = useState(false);
-    const { createNotification, deleteNotification } = useNotification();
+    // const { createNotification, deleteNotification } = useNotification();
 
     const handleLikeClicked = async () => {
         currentUserLiked ? handleUnLike() : handleLike();
@@ -75,7 +75,7 @@ export const Feed = ({
             } else {
                 console.error("Error liking post");
             }
-            createNotification(userCreatePost, postId, "đã thích bài viết của bạn");
+            // createNotification(userCreatePost, postId, "đã thích bài viết của bạn");
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
@@ -105,7 +105,7 @@ export const Feed = ({
             } else {
                 console.error("Error unliking post");
             }
-            deleteNotification(userCreatePost, postId, 1);
+            // deleteNotification(userCreatePost, postId, 1);
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
@@ -146,7 +146,7 @@ export const Feed = ({
             } else {
                 console.error("Error submitting comment");
             }
-            createNotification(userCreatePost, postId, "đã bình luận bài viết của bạn");
+            // createNotification(userCreatePost, postId, "đã bình luận bài viết của bạn");
 
         } catch (error) {
             console.error("Error: ", error);
@@ -294,7 +294,7 @@ export const Feed = ({
                     </div>
                     <div
                         className="feed__option"
-                        onClick={() => { setCommentVisible(!commentVisible), setEditingCommentId(null) }}
+                        // onClick={() => { setCommentVisible(!commentVisible), setEditingCommentId(null) }}
                     >
                         <FaRegCommentAlt />
                         <span style={{ paddingLeft: "10px", userSelect: "none", webkitUserSelect: "none", mozUserSelect: "none" }}>{comments?.length} Comment</span>
