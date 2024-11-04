@@ -165,7 +165,7 @@ export const Feed = ({
             try {
                 const response = await axios.delete(`http://localhost:8001/api/comment/${commentId}`);
                 if (response.status === 204) {
-                    const updatedComments = comments?.filter((comment) => comment.id !== commentid);
+                    const updatedComments = comments?.filter((comment) => comment.id !== commentId);
                     setComments(updatedComments);
                     updateComments(postId, updatedComments); // Call update function
                 } else {
