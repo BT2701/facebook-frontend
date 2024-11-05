@@ -28,7 +28,7 @@
     color: rgb(87, 174, 228) !important;
 }
 .notification-item-avt{
-    width: 55px;
+    width: 55px !important;
     height: 55px;
     border-radius: 50%;
     margin-left: 0.5em;

@@ -11,37 +11,31 @@ export const NotificationProvider = ({ children }) => {
     const { currentUser } = useUser();
 
     const deleteNotification = (receiver, post = null, action) => {
-        const postId=post;
-        if(postId === null){
-            postId = 0;
-        }
-        axios.delete(`${process.env.REACT_APP_API_URL}/notification/delete`, {
-            params: {
-            user: currentUser,
-            receiver: receiver,
-            post: postId,
-            action_n: action
-            }
-        })
+        const postId = post || 0;
+        axios.delete(`${process.env.REACT_APP_API_URL}/notification/delete/${currentUser}/${receiver}/${postId}/${action}`)
             .then(response => {
                 console.log('Notification deleted:', response.data);
             })
             .catch(error => {
                 console.error('Error deleting notification:', error);
             });
-    }
+    };
+    
     
     const createNotification = (receiverId, postId = null, contentStr, action) => {
         const post=postId;
         if(post === null){
             post = 0;
         }
+        if(receiverId === currentUser){
+            return;
+        }
         const notification = {
             user: currentUser,
             receiver: receiverId,
             post: post,
             content: contentStr,
-            action: action,
+            action_n: action,
             is_read: 0,
             timeline: new Date().toISOString()
         };
@@ -55,7 +49,7 @@ export const NotificationProvider = ({ children }) => {
             });
     }
     return (
-        <NotificationContext.Provider value={{ receiver, setReceiver, post, setPost, content, setContent, createNotification }}>
+        <NotificationContext.Provider value={{ receiver, setReceiver, post, setPost, content, setContent, createNotification, deleteNotification }}>
             {children}
         </NotificationContext.Provider>
     );

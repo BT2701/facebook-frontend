@@ -63,7 +63,6 @@ export const StoryReel = () => {
             console.error('Error creating story:', error);
         }
     };
-
     return (
         <div className="storyReel">
             <CreateStory />
