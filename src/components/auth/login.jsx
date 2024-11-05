@@ -16,6 +16,7 @@ import { Signup } from "./Signup";
 import axios from "axios";
 import { useUser } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
+
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,13 +27,13 @@ export const Login = () => {
   const handleChangeEmail = (e) => {
     setEmail(e.target.value);
   };
+
   const handleChangePassword = (e) => {
     setPassword(e.target.value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(email, password);
 
     try {
       const response = await axios.post(
@@ -42,15 +43,26 @@ export const Login = () => {
           headers: {
             "Content-Type": "application/json",
           },
+          withCredentials: true,
         }
       );
 
       if (response.status === 200) {
+        // Lấy userId từ session
+        const sessionResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}/user/sessionInfo`,
+          { withCredentials: true }
+        );
+
+        const userId = sessionResponse.data.userId;
+        // Lấy userId từ session và log ra console coi chơi
+        console.log("Session userId:", userId);
+
         // Lưu userId vào context
         console.log(response);
-        setCurrentUser(response?.data?.id);
+        setCurrentUser(response.data.id);
 
-        console.log("Logged in userId:", response?.data?.id);
+        console.log("Logged in userId:", response.data.userId);
 
         toast({
           title: "Login successful!",
@@ -58,7 +70,7 @@ export const Login = () => {
           duration: 3000,
           isClosable: true,
         });
-        navigate("/profile?id=" + response?.data?.id);
+        navigate("/");
       }
     } catch (error) {
       toast({
@@ -126,7 +138,11 @@ export const Login = () => {
               >
                 Log In
               </Button>
-              <Text>Forgotten password?</Text>
+              {/* <Link to="/">
+                <Text color="blue.500" _hover={{ textDecoration: "underline" }}>
+                  Forgotten password?
+                </Text>
+              </Link> */}
               <Divider />
             </VStack>
             <Flex justify={"center"} mt={6}>

@@ -1,5 +1,6 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import axios from 'axios';
+import { useUser } from "./UserContext";
 
 export const NotificationContext = createContext();
 
@@ -7,14 +8,40 @@ export const NotificationProvider = ({ children }) => {
     const [receiver, setReceiver] = useState(null);
     const [post, setPost] = useState(null);
     const [content, setContent] = useState('');
-    const [currentUser, setCurrentUser] = useState(5); //dat tam gia tri, doi co du lieu tu user service
+    const { currentUser } = useUser();
 
-    const createNotification = (receiverId, postId = null, contentStr) => {
+    const deleteNotification = (receiver, post = null, action) => {
+        const postId=post;
+        if(postId === null){
+            postId = 0;
+        }
+        axios.delete(`${process.env.REACT_APP_API_URL}/notification/delete`, {
+            params: {
+            user: currentUser,
+            receiver: receiver,
+            post: postId,
+            action_n: action
+            }
+        })
+            .then(response => {
+                console.log('Notification deleted:', response.data);
+            })
+            .catch(error => {
+                console.error('Error deleting notification:', error);
+            });
+    }
+    
+    const createNotification = (receiverId, postId = null, contentStr, action) => {
+        const post=postId;
+        if(post === null){
+            post = 0;
+        }
         const notification = {
             user: currentUser,
             receiver: receiverId,
-            post: postId,
+            post: post,
             content: contentStr,
+            action: action,
             is_read: 0,
             timeline: new Date().toISOString()
         };

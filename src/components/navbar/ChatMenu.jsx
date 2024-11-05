@@ -84,18 +84,18 @@ export default function ChatMenu() {
   useEffect(() => {
     // Listening from server for message to display notification
     if (chatConn) {
-      chatConn.on("ReceiveMessage", () => {
+      const incrementUnreadChat = () => {
         setUnreadChat((prev) => prev + 1);
-      });
-    }
+      };
 
-    return () => {
-      if (chatConn) {
-        chatConn.off("ReceiveMessage", () => {
-          console.log("off listener");
-        });
-      }
-    };
+      chatConn.on("ReceiveMessage", incrementUnreadChat);
+
+      return () => {
+        if (chatConn) {
+          chatConn.off("ReceiveMessage", incrementUnreadChat);
+        }
+      };
+    }
   }, [chatConn]);
 
   return (
