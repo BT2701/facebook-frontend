@@ -54,32 +54,31 @@ const Notifications = () => {
     const [readNotification, setReadNotification] = useState(0);
     const [unreadCount, setUnreadCount] = useState(0);
     const [userNames, setUserNames] = useState({});
-    const { currentUser, setCurrentUser } = useUser();
+    const { currentUser } = useUser();
 
 
-    const fetchUserName = async (id) => {
+    const fetchUser = async (id) => {
         const user = await getUserById(id);
-        return user?.data?.name || 'Unknown';
+        return user?.data || 'Unknown';
     };
 
     useEffect(() => {
         const fetchData = async () => {
-            console.log("abc",currentUser)
             const response = await fetchDataForNotification({ currentUser });
             if (response) {
                 setNotificationList(response.data);
                 const unreadCount = response.data.filter(item => item.is_read === 0).length;
                 setUnreadCount(unreadCount);
 
-                const names = await Promise.all(
+                const users = await Promise.all(
                     response.data.map(async (notification) => {
-                        const name = await fetchUserName(notification.user);
-                        return { [notification.user]: name };
+                        const user = await fetchUser(notification.user);
+                        return { [notification.user]: user };
                     })
                 );
 
                 // Combine each result into a single object with user IDs as keys
-                setUserNames(Object.assign({}, ...names));
+                setUserNames(Object.assign({}, ...users));
             }
         };
         fetchData();
@@ -158,8 +157,8 @@ const Notifications = () => {
                                 notificationList.map((notification) => (
                                     <NotificationItem
                                         key={notification.id}
-                                        avatarSrc="https://via.placeholder.com/50"
-                                        title={userNames[notification.user] || 'Loading...'}
+                                        avatarSrc={userNames[notification.user]?.avt}
+                                        title={userNames[notification.user]?.name || 'Loading...'}
                                         message={notification.content}
                                         time={formatTimeFromDatabase(notification.timeline)}
                                         is_read={notification.is_read}

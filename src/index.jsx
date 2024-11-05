@@ -14,6 +14,7 @@ window.process = process;
 window.Buffer = [];
 
 ReactDOM.createRoot(document.getElementById("root")).render(
+
   <ReduxProvider store={store}>
     <BrowserRouter>
       <ChakraProvider>

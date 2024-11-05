@@ -1,7 +1,23 @@
 import { background } from '@chakra-ui/react';
-import React from 'react';
-import Guy from '../../../images/stories/guy.jpg'  //đặt tạm sau này chuyển thành avt
-const CreateStory = (currentUser) => {
+import React, { useEffect, useState } from 'react';
+import { useUser } from '../../../context/UserContext';
+import { getUserById } from '../../../utils/getData';
+const CreateStory = () => {
+    const { currentUser } = useUser();
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const response = await getUserById(currentUser);
+                setUser(response.data);
+            }
+            catch (error) {
+                console.error('Error fetching user:', error);
+            }
+        }
+        fetchUser();
+    }, [currentUser]);
     return (
         <div style={{
         }} className= "story">
@@ -10,7 +26,7 @@ const CreateStory = (currentUser) => {
                     alt=""
                     className="x5yr21d xl1xv1r xh8yej3"
                     referrerPolicy="origin-when-cross-origin"
-                    src={Guy}
+                    src={user?.avt}
                 />
             </div>
             <div></div>
