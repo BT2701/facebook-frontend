@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import './imagePreviewDialog.css';
 import { Button } from 'react-bootstrap';
 
-const ImagePreviewDialog = ({ previewImage, onConfirm, onCancel }) => {
+const ImagePreviewDialog = ({ previewImage, onConfirm, onCancel, uploadProgress, isUploading }) => {
     const canvasRef = useRef(null);
 
     useEffect(() => {
@@ -41,6 +41,12 @@ const ImagePreviewDialog = ({ previewImage, onConfirm, onCancel }) => {
         <div className="preview-dialog">
             <div className="preview-content">
                 <canvas ref={canvasRef} width={300} height={500} className="preview-image" />
+                {/* Thanh tiến trình */}
+                {isUploading && (
+                    <div className="upload-progress">
+                        <div className="progress-bar" style={{ width: `${uploadProgress}%` }} />
+                    </div>
+                )}
                 <div className="preview-buttons">
                     <Button className='btn-success' onClick={onConfirm}>Xác nhận</Button>
                     <Button className='btn-secondary' onClick={onCancel}>Hủy</Button>

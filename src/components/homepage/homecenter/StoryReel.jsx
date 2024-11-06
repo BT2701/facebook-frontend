@@ -16,6 +16,9 @@ export const StoryReel = () => {
     const [startIndex, setStartIndex] = useState(0);
     const [previewImage, setPreviewImage] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
+    const [uploadProgress, setUploadProgress] = useState(0); // Thêm state để lưu tiến trình tải lên
+    const [isUploading, setIsUploading] = useState(false); // Trạng thái để kiểm tra đang tải lên
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -55,6 +58,9 @@ export const StoryReel = () => {
     };
 
     const handleCreateStory = async (user, image) => {
+        setIsUploading(true); // Bắt đầu tải lên
+        setUploadProgress(0); // Đặt lại tiến trình
+
         const formData = new FormData();
         formData.append('userId', user);
         formData.append('image', image);
@@ -68,8 +74,12 @@ export const StoryReel = () => {
             setStories((prevStories) => [...prevStories, response.data]); // Cập nhật danh sách stories
             setPreviewImage(null);
             setSelectedFile(null);
+            setUploadProgress(100); // Đặt tiến trình là 100 khi hoàn thành
         } catch (error) {
             console.error('Error creating story:', error);
+        }
+        finally {
+            setIsUploading(false); // Kết thúc tải lên
         }
     };
     
@@ -129,6 +139,8 @@ export const StoryReel = () => {
                 previewImage={previewImage} 
                 onConfirm={handleConfirm} 
                 onCancel={handleCancel} 
+                uploadProgress={uploadProgress}
+                isUploading={isUploading}
             />
         </div>
     );
