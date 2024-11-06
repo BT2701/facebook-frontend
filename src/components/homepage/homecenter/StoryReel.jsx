@@ -55,27 +55,24 @@ export const StoryReel = () => {
     };
 
     const handleCreateStory = async (user, image) => {
-        alert(image);
         const formData = new FormData();
         formData.append('userId', user);
         formData.append('image', image);
-        formData.append('timeline', new Date().toISOString());
-
+    
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/story/upload`, formData, {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/story/create`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
             });
-            console.log("File ID:", response.data.FileId);
-
-            setStories((prevStories) => [...prevStories, response.data]);
+            setStories((prevStories) => [...prevStories, response.data]); // Cập nhật danh sách stories
             setPreviewImage(null);
             setSelectedFile(null);
         } catch (error) {
             console.error('Error creating story:', error);
         }
     };
+    
 
     const handleSelectImage = () => {
         const input = document.createElement('input');
