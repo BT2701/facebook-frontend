@@ -34,7 +34,13 @@ const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick })
         <Avatar src={avatarSrc} size="mm" mr={3} className="notification-item-avt" />
         <Box className="notification-item-box">
             <Box className="notification-item-box-content">
-                <Text fontWeight="bold" fontSize="md" className="notification-item-title">
+                <Text
+                    fontWeight="bold"
+                    fontSize="md"
+                    className="notification-item-title"
+                    maxWidth="200px"
+                    isTruncated
+                >
                     {title}
                 </Text>
                 <Text fontSize="sm" color="gray.600" className="notification-item-mess" noOfLines={1}>

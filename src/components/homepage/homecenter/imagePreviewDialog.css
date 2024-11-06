@@ -1,0 +1,32 @@
+/* imagePreviewDialog.css */
+.preview-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.preview-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 300px; /* Adjust the width as needed */
+    height: 520px; /* Adjust the height as needed */
+}
+
+.preview-image {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.preview-buttons button {
+    margin: 0 10px;
+}

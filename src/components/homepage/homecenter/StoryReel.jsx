@@ -6,11 +6,16 @@ import { FaArrowRight, FaArrowLeft } from 'react-icons/fa';
 import axios from "axios";
 import { fetchDataForStory, getUserById } from "../../../utils/getData";
 import { useUser } from "../../../context/UserContext";
+import ImagePreviewDialog from "./ImagePreviewDialog";
 
 export const StoryReel = () => {
     const [stories, setStories] = useState([]);
     const [users, setUsers] = useState({});
     const { currentUser } = useUser();
+    const [visibleStoriesCount, setVisibleStoriesCount] = useState(4);
+    const [startIndex, setStartIndex] = useState(0);
+    const [previewImage, setPreviewImage] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -38,8 +43,6 @@ export const StoryReel = () => {
         fetchData();
     }, []);
 
-    const [visibleStoriesCount, setVisibleStoriesCount] = useState(4);
-    const [startIndex, setStartIndex] = useState(0);
 
     const handleSeeMore = () => {
         setStartIndex((prevIndex) => prevIndex + 1);
@@ -52,20 +55,57 @@ export const StoryReel = () => {
     };
 
     const handleCreateStory = async (user, image) => {
+        alert(image);
+        const formData = new FormData();
+        formData.append('userId', user);
+        formData.append('image', image);
+        formData.append('timeline', new Date().toISOString());
+
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/story`, {
-                user: user,
-                image: image,
-                timeline: new Date().toISOString()
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/story/upload`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
             });
+            console.log("File ID:", response.data.FileId);
+
             setStories((prevStories) => [...prevStories, response.data]);
+            setPreviewImage(null);
+            setSelectedFile(null);
         } catch (error) {
             console.error('Error creating story:', error);
         }
     };
+
+    const handleSelectImage = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                setPreviewImage(URL.createObjectURL(file));
+                setSelectedFile(file);
+            }
+        };
+        input.click();
+    };
+
+    const handleConfirm = () => {
+        if (selectedFile) {
+            handleCreateStory(currentUser, selectedFile);
+        }
+
+    };
+
+    const handleCancel = () => {
+        setPreviewImage(null);
+        setSelectedFile(null);
+    };
+
     return (
         <div className="storyReel">
-            <CreateStory />
+            <button onClick={handleSelectImage}><CreateStory /></button>
             {Array.isArray(stories) && stories.slice(startIndex, visibleStoriesCount).map((story, index) => {
                 const user = users[story.userId];
                 return (
@@ -87,6 +127,12 @@ export const StoryReel = () => {
                     <FaArrowRight size={30} />
                 </div>
             )}
+            {/* Sử dụng ImagePreviewDialog */}
+            <ImagePreviewDialog 
+                previewImage={previewImage} 
+                onConfirm={handleConfirm} 
+                onCancel={handleCancel} 
+            />
         </div>
     );
 };
