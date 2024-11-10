@@ -4,7 +4,7 @@ import { IoMdVideocam } from "react-icons/io";
 import { MdPhotoLibrary, MdOutlineMood } from "react-icons/md";
 import { CreatePost } from "./CreatePost";
 
-export const MessageSender = ({ setPosts, currentUserId, fetchPosts, setLastPostId }) => {
+export const MessageSender = ({ setPosts, currentUserId, setLastPostId, updatePostInfor }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
@@ -38,7 +38,7 @@ export const MessageSender = ({ setPosts, currentUserId, fetchPosts, setLastPost
       </div>
 
       {/* Render CreatePost as a modal */}
-      {isOpen && <CreatePost setPosts={setPosts} isOpen={isOpen} onClose={onClose} currentUserId={currentUserId} setLastPostId={setLastPostId} />}
+      {isOpen && <CreatePost setPosts={setPosts} isOpen={isOpen} onClose={onClose} currentUserId={currentUserId} setLastPostId={setLastPostId} updatePostInfor={updatePostInfor} />}
     </div>
   );
 };

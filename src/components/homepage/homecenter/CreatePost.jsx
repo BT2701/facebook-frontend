@@ -19,14 +19,13 @@ import { useState } from "react";
 import axios from "axios";
 import { CloseIcon } from "@chakra-ui/icons";
 
-export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditContent, postEditImage, currentUserId, setLastPostId }) => {
+export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditContent, postEditImage, currentUserId, setLastPostId, updatePostInfor }) => {
     const [postContent, setPostContent] = useState(postEditContent ? postEditContent : "");
     const [image, setImage] = useState(postEditImage);
     //0 : không tác động đến image, 1: xóa image, 2: thay đổi image. 
     const [discriptionActionToImage, setDiscriptionActionToImage] = useState(0);
     const toast = useToast();
     const [isLoading, setIsLoading] = useState(false);
-
     const handlePostSubmit = async () => {
 
         if (!postContent.trim() && !image) {
@@ -43,10 +42,11 @@ export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditCont
         //thực hiện block chức năng nhập content, chọn ảnh, click submit 
         setIsLoading(true);
         try {
+
             const formData = new FormData();
             formData.append("imageFile", typeof (image) === "string" ? null : image);
             formData.append("contentPost", postContent);
-            formData.append("userId", 1);
+            formData.append("userId", currentUserId);
             if (postEditId)
                 formData.append("discriptionActionToImage", discriptionActionToImage);
             const url = postEditId
@@ -72,23 +72,24 @@ export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditCont
                     isClosable: true,
                 });
 
+                const postCreated = response.data;
+                updatePostInfor(postCreated.userId, postCreated)
+                    .then((data) => {
+                        if (postEditId) {
+                            // Update only the edited post in the list
+                            setPosts((prevPosts) =>
+                                prevPosts.map((post) => (post.id === postEditId ? data : post))
+                            );
+                        } else {
 
-                if (postEditId) {
-                    // Update only the edited post in the list
-                    setPosts((prevPosts) =>
-                        prevPosts.map((post) => (post.id === postEditId ? response.data : post))
-                    );
-                } else {
-
-                    setPosts((prevPosts) => {
-                        if (prevPosts.length === 0) {
-                            setLastPostId(response.data.id);
+                            setPosts((prevPosts) => {
+                                if (prevPosts.length === 0) {
+                                    setLastPostId(data.id);
+                                }
+                                return [data, ...prevPosts];
+                            })
                         }
-                        return [response.data, ...prevPosts];
                     })
-
-                }
-
             }
         } catch (error) {
             setIsLoading(false);
