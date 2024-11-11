@@ -6,6 +6,7 @@ import {
   HStack,
   IconButton,
   Input,
+  Spinner,
   Text,
 } from "@chakra-ui/react";
 
@@ -33,6 +34,10 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
 
   const chatConnRef = useRef(null);
 
+  const [cursor, setCursor] = useState("");
+
+  const [isLoading, setIsLoading] = useState(false);
+
   // State for all messages
   const [messages, setMessages] = useState([]);
 
@@ -40,39 +45,53 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
   const [msgInput, setMsgInput] = useState("");
 
   // Get messages from server
-  const getMessages = async () => {
-    const response = await getMessagesByUserIdAndContactId(
-      currentUser,
-      contactId
-    );
-
-    if (response && response.data) {
-      const tempMsg = [];
-
-      for (const msg of response.data) {
-        // if sender is current user
-        if (msg.sender === currentUser) {
-          tempMsg.push({
-            id: msg.id,
-            message: { text: msg.content },
-            isFromYou: true,
-          });
-        } else {
-          tempMsg.push({
-            id: msg.id,
-            message: {
-              senderName: contactName,
-              senderAvatar: avatar,
-              text: msg.content,
-            },
-            isFromYou: false,
-          });
-        }
+  const getMessages = async (cursor) => {
+    if (isLoading) {
+      let response;
+      if (cursor) {
+        response = await getMessagesByUserIdAndContactId(
+          currentUser,
+          contactId,
+          cursor
+        );
+      } else {
+        response = await getMessagesByUserIdAndContactId(
+          currentUser,
+          contactId
+        );
       }
 
-      setMessages(tempMsg);
-    } else {
-      setMessages([]);
+      if (response && response.data && response.data.messages) {
+        setCursor(response.data.cursor);
+
+        const tempMsg = [];
+
+        for (const msg of response.data.messages) {
+          // if sender is current user
+          if (msg.sender === currentUser) {
+            tempMsg.push({
+              id: msg.id,
+              message: { text: msg.content },
+              isFromYou: true,
+            });
+          } else {
+            tempMsg.push({
+              id: msg.id,
+              message: {
+                senderName: contactName,
+                senderAvatar: avatar,
+                text: msg.content,
+              },
+              isFromYou: false,
+            });
+          }
+        }
+
+        setMessages((prev) => [...prev, ...tempMsg]);
+      } else {
+        setCursor("");
+      }
+      setIsLoading(false);
     }
   };
 
@@ -110,12 +129,12 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
         if (response && response.data && response.data.id) {
           // Update messages
           setMessages((prev) => [
-            ...prev,
             {
               id: response.data.id,
               message: { text: msgInput },
               isFromYou: true,
             },
+            ...prev,
           ]);
 
           if (chatConnRef.current) {
@@ -147,11 +166,17 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
 
   useEffect(() => {
     // If this component have contactId then get data from server
-    if (contactId) {
+    if (contactId && !isLoading) {
       // Get messages between user and contacter
-      getMessages();
+      setIsLoading(true);
     }
   }, [contactId]);
+
+  useEffect(() => {
+    if (isLoading) {
+      getMessages(cursor);
+    }
+  }, [isLoading]);
 
   // useEffect for chat connection
   useEffect(() => {
@@ -162,7 +187,6 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
         if (fromId === contactId) {
           // Set incoming message
           setMessages((prev) => [
-            ...prev,
             {
               id: msgId,
               message: {
@@ -172,6 +196,7 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
               },
               isFromYou: false,
             },
+            ...prev,
           ]);
         }
       };
@@ -255,7 +280,27 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
       {/* End Chat Header */}
 
       {/* Chat Message */}
-      <Box overflowY="auto" flex={1} p={2}>
+      {isLoading && (
+        <Box display="flex" p={3} justifyContent="center" alignItems="center">
+          <Spinner size="sm" />
+        </Box>
+      )}
+
+      <Box
+        overflowY="auto"
+        flex={1}
+        p={2}
+        display="flex"
+        flexDirection="column-reverse"
+        onScroll={(e) => {
+          const { scrollHeight, scrollTop, clientHeight } = e.target;
+          if (Math.abs(scrollHeight - clientHeight - Math.abs(scrollTop)) < 1) {
+            if (cursor) {
+              setIsLoading(true);
+            }
+          }
+        }}
+      >
         {messages.map((data) => (
           <ChatMessage
             key={data.id}
