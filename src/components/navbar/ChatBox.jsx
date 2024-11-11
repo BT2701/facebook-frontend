@@ -47,19 +47,11 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
   // Get messages from server
   const getMessages = async (cursor) => {
     if (isLoading) {
-      let response;
-      if (cursor) {
-        response = await getMessagesByUserIdAndContactId(
-          currentUser,
-          contactId,
-          cursor
-        );
-      } else {
-        response = await getMessagesByUserIdAndContactId(
-          currentUser,
-          contactId
-        );
-      }
+      const response = await getMessagesByUserIdAndContactId(
+        currentUser,
+        contactId,
+        cursor
+      );
 
       if (response && response.data && response.data.messages) {
         setCursor(response.data.cursor);
