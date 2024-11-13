@@ -28,11 +28,11 @@ export const Router = () => {
         <Route
           path="/"
           element={
-            <ChatConnProvider>
+            // <ChatConnProvider>
               <ChatBoxProvider>
                 <Navbar />
               </ChatBoxProvider>
-            </ChatConnProvider>
+            // </ChatConnProvider>
           }
         >
           <Route path="/" element={<Homepage />} />

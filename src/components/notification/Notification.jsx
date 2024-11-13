@@ -14,7 +14,6 @@ import {
     Flex
 } from "@chakra-ui/react";
 import { BellIcon } from "@chakra-ui/icons";
-import { HubConnectionBuilder } from '@microsoft/signalr';
 import './Notification.css'
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -22,6 +21,8 @@ import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
 import { fetchDataForNotification, getUserById, markAllAsReadNotification, markAsReadNotification } from "../../utils/getData";
 import { useUser } from "../../context/UserContext";
 import PostRedirect from "./PostRedirect";
+import { useChatConn } from "../../context/ChatConnContext";
+
 
 const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick }) => (
     <MenuItem
@@ -65,6 +66,8 @@ const Notifications = () => {
     const { currentUser } = useUser();
     const [openDialog, setOpenDialog] = useState(false);
     const [feedId, setFeedId] = useState(null);
+    const { chatConn } = useChatConn();
+
 
 
     const fetchUser = async (id) => {
@@ -93,30 +96,18 @@ const Notifications = () => {
         };
         fetchData();
         setReadNotification(0);
-    }, [readNotification]);
+    }, [readNotification, notificationList.length]);
 
     useEffect(() => {
-        const connection = new HubConnectionBuilder()
-            .withUrl("http://localhost:8001/notificationHub") // Thay bằng URL của NotificationHub
-            .withAutomaticReconnect()
-            .build();
-
-        connection.start()
-            .then(() => {
-                console.log("Connected to SignalR!");
-                connection.on("ReceiveNotification", (notification) => {
-                    setNotificationList((prevList) => [notification, ...prevList]);
-                    if (notification.receiver === currentUser) {
-                        setUnreadCount(prevCount => prevCount + 1);
-                    }
-                });
-            })
-            .catch(error => console.error("SignalR Notification Connection Error: ", error));
-
-        return () => {
-            connection.stop();
-        };
-    }, [currentUser]);
+        if (chatConn) {
+            chatConn.on("ReceiveNotification", (notification) => {
+                setNotificationList((prev) => [...prev, notification]);
+            });
+            chatConn.on("DeleteNotification", (notification1) => {
+                setNotificationList((prev) => prev.filter(notification => notification.id !== notification1.id));
+            });
+        }
+    }, [chatConn]);
 
     const markAllAsRead = async () => {
         try {
