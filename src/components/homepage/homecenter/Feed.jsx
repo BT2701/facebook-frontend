@@ -52,7 +52,7 @@ export const Feed = ({
         };
 
         try {
-            const response = await axios.post("http://localhost:8001/api/reaction", likeData, {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/reaction`, likeData, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -75,7 +75,7 @@ export const Feed = ({
             } else {
                 console.error("Error liking post");
             }
-            createNotification(userCreatePost, postId, "đã thích bài viết của bạn", 1);
+            createNotification(userCreatePost, postId, "Liked your post", 1);
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
@@ -87,7 +87,7 @@ export const Feed = ({
     const handleUnLike = async () => {
         try {
             const response = await axios.delete(
-                `http://localhost:8001/api/reaction/${postId}/${currentUserId}`
+                `${process.env.REACT_APP_API_URL}/reaction/${postId}/${currentUserId}`
             );
 
             // Check if the response indicates success
@@ -132,7 +132,7 @@ export const Feed = ({
             Content: newCommentContent,
         };
         try {
-            const response = await axios.post("http://localhost:8001/api/comment", commentInfo, {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/comment`, commentInfo, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -150,7 +150,7 @@ export const Feed = ({
             } else {
                 console.error("Error submitting comment");
             }
-            createNotification(userCreatePost, postId, "đã bình luận bài viết của bạn", 2);
+            createNotification(userCreatePost, postId, "Commented your post", 2);
 
         } catch (error) {
             console.error("Error: ", error);
@@ -167,7 +167,7 @@ export const Feed = ({
             if (!confirmDelete) return;
 
             try {
-                const response = await axios.delete(`http://localhost:8001/api/comment/${commentId}`);
+                const response = await axios.delete(`${process.env.REACT_APP_API_URL}/comment/${commentId}`);
                 if (response.status === 204) {
                     const updatedComments = comments?.filter((comment) => comment.id !== commentId);
                     setComments(updatedComments);
@@ -195,7 +195,7 @@ export const Feed = ({
 
         try {
             const response = await axios.put(
-                `http://localhost:8001/api/comment/${commentEditId}`,
+                `${process.env.REACT_APP_API_URL}/comment/${commentEditId}`,
                 {
                     Content: editedContentComment
                 },
@@ -229,7 +229,7 @@ export const Feed = ({
 
         try {
             setIsDeleting(true);
-            const response = await axios.delete(`http://localhost:8001/api/post/${postDeleteId}`);
+            const response = await axios.delete(`${process.env.REACT_APP_API_URL}/post/${postDeleteId}`);
             if (response.status === 204) {
                 setIsDeleting(false);
                 toast({

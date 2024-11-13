@@ -74,8 +74,8 @@ export const Homecenter = () => {
     try {
       // Construct the URL based on lastId
       const url = lastPostId
-        ? `http://localhost:8001/api/post/${currentUser}?lastPostId=${lastPostId}&limit=${postsPerPage}`
-        : `http://localhost:8001/api/post/${currentUser}?limit=${postsPerPage}`;
+        ? `${process.env.REACT_APP_API_URL}/post/${currentUser}?lastPostId=${lastPostId}&limit=${postsPerPage}`
+        : `${process.env.REACT_APP_API_URL}/post/${currentUser}?limit=${postsPerPage}`;
 
       const response = await axios.get(url);
       // Check if $values is an array and not null

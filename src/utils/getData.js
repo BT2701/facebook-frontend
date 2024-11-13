@@ -152,6 +152,16 @@ export const fetchDataForStory = async () => {
   }
 };
 
+// post
+export const fetchDataForPostId = async (id) => {
+  try {
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/post/post-noti/${id}`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 //friend request
 // Hàm lấy danh sách yêu cầu
 export const getDataRequests = async (id, pageNumber) => {
