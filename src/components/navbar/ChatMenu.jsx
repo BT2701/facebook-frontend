@@ -11,6 +11,7 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Spinner,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -19,7 +20,6 @@ import { getMessagesByUserId, getUserById } from "../../utils/getData";
 import { useChatBox } from "../../context/ChatBoxContext";
 import { useChatConn } from "../../context/ChatConnContext";
 import { useUser } from "../../context/UserContext";
-import { Spinner } from "react-bootstrap";
 
 export default function ChatMenu() {
   const { setChatInfo } = useChatBox();
