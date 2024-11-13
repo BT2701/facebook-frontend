@@ -14,12 +14,14 @@ import {
     Flex
 } from "@chakra-ui/react";
 import { BellIcon } from "@chakra-ui/icons";
+import { HubConnectionBuilder } from '@microsoft/signalr';
 import './Notification.css'
 import { useEffect, useState } from "react";
 import axios from "axios";
 import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
 import { fetchDataForNotification, getUserById, markAllAsReadNotification, markAsReadNotification } from "../../utils/getData";
 import { useUser } from "../../context/UserContext";
+import PostRedirect from "./PostRedirect";
 
 const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick }) => (
     <MenuItem
@@ -61,6 +63,8 @@ const Notifications = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [userNames, setUserNames] = useState({});
     const { currentUser } = useUser();
+    const [openDialog, setOpenDialog] = useState(false);
+    const [feedId, setFeedId] = useState(null);
 
 
     const fetchUser = async (id) => {
@@ -91,6 +95,29 @@ const Notifications = () => {
         setReadNotification(0);
     }, [readNotification]);
 
+    useEffect(() => {
+        const connection = new HubConnectionBuilder()
+            .withUrl("http://localhost:8001/notificationHub") // Thay bằng URL của NotificationHub
+            .withAutomaticReconnect()
+            .build();
+
+        connection.start()
+            .then(() => {
+                console.log("Connected to SignalR!");
+                connection.on("ReceiveNotification", (notification) => {
+                    setNotificationList((prevList) => [notification, ...prevList]);
+                    if (notification.receiver === currentUser) {
+                        setUnreadCount(prevCount => prevCount + 1);
+                    }
+                });
+            })
+            .catch(error => console.error("SignalR Notification Connection Error: ", error));
+
+        return () => {
+            connection.stop();
+        };
+    }, [currentUser]);
+
     const markAllAsRead = async () => {
         try {
             await markAllAsReadNotification(currentUser);
@@ -99,10 +126,17 @@ const Notifications = () => {
             console.error('Error marking all as read:', error);
         }
     };
-    const markAsRead = async (id) => {
+    const markAsRead = async (id, feedId, action) => {
         try {
             await markAsReadNotification(id);
             setReadNotification(1);
+            if (action === 1 || action === 2) {
+                setFeedId(feedId);
+                setOpenDialog(true);
+            }
+            else if (action === 3) {
+                window.location.href = `/friends`;
+            }
         } catch (error) {
             console.error('Error marking notification as read:', error);
         }
@@ -145,11 +179,11 @@ const Notifications = () => {
                     <Box p={3} borderBottom="1px solid #e2e8f0">
                         <Flex justifyContent="space-between" alignItems="center" height={8}>
                             <Text fontSize="lg" fontWeight="bold">
-                                Thông báo
+                                Notifications
                             </Text>
                             {notificationList.length > 0 && (
                                 <Button className="notification-read-all" size="sm" colorScheme="blue" onClick={markAllAsRead}>
-                                    Đánh dấu đã đọc
+                                    Mark all as read
                                 </Button>
                             )}
                         </Flex>
@@ -168,7 +202,7 @@ const Notifications = () => {
                                         message={notification.content}
                                         time={formatTimeFromDatabase(notification.timeline)}
                                         is_read={notification.is_read}
-                                        onClick={() => markAsRead(notification.id)}
+                                        onClick={() => markAsRead(notification.id, notification.post, notification.action_n)}
                                     />
                                 ))
                             )}
@@ -176,6 +210,12 @@ const Notifications = () => {
                     </Box>
                 </MenuList>
             </Menu>
+            <PostRedirect
+                feedId={feedId}
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                currentUser={currentUser}
+            />
         </Center>
     );
 };

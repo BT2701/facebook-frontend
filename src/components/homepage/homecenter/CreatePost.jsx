@@ -50,8 +50,8 @@ export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditCont
             if (postEditId)
                 formData.append("discriptionActionToImage", discriptionActionToImage);
             const url = postEditId
-                ? `http://localhost:8001/api/post/${postEditId}`
-                : 'http://localhost:8001/api/post';
+                ? `${process.env.REACT_APP_API_URL}/post/${postEditId}`
+                : `${process.env.REACT_APP_API_URL}/post`;
             const method = postEditId ? 'put' : 'post';
             const response = await axios({
                 method,
