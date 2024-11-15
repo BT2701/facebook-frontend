@@ -13,6 +13,10 @@ This project is a frontend application for Facebook, built using Create React Ap
   - [Project Members](#project-members)
   - [Features](#features)
   - [Technologies](#technologies)
+    - [Frontend](#frontend)
+    - [State Management](#state-management)
+    - [Networking](#networking)
+    - [Others](#others)
   - [Installation](#installation)
     - [Prerequisites](#prerequisites)
     - [Install React](#install-react)
@@ -67,10 +71,23 @@ This project is a frontend application for Facebook, built using Create React Ap
 
 ## Technologies
 
-- React
-- Redux
-- Axios
+### Frontend
+- React.jsx
+- React-Bootstrap
 - Material-UI
+- CSS
+
+### State Management
+- Context API for global state management
+- Hooks for local state management
+
+### Networking
+- Axios
+- RESTful API
+
+### Others
+- Other graphic libraries
+
 
 ## Installation
 
@@ -102,7 +119,7 @@ In the project directory, you can run:
 First, clone the repository to your local machine using the following command:
 
 ```bash
-git clone https://github.com/your-username/facebook-frontend.git
+git clone https://github.com/BT2701/facebook-frontend.git
 cd facebook-frontend
 ```
 
