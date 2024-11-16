@@ -227,14 +227,25 @@ export const deleteRequestById = async (id) => {
   try {
       const response = await axios.delete(`${process.env.REACT_APP_API_URL}/Request/${id}`); // Gọi API DELETE
 
-      if (response.status === 204) { // Nếu thành công
-          return true; // Trả về true để xác nhận xóa thành công
-      }
+      // Trả về status code từ response
+      return response.status; // Ví dụ: 204, 404, 500, v.v.
   } catch (error) {
       console.error('Error deleting request:', error);
-      return false; // Trả về false nếu có lỗi
+      
+      // Kiểm tra lỗi và trả về mã trạng thái lỗi tương ứng
+      if (error.response) {
+          // Nếu có lỗi từ server (ví dụ: 404, 500)
+          return error.response.status; // Trả về mã lỗi từ server
+      } else if (error.request) {
+          // Nếu không nhận được phản hồi từ server
+          return 500; // Trả về 500 cho lỗi server
+      } else {
+          // Lỗi khác
+          return 500; // Trả về 500 cho lỗi không xác định
+      }
   }
 };
+
 
 // Hàm thêm yêu cầu
 export const addRequest = async (sender, receiver) => {
@@ -287,10 +298,16 @@ export const removeFriend = async (userId, friendId) => {
       `${process.env.REACT_APP_API_URL}/friend/remove/${userId}/${friendId}`,
       { withCredentials: true }
     );
-    return response.data;
+
+    // Trả về mã trạng thái từ response
+    return response.status;
   } catch (error) {
-    console.error("Lỗi khi xóa quan hệ bạn bè:", error);
-    return null;
+    if (error.response) {
+      // Trả về mã lỗi từ backend nếu có
+      return error.response.status; // Ví dụ: 400, 404, 500
+    }
+    console.error("Lỗi không xác định:", error.message);
+    return 500; // Lỗi không xác định, mặc định trả về 500
   }
 };
 
@@ -346,17 +363,15 @@ export const addFriendAndDeleteRequest = async (userId1, userId2, requestId) => 
       { withCredentials: true }
     );
 
-    // Kiểm tra nếu thêm bạn bè thành công (trả về dữ liệu bạn bè đã được thêm)
-    if (addFriendResponse && addFriendResponse.data) {
-      console.log("Thêm bạn bè và xóa yêu cầu kết bạn thành công.");
-      return true;
-    } else {
-      console.error("Không thể thêm bạn bè và xóa yêu cầu kết bạn.");
-      return false;
-    }
+    return addFriendResponse.status; // Ví dụ: 201 (Thành công), 404 (Không tìm thấy), 500 (Lỗi server)
+
   } catch (error) {
-    console.error("Lỗi khi thêm bạn bè và xóa yêu cầu kết bạn:", error);
-    return false;
+    if (error.response) {
+      // Trả về mã lỗi từ backend nếu có
+      return error.response.status; // Ví dụ: 400, 404, 500
+    }
+    console.error("Lỗi không xác định:", error.message);
+    return 500; // Lỗi không xác định, mặc định trả về 500
   }
 };
 

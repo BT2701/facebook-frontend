@@ -33,11 +33,17 @@ const CustomCard = ({ data }) => {
         try {
             // Gọi hàm xử lý xác nhận ở đây (ví dụ, API call)
             const response = await addFriendAndDeleteRequest(userId,idFriend,idRequest); // Giả sử có một hàm xác nhận yêu cầu
-            if (response) { // Nếu thành công
+            if (response === 204) { // Nếu thành công
                 setIsRequested(true); // Cập nhật trạng thái
                 setStatusBtn('Request accepted');
-            }else {
-                alert("có lỗi khi gửi lời mời kết bạn");
+            }else if (response === 404) { // Không tìm thấy yêu cầu kết bạn
+                alert("Yêu cầu kết bạn không tồn tại.");
+                setIsRequested(true); // Cập nhật trạng thái
+                setStatusBtn('Request accepted');
+            } else if (response === 500) { // Lỗi server
+                alert("Có lỗi từ server. Vui lòng thử lại sau.");
+            } else { // Trường hợp khác (nếu cần)
+                alert("Đã xảy ra lỗi không xác định.");
             }
         } catch (error) {
             console.error("Error confirming request:", error);
@@ -69,22 +75,38 @@ const CustomCard = ({ data }) => {
                 if (status === 'friendRequest') {
                     // Gọi hàm xóa yêu cầu kết bạn
                     response = await deleteRequestById(data.id);
-                    if (response) {
+                    // Kiểm tra mã trạng thái trả về từ API
+                    if (response === 204) { // Nếu xóa thành công (status 204)
                         setIsRequested(true);
                         setStatusBtn('Request deleted');
+                    } else if (response === 404) { // Nếu không tìm thấy yêu cầu (status 404)
+                        alert("Yêu cầu kết bạn không tồn tại.");
+                        setIsRequested(true);
+                        setStatusBtn('Request deleted');
+                    } else if (response === 500) { // Nếu có lỗi server (status 500)
+                        alert("Có lỗi xảy ra khi xóa yêu cầu kết bạn.");
                     } else {
-                        console.log("Có lỗi xảy ra khi xóa yêu cầu kết bạn.");
+                        // Xử lý các trường hợp khác nếu có
+                        console.log("Trạng thái không xác định:", response);
                     }
                 } else if (status === 'friend') {
                     // Gọi hàm removeFriend để xóa bạn bè qua API
-                    removeFriend(userId, idFriend).then((response) => {
-                        if (response) {
-                            setIsRequested(true); 
-                            setStatusBtn('Friend deleted');
-                        } else {
-                            console.log("Có lỗi xảy ra khi xóa bạn bè.");
-                        }
-                    });
+                    response= await removeFriend(userId, idFriend);
+                    if (response === 200) {
+                        setIsRequested(true); 
+                        setStatusBtn('Friend deleted');
+                        console.log("Xóa bạn bè thành công.");
+                    } else if (response === 404) {
+                        console.log("Không tìm thấy quan hệ bạn bè.");
+                        setIsRequested(true); 
+                        setStatusBtn('Friend deleted');
+                    } else if (response === 500) {
+                        console.log("Có lỗi xảy ra trên server khi xóa bạn bè.");
+                    } else {
+                        console.log("Trạng thái không xác định hoặc có lỗi khác:", response);
+                    }
+                
+                
                 }
             } catch (error) {
                 console.error("Error deleting request:", error);
@@ -98,6 +120,18 @@ const CustomCard = ({ data }) => {
                 setIdSendRequest(0); // Cập nhật idSendRequest sau khi xóa thành công
             } else {
                 console.log("Không thể xóa yêu cầu.");
+            }
+
+            if (response === 204) { // Nếu xóa thành công (status 204)
+                setIdSendRequest(0); // Cập nhật idSendRequest sau khi xóa thành công
+            } else if (response === 404) { // Nếu không tìm thấy yêu cầu (status 404)
+                alert("yêu cầu kết bạn đã được xử lý");
+                handleRemove();
+            } else if (response === 500) { // Nếu có lỗi server (status 500)
+                alert("Có lỗi xảy ra khi xóa yêu cầu kết bạn.");
+            } else {
+                // Xử lý các trường hợp khác nếu có
+                console.log("Trạng thái không xác định:", response);
             }
         } catch (error) {
             console.error("Có lỗi xảy ra khi xóa yêu cầu:", error);
