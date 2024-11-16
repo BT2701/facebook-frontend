@@ -13,6 +13,8 @@ import { IoShareSocialOutline } from "react-icons/io5";
 import { MdOutlinePhone } from "react-icons/md";
 import axios from "axios";
 import { useUser } from "../../context/UserContext";
+import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
+import { getUserById } from "../../utils/getData";
 
 const IntroText = ({ icon, title }) => {
     return (
@@ -49,7 +51,7 @@ export const Post = () => {
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-              const response = await axios.get(`http://localhost:8001/api/post/${user?.id}/${user?.id}?limit=10`)
+              const response = await axios.get(`http://localhost:8001/api/post/${currentUser}/${currentUser}?lastPostId=${100}&limit=100`)
               setPosts(response.data.$values);  
               console.log(response)
             } catch (error) {
@@ -71,23 +73,67 @@ export const Post = () => {
           }).format(date);
     }
 
-    const handleDeletePost = async (idPost) => {
-        const confirmDelete = window.confirm("Bạn muốn xóa post?");
-        if (!confirmDelete) return;
-    
+    const updatePostInfor = async (userId, post) => {
         try {
-          const response = await axios.delete(`http://localhost:8001/api/post/${idPost}`);
-          if (response.status === 204) {
-            const updatePosts = posts?.filter((post) => post.id !== idPost);
-            setPosts(updatePosts);
-            alert("delete post thanh cong");
+          const response = await getUserById(userId);
+          console.log(response)
+          if (response && response.data) {
+            post.profilePic = response.data.avt;
+            post.profileName = response.data.name;
           } else {
-            console.error("Error deleting post");
+            console.error('Error: response or response.data is undefined');
+            // // Handle the case where response or response.data is missing
+            // post.profilePic = 'https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp'; // Or some default value
+            // post.profileName = 'Anonymous'; // Or some default name
           }
+          if (post.comments.$values.length && Array.isArray(post.comments.$values)) {
+            const updatedComments = await Promise.all(
+              post.comments.$values.map(async (comment) => {
+                return await updateCommentInfor(comment.userId, comment);
+              })
+            );
+            post.comments.$value = updatedComments;
+          }
+          return post;
         } catch (error) {
-          console.error("Error: ", error);
+          console.error('Error fetching user data:', error);
+          // // Handle the error (e.g., return default values or an empty object)
+          // post.profilePic = "https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp';
+          // post.profileName = 'Anonymous';
+          return post;
         }
-    }
+      };
+    
+      const updateCommentInfor = async (userId, comment) => {
+        try {
+          const response = await getUserById(userId);
+          if (response && response.data) {
+            comment.profilePic = response.data.avt;
+            comment.profileName = response.data.name;
+          } else {
+            console.error('Error: response or response.data is undefined');
+            // // Handle the case where response or response.data is missing
+            // post.profilePic = 'https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp'; // Or some default value
+            // post.profileName = 'Anonymous'; // Or some default name
+          }
+    
+          return comment;
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // // Handle the error (e.g., return default values or an empty object)
+          // post.profilePic = "https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp';
+          // post.profileName = 'Anonymous';
+          return comment;
+        }
+    };
+
+    const updateCommentsForPost = (postId, updatedComments) => {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId ? { ...post, comments: { $values: updatedComments } } : post
+          )
+        );
+    };
 
     return (
         <>
@@ -126,44 +172,33 @@ export const Post = () => {
                         {/* Feed section */}
                         <Box minH={20}>
                             {
-                                posts?.length > 0 ? (
+                                (user && posts?.length > 0) ? (
                                     posts.map((post, index) => (
                                         <div key={index}>
-                                            <Feed key={index}
-                                            postId={post?.id}
-                                            profilePic={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_FWF2judaujT30K9sMf-tZFhMWpgP6xCemw&s"}
-                                            content={post?.content}
-                                            timeStamp={post?.timeline}
-                                            userName={post?.userId}
-                                            postImage={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_FWF2judaujT30K9sMf-tZFhMWpgP6xCemw&s"}
-                                            likedByCurrentUser={post?.likedByCurrentUser}
-                                            likeCount={post?.reactions.$values.length}
-                                            commentList={post?.comments.$values}
-                                            currentUserId={user?.id}
-                                            userCreatePost={post?.userId}
-                                            handleDeletePost={() => handleDeletePost(post?.id)}
+                                            <Feed
+                                                postId={post.id}
+                                                profilePic={user?.avt}
+                                                content={post.content}
+                                                timeStamp={formatTimeFromDatabase(post.timeline)}
+                                                userName={user?.name}
+                                                postImage={post.image}
+                                                likedByCurrentUser={post.likedByCurrentUser}
+                                                likeCount={post.reactions.$values.length}
+                                                commentList={post.comments.$values}
+                                                currentUserId={currentUser}
+                                                userCreatePost={post.userId}
+                                                setPosts={setPosts}
+                                                posts={posts}
+                                                updateComments={updateCommentsForPost}
+                                                updatePostInfor={updatePostInfor}
+                                                updateCommentInfor={updateCommentInfor}
+                                                userId={post?.userId}
                                             />
                                         </div>
                                     ))
                             ) : (
                                 <p>Loading posts...</p>
                             )}
-                            {/* <div key={"e._id"}>
-                                <Feed key={"index"}
-                                    postId={"post.id"}
-                                    profilePic={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_FWF2judaujT30K9sMf-tZFhMWpgP6xCemw&s"}
-                                    content={"post.content"}
-                                    timeStamp={"post.timeline"}
-                                    userName={"post.userId"}
-                                    postImage={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_FWF2judaujT30K9sMf-tZFhMWpgP6xCemw&s"}
-                                    likedByCurrentUser={"post.likedByCurrentUser"}
-                                    likeCount={"post.reactions.$values.length"}
-                                    commentList={"post.comments.$values"}
-                                    currentUserId={"currentUserId"}
-                                    userCreatePost={"post.userId"}
-                                    handleDeletePost={"handleDeletePost"}
-                                />
-                            </div> */}
                         </Box>
                     </Grid>
                 </Box>

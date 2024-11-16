@@ -156,6 +156,7 @@ export const Homecenter = () => {
               updateComments={updateCommentsForPost}
               updatePostInfor={updatePostInfor}
               updateCommentInfor={updateCommentInfor}
+              userId={post?.user}
             />
           </div>
         ))

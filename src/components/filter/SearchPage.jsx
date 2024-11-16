@@ -1,30 +1,42 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './search.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Feed } from '../homepage/homecenter/Feed';
 import { Box, Image, Spinner } from '@chakra-ui/react';
 import { useSearchContext } from '../../context/SearchContext';
+import { useUser } from '../../context/UserContext';
+import { getUserById } from '../../utils/getData';
+import formatTimeFromDatabase from '../sharedComponents/formatTimeFromDatabase';
 
 function SearchPage() {
+    const { currentUser } = useUser();
     const [users, setUsers] = useState([]);
     const [posts, setPosts] = useState([]);
     const [keywords, setKeywords] = useState('');
     const { input } = useSearchContext();
-    const [errorFetchUser, setErrorFetchUser] = useState("");
-    const [errorFetchPost, setErrorFetchPost] = useState("");
+    // const [errorFetchUser, setErrorFetchUser] = useState("");
+    // const [errorFetchPost, setErrorFetchPost] = useState("");
     const limitUser = 10;
-    const limitPost = 5; 
+    const limitPost = 5;
+    const [offsetUser, setOffsetUser] = useState(0); 
+    const [offsetPost, setOffsetPost] = useState(0); 
     const [isLoadingPosts, setIsLoadingPosts] = useState(false);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const userScrollRef = useRef(null);
+    const location = useLocation();
 
     useEffect(() => {
-        setKeywords(input);
+        const searchParams = new URLSearchParams(location.search);
+        const query = searchParams.get('keywords') || ''; 
+
+        setKeywords(input === "" ? query : input);
         setUsers([]);
         setPosts([]);
-        fetchPostsData(input);
-        fetchUsersData(input);
+        setOffsetUser(0); 
+        setOffsetPost(0); 
+        fetchPostsData(input, 0);
+        fetchUsersData(input, 0);
     }, [input]);
 
     useEffect(() => {
@@ -35,7 +47,7 @@ function SearchPage() {
         };
         window.addEventListener('scroll', handlePostScroll);
         return () => window.removeEventListener('scroll', handlePostScroll);
-    }, [isLoadingPosts]);
+    }, [isLoadingPosts, offsetPost]);
 
     useEffect(() => {
         const handleUserScroll = () => {
@@ -57,52 +69,122 @@ function SearchPage() {
                 userScrollElement.removeEventListener('scroll', handleUserScroll);
             }
         };
-    }, [isLoadingUsers]);
+    }, [isLoadingUsers, offsetUser]);
 
     const loadMorePosts = () => {
         setIsLoadingPosts(true);
-        fetchPostsData(keywords);
+        fetchPostsData(keywords, offsetPost + limitPost);
     };
 
     const loadMoreUsers = () => {
         setIsLoadingUsers(true);
-        fetchUsersData(keywords);
+        fetchUsersData(keywords, offsetUser + limitUser);
     };
 
-    const fetchPostsData = async (keywords) => {
+    const fetchPostsData = async (keywords, offset) => {
         try {
-            const postResponse = await fetch(`http://localhost:8001/api/post/search?content=${keywords}&limit=${limitPost}`);
+            const postResponse = await fetch(`http://localhost:8001/api/post/search?content=${keywords}&limit=${limitPost}&offset=${offset}`);
             const postData = await postResponse.json();
-            setErrorFetchPost("");
-            setPosts((prevPosts) => [...prevPosts, ...postData.$values]);
+    
+            if (postData && Array.isArray(postData?.$values)) {
+                const postsWithUserData = await Promise.all(
+                    postData.$values.map(async (post) => {
+                        const user = await getUserById(post?.userId);
+                        return {
+                            user: user?.data,
+                            ...post,
+                        };
+                    })
+                );
+    
+                setPosts((prevPosts) => [...prevPosts, ...postsWithUserData]);
+                setOffsetPost(offset); // Update offset
+            }
         } catch (error) {
-            setErrorFetchPost(error.message);
+            console.log('Error fetching posts:', error);
         } finally {
             setIsLoadingPosts(false);
         }
     };
+    
 
-    const fetchUsersData = async (keywords) => {
+    const fetchUsersData = async (keywords, offset) => {
         try {
-            const userResponse = await fetch(`http://localhost:8001/api/user/search?name=${keywords}&limit=${limitUser}`);
+            const userResponse = await fetch(`http://localhost:8001/api/user/search?name=${keywords}&limit=${limitUser}&offset=${offset}`);
             const userData = await userResponse.json();
-            
+
             if (Array.isArray(userData)) {
-                setErrorFetchUser("");
+                // setErrorFetchUser("");
                 setUsers((prevUsers) => [...prevUsers, ...userData]);
-            } else {
-                throw new Error("Expected an array but received a different type.");
+                setOffsetUser(offset); // Cập nhật offset sau khi fetch thành công
             }
         } catch (error) {
-            setErrorFetchUser(error.message);
-            console.error('Error fetching users:', error);
+            // setErrorFetchUser(error.message);
+            console.log('Error fetching users:', error);
         } finally {
             setIsLoadingUsers(false);
         }
     };
 
-    const handleDeletePost = (postId) => {
-        alert(postId);
+    const updatePostInfor = async (userId, post) => {
+        try {
+          const response = await getUserById(userId);
+          if (response && response.data) {
+            post.profilePic = response.data.avt;
+            post.profileName = response.data.name;
+          } else {
+            console.error('Error: response or response.data is undefined');
+            // // Handle the case where response or response.data is missing
+            // post.profilePic = 'https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp'; // Or some default value
+            // post.profileName = 'Anonymous'; // Or some default name
+          }
+          if (post.comments.$values.length && Array.isArray(post.comments.$values)) {
+            const updatedComments = await Promise.all(
+              post.comments.$values.map(async (comment) => {
+                return await updateCommentInfor(comment.userId, comment);
+              })
+            );
+            post.comments.$value = updatedComments;
+          }
+          return post;
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // // Handle the error (e.g., return default values or an empty object)
+          // post.profilePic = "https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp';
+          // post.profileName = 'Anonymous';
+          return post;
+        }
+      };
+    
+      const updateCommentInfor = async (userId, comment) => {
+        try {
+          const response = await getUserById(userId);
+          if (response && response.data) {
+            comment.profilePic = response.data.avt;
+            comment.profileName = response.data.name;
+          } else {
+            console.error('Error: response or response.data is undefined');
+            // // Handle the case where response or response.data is missing
+            // post.profilePic = 'https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp'; // Or some default value
+            // post.profileName = 'Anonymous'; // Or some default name
+          }
+    
+          return comment;
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // // Handle the error (e.g., return default values or an empty object)
+          // post.profilePic = "https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp';
+          // post.profileName = 'Anonymous';
+          return comment;
+        }
+    };
+
+    const updateCommentsForPost = (postId, updatedComments) => {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId ? { ...post, comments: { $values: updatedComments } } : post
+          )
+        );
     };
 
     return (
@@ -115,7 +197,7 @@ function SearchPage() {
                 {/* Render Users */}
                 <div className='search-content-user-scroll' ref={userScrollRef}>
                     {
-                        errorFetchUser ? (
+                        users?.length === 0 ? (
                             <div style={{ display: "flex", justifyContent: "center" }}>
                                 <span>There are currently no users matching the keyword : "{keywords}"</span>
                             </div>
@@ -159,7 +241,7 @@ function SearchPage() {
                 {/* Render Posts */}
                 <div className="search-content-post">
                     {
-                        errorFetchPost ? (
+                        posts?.length === 0 ? (
                             <div style={{ display: "flex", justifyContent: "center" }}>
                                 <span>There are currently no posts matching the keyword : "{keywords}"</span>
                             </div>
@@ -167,19 +249,23 @@ function SearchPage() {
                             <div style={{ width: "500px", maxWidth: "500px" }}>
                                 {posts?.map(post => (
                                     <Feed
-                                        key={post.id}
                                         postId={post.id}
-                                        profilePic={post.image} 
-                                        postImage={post.image}
-                                        userName={post.userId} 
-                                        timeStamp={new Date(post.timeline).toLocaleString()} 
+                                        profilePic={post.user.avt}
                                         content={post.content}
-                                        likedByCurrentUser={post.likedByCurrentUser} 
-                                        likeCount={post.reactions?.$values.length || 0}
-                                        commentList={post.comments.$values} 
-                                        currentUserId={1} 
-                                        userCreatePost={post.userId} 
-                                        handleDeletePost={handleDeletePost} 
+                                        timeStamp={formatTimeFromDatabase(post.timeline)}
+                                        userName={post.user.name}
+                                        postImage={post.image}
+                                        likedByCurrentUser={post.likedByCurrentUser}
+                                        likeCount={post.reactions.$values.length}
+                                        commentList={post.comments.$values}
+                                        currentUserId={currentUser}
+                                        userCreatePost={post.userId}
+                                        setPosts={setPosts}
+                                        posts={posts}
+                                        updateComments={updateCommentsForPost}
+                                        updatePostInfor={updatePostInfor}
+                                        updateCommentInfor={updateCommentInfor}
+                                        userId={post?.userId}
                                     />
                                 ))}
                             </div>
