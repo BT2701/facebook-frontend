@@ -49,7 +49,7 @@ export const FriendRequest = () => {
                     Info: {
                         id: senderInfo.data.id, // Thay đổi ở đây để lấy ID người gửi từ request
                         name: senderInfo.data.name, // Hoặc bạn có thể gọi API để lấy tên thực tế
-                        avatar: senderInfo.data.avt
+                        avatar: senderInfo.data.avt || `${process.env.REACT_APP_DEFAULT_USER_IMG}`
                     },
                     status: "friendRequest" // Thêm thuộc tính status với giá trị là "friendRequest"
                 };
@@ -95,7 +95,7 @@ export const FriendRequest = () => {
                 Info: {
                     id: suggestion.id, // Lấy Id từ gợi ý
                     name: suggestion.name , // Tên bạn bè, nếu không có thì sử dụng ID
-                    avatar: suggestion.avt || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe52w64lGbNV6RGGmd85bXiciZjcWu6XR5rg&s" // Avatar giả lập
+                    avatar: suggestion.avt || `${process.env.REACT_APP_DEFAULT_USER_IMG}`
                 },
                 status: "suggest" // Thêm thuộc tính status với giá trị là "suggest"
             }));
@@ -140,7 +140,7 @@ export const FriendRequest = () => {
                     Info: {
                         id: friend.id, // Lấy ID của người bạn
                         name: friend.name, // Tạm thời giả lập tên bạn bè
-                        avatar: friend.avt || 'data:image/jpeg;base64,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' // Avatar giả lập
+                        avatar: friend.avt || `${process.env.REACT_APP_DEFAULT_USER_IMG}`
                     },
                     status: "friend" // Thêm thuộc tính status với giá trị là "friendRequest"
                 };
