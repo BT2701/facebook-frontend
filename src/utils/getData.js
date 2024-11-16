@@ -50,7 +50,7 @@ export const getUserById = async (userId) => {
     const response = await axios.get(
       `${process.env.REACT_APP_API_URL}/user/${userId}`
     );
-
+    console.log("dadfgdfgfddddddta"+response.data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -163,7 +163,19 @@ export const fetchDataForPostId = async (id) => {
 };
 
 //friend request
-// Hàm lấy danh sách yêu cầu
+export const getAllRequests = async (id) => {
+  try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/Request`, {
+          params: { id }, // Truyền tham số vào URL
+      });
+      return response.data; // Đảm bảo trả về dữ liệu
+  } catch (error) {
+      console.error('Error fetching requests:', error);
+      return null; // Trả về null nếu có lỗi
+  }
+};
+
+// Hàm lấy danh sách yêu cầu theo phân trang
 export const getDataRequests = async (id, pageNumber) => {
   try {
     const response = await axios.get(
@@ -179,172 +191,47 @@ export const getDataRequests = async (id, pageNumber) => {
   }
 };
 
-//fake data
-export const getAllFriends = async (userId, pageNumber) => {
-  const pageSize = 16;
+// Hàm xóa yêu cầu theo ID
+export const deleteRequestById = async (id) => {
   try {
-    // Fake dữ liệu với 10 dòng cho mỗi trang
-    const fakeFriendsData = [
-      {
-        Id: 1,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 2,
-      },
-      {
-        Id: 2,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: 3,
-        UserId2: userId,
-      },
-      {
-        Id: 3,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: 4,
-        UserId2: userId,
-      },
-      {
-        Id: 4,
-        IsFriend: false,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 5,
-      },
-      {
-        Id: 5,
-        IsFriend: false,
-        TimeLine: new Date(),
-        UserId1: 6,
-        UserId2: userId,
-      },
-      {
-        Id: 6,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 7,
-      },
-      {
-        Id: 7,
-        IsFriend: false,
-        TimeLine: new Date(),
-        UserId1: 8,
-        UserId2: userId,
-      },
-      {
-        Id: 8,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: 9,
-        UserId2: userId,
-      },
-      {
-        Id: 9,
-        IsFriend: false,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 10,
-      },
-      {
-        Id: 10,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: 11,
-        UserId2: userId,
-      },
-      {
-        Id: 11,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 12,
-      },
-      {
-        Id: 12,
-        IsFriend: false,
-        TimeLine: new Date(),
-        UserId1: 13,
-        UserId2: userId,
-      },
-      {
-        Id: 13,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 14,
-      },
-      {
-        Id: 14,
-        IsFriend: false,
-        TimeLine: new Date(),
-        UserId1: 15,
-        UserId2: userId,
-      },
-      {
-        Id: 15,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 16,
-      },
-      {
-        Id: 16,
-        IsFriend: false,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 17,
-      },
-      {
-        Id: 17,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 18,
-      },
-      {
-        Id: 18,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: 19,
-        UserId2: userId,
-      },
-      {
-        Id: 19,
-        IsFriend: false,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 20,
-      },
-      {
-        Id: 20,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: userId,
-        UserId2: 21,
-      },
-      {
-        Id: 21,
-        IsFriend: true,
-        TimeLine: new Date(),
-        UserId1: 22,
-        UserId2: userId,
-      },
-    ];
-    // Tạo mảng chỉ chứa bạn bè (bỏ qua userId và trả về người còn lại)
-    const friendsData = fakeFriendsData.map((friend) => {
-      const otherUserId =
-        friend.UserId1 === userId ? friend.UserId2 : friend.UserId1;
-      return {
-        Id: friend.Id,
-        IsFriend: friend.IsFriend,
-        TimeLine: friend.TimeLine,
-        otherUserId: otherUserId, // Trả về người còn lại
-      };
-    });
+      const response = await axios.delete(`${process.env.REACT_APP_API_URL}/Request/${id}`); // Gọi API DELETE
 
+      if (response.status === 204) { // Nếu thành công
+          return true; // Trả về true để xác nhận xóa thành công
+      }
+  } catch (error) {
+      console.error('Error deleting request:', error);
+      return false; // Trả về false nếu có lỗi
+  }
+};
+
+// Hàm thêm yêu cầu
+export const addRequest = async (sender, receiver) => {
+  try {
+      const requestBody = {
+          sender,       // Giá trị sender
+          receiver,     // Giá trị receiver
+          time: new Date().toISOString() // Sửa trường Timeline thành time
+      };
+
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/Request`, requestBody); // Gọi API POST
+
+      if (response.status === 200) { // Nếu thành công, thường thì 201 là cho tạo mới
+          return response.data; // Trả về dữ liệu của yêu cầu mới tạo
+      }
+  } catch (error) {
+      console.error('Error adding request:', error);
+      return false; // Trả về null nếu có lỗi
+  }
+};
+
+//friend
+//hàm lấy danh sách user là bạn của userId
+export const getAllFriends = async (userId, pageNumber) => {
+  const pageSize = 12;
+  try {
+    const FriendsData = await getFriendsByUserId(userId); 
+    const friendsData=FriendsData.data;
     // Tính toán chỉ số bắt đầu và kết thúc dựa trên số trang và kích thước trang
     const startIndex = (pageNumber - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -362,284 +249,109 @@ export const getAllFriends = async (userId, pageNumber) => {
   }
 };
 
+// Hàm xóa quan hệ bạn bè
+export const removeFriend = async (userId, friendId) => {
+  try {
+    const response = await axios.delete(
+      `${process.env.REACT_APP_API_URL}/friend/remove/${userId}/${friendId}`,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi xóa quan hệ bạn bè:", error);
+    return null;
+  }
+};
+
+
+// Hàm thêm bạn bè mới với TimeLine
+export const addFriend = async (userId1, userId2) => {
+  try {
+    // Lấy thời gian hiện tại làm TimeLine
+    const timeLine = new Date().toISOString(); // ISO 8601 format
+
+    const friendData = {
+      userId1: userId1,
+      userId2: userId2,
+      isFriend: true, // Hoặc các thuộc tính khác nếu có
+      timeLine: timeLine, // Thêm TimeLine vào data
+    };
+
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_URL}/friend`,
+      friendData,
+      { withCredentials: true }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 409) {
+      console.error("Bạn bè đã tồn tại:", error.response.data);
+    } else {
+      console.error("Lỗi khi thêm bạn bè:", error);
+    }
+    return null;
+  }
+};
+
+export const addFriendAndDeleteRequest = async (userId1, userId2, requestId) => {
+  try {
+    // Lấy thời gian hiện tại làm TimeLine
+    const timeLine = new Date().toISOString(); // ISO 8601 format
+
+    // Tạo dữ liệu friendData cho việc thêm bạn bè
+    const friendData = {
+      userId1: userId1,
+      userId2: userId2,
+      isFriend: true,
+      timeLine: timeLine,
+      requestId: requestId, // Gửi requestId để API có thể xóa yêu cầu kết bạn
+    };
+
+    // Gửi yêu cầu POST để thêm bạn bè và xóa yêu cầu kết bạn trong một lần gọi
+    const addFriendResponse = await axios.post(
+      `${process.env.REACT_APP_API_URL}/friend/create-and-delete-request`,
+      friendData,
+      { withCredentials: true }
+    );
+
+    // Kiểm tra nếu thêm bạn bè thành công (trả về dữ liệu bạn bè đã được thêm)
+    if (addFriendResponse && addFriendResponse.data) {
+      console.log("Thêm bạn bè và xóa yêu cầu kết bạn thành công.");
+      return true;
+    } else {
+      console.error("Không thể thêm bạn bè và xóa yêu cầu kết bạn.");
+      return false;
+    }
+  } catch (error) {
+    console.error("Lỗi khi thêm bạn bè và xóa yêu cầu kết bạn:", error);
+    return false;
+  }
+};
+
+
+
 // Hàm để lấy gợi ý bạn bè với phân trang
 export const getFriendSuggestions = async (userId, pageNumber = 1) => {
   const pageSize = 12;
   try {
-    // Giả lập dữ liệu gợi ý với 5 người dùng
-    const fakeUserSuggestions = [
-      {
-        Id: 1000,
-        Name: "Nguyễn Nhật Trường",
-        Birth: new Date(1995, 4, 15),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFM7OSlDxothDSCAP-CAApOdJ6qzoJCE6P2g&s",
-        Phone: "1234567890",
-        Email: "alice@example.com",
-        Gender: "Female",
-        Desc: "Loves traveling.",
-        IsOnline: 1,
-        LastActive: new Date(),
-        Address: "123 Main St",
-        Social: "Facebook",
-        Education: "University",
-        Relationship: "Single",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 2000,
-        Name: "Phạm Văn Dự",
-        Birth: new Date(1992, 1, 20),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvcKv5DrXI7ImMA_vdcVfGwbRSxpPzRW9e3Q&s",
-        Phone: "0987654321",
-        Email: "bob@example.com",
-        Gender: "Male",
-        Desc: "Gamer and tech enthusiast.",
-        IsOnline: 0,
-        LastActive: new Date(),
-        Address: "456 Elm St",
-        Social: "Twitter",
-        Education: "High School",
-        Relationship: "In a relationship",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 3000,
-        Name: "Dương Thành Trưởng",
-        Birth: new Date(1990, 10, 10),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWDWXxnmYn6KWBqmJVoqG2O0ovqbPKSF-E3g&s",
-        Phone: "1122334455",
-        Email: "charlie@example.com",
-        Gender: "Male",
-        Desc: "Foodie and chef.",
-        IsOnline: 1,
-        LastActive: new Date(),
-        Address: "789 Oak St",
-        Social: "Instagram",
-        Education: "Culinary School",
-        Relationship: "Married",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 4000,
-        Name: "Dương Gió Tai",
-        Birth: new Date(1994, 7, 30),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-IxweiKWIdzzPmlSvhK5M30yGbBsxPsFbRA&s",
-        Phone: "2233445566",
-        Email: "diana@example.com",
-        Gender: "Female",
-        Desc: "Fitness enthusiast.",
-        IsOnline: 1,
-        LastActive: new Date(),
-        Address: "321 Pine St",
-        Social: "LinkedIn",
-        Education: "University",
-        Relationship: "Single",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 5000,
-        Name: "Quỳnh Bei",
-        Birth: new Date(1988, 2, 5),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRi1iXtKbyy1hraUj8QgCji8fNv1tvXqwG1tg&s",
-        Phone: "3344556677",
-        Email: "ethan@example.com",
-        Gender: "Male",
-        Desc: "Nature lover.",
-        IsOnline: 0,
-        LastActive: new Date(),
-        Address: "654 Maple St",
-        Social: "Snapchat",
-        Education: "Community College",
-        Relationship: "It's complicated",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 6000,
-        Name: "Nguyễn Nhật Trường1",
-        Birth: new Date(1995, 4, 15),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFM7OSlDxothDSCAP-CAApOdJ6qzoJCE6P2g&s",
-        Phone: "1234567890",
-        Email: "alice@example.com",
-        Gender: "Female",
-        Desc: "Loves traveling.",
-        IsOnline: 1,
-        LastActive: new Date(),
-        Address: "123 Main St",
-        Social: "Facebook",
-        Education: "University",
-        Relationship: "Single",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 7000,
-        Name: "Phạm Văn Dự1",
-        Birth: new Date(1992, 1, 20),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvcKv5DrXI7ImMA_vdcVfGwbRSxpPzRW9e3Q&s",
-        Phone: "0987654321",
-        Email: "bob@example.com",
-        Gender: "Male",
-        Desc: "Gamer and tech enthusiast.",
-        IsOnline: 0,
-        LastActive: new Date(),
-        Address: "456 Elm St",
-        Social: "Twitter",
-        Education: "High School",
-        Relationship: "In a relationship",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 8000,
-        Name: "Dương Thành Trưởng1",
-        Birth: new Date(1990, 10, 10),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWDWXxnmYn6KWBqmJVoqG2O0ovqbPKSF-E3g&s",
-        Phone: "1122334455",
-        Email: "charlie@example.com",
-        Gender: "Male",
-        Desc: "Foodie and chef.",
-        IsOnline: 1,
-        LastActive: new Date(),
-        Address: "789 Oak St",
-        Social: "Instagram",
-        Education: "Culinary School",
-        Relationship: "Married",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 9000,
-        Name: "Dương Gió Tai1",
-        Birth: new Date(1994, 7, 30),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-IxweiKWIdzzPmlSvhK5M30yGbBsxPsFbRA&s",
-        Phone: "2233445566",
-        Email: "diana@example.com",
-        Gender: "Female",
-        Desc: "Fitness enthusiast.",
-        IsOnline: 1,
-        LastActive: new Date(),
-        Address: "321 Pine St",
-        Social: "LinkedIn",
-        Education: "University",
-        Relationship: "Single",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 1000,
-        Name: "Quỳnh Bei1",
-        Birth: new Date(1988, 2, 5),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRi1iXtKbyy1hraUj8QgCji8fNv1tvXqwG1tg&s",
-        Phone: "3344556677",
-        Email: "ethan@example.com",
-        Gender: "Male",
-        Desc: "Nature lover.",
-        IsOnline: 0,
-        LastActive: new Date(),
-        Address: "654 Maple St",
-        Social: "Snapchat",
-        Education: "Community College",
-        Relationship: "It's complicated",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 110,
-        Name: "Nguyễn Nhật Trường2",
-        Birth: new Date(1995, 4, 15),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFM7OSlDxothDSCAP-CAApOdJ6qzoJCE6P2g&s",
-        Phone: "1234567890",
-        Email: "alice@example.com",
-        Gender: "Female",
-        Desc: "Loves traveling.",
-        IsOnline: 1,
-        LastActive: new Date(),
-        Address: "123 Main St",
-        Social: "Facebook",
-        Education: "University",
-        Relationship: "Single",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 120,
-        Name: "Phạm Văn Dự2",
-        Birth: new Date(1992, 1, 20),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvcKv5DrXI7ImMA_vdcVfGwbRSxpPzRW9e3Q&s",
-        Phone: "0987654321",
-        Email: "bob@example.com",
-        Gender: "Male",
-        Desc: "Gamer and tech enthusiast.",
-        IsOnline: 0,
-        LastActive: new Date(),
-        Address: "456 Elm St",
-        Social: "Twitter",
-        Education: "High School",
-        Relationship: "In a relationship",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 130,
-        Name: "Dương Thành Trưởng2",
-        Birth: new Date(1990, 10, 10),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWDWXxnmYn6KWBqmJVoqG2O0ovqbPKSF-E3g&s",
-        Phone: "1122334455",
-        Email: "charlie@example.com",
-        Gender: "Male",
-        Desc: "Foodie and chef.",
-        IsOnline: 1,
-        LastActive: new Date(),
-        Address: "789 Oak St",
-        Social: "Instagram",
-        Education: "Culinary School",
-        Relationship: "Married",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 140,
-        Name: "Dương Gió Tai2",
-        Birth: new Date(1994, 7, 30),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-IxweiKWIdzzPmlSvhK5M30yGbBsxPsFbRA&s",
-        Phone: "2233445566",
-        Email: "diana@example.com",
-        Gender: "Female",
-        Desc: "Fitness enthusiast.",
-        IsOnline: 1,
-        LastActive: new Date(),
-        Address: "321 Pine St",
-        Social: "LinkedIn",
-        Education: "University",
-        Relationship: "Single",
-        TimeJoin: new Date(),
-      },
-      {
-        Id: 150,
-        Name: "Quỳnh Bei2",
-        Birth: new Date(1988, 2, 5),
-        Avt: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRi1iXtKbyy1hraUj8QgCji8fNv1tvXqwG1tg&s",
-        Phone: "3344556677",
-        Email: "ethan@example.com",
-        Gender: "Male",
-        Desc: "Nature lover.",
-        IsOnline: 0,
-        LastActive: new Date(),
-        Address: "654 Maple St",
-        Social: "Snapchat",
-        Education: "Community College",
-        Relationship: "It's complicated",
-        TimeJoin: new Date(),
-      },
-    ];
+      // Tạo URL với query params bao gồm userId và friendRequests
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/friend/nonfriends/${userId}`
+      );    
+      let suggestions=response.data; 
 
-    // Giả lập thời gian chờ như đang gọi API thực
-    await new Promise((resolve) => setTimeout(resolve, 500));
+      // Giả lập thời gian chờ như gọi API thực tế
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Tính toán chỉ số bắt đầu và kết thúc dựa trên số trang và kích thước trang
-    const startIndex = (pageNumber - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+      // Tính toán phân trang
+      const startIndex = (pageNumber - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
 
-    // Cắt mảng dữ liệu gợi ý dựa trên trang và kích thước
-    const paginatedSuggestions = fakeUserSuggestions.slice(
-      startIndex,
-      endIndex
-    );
+      // Cắt mảng dữ liệu gợi ý theo phân trang
+      const paginatedSuggestions = suggestions.slice(startIndex, endIndex);
 
-    // Trả về mảng gợi ý người dùng đã phân trang
-    return paginatedSuggestions;
+      return paginatedSuggestions;
   } catch (error) {
     console.error("Error fetching friend suggestions:", error);
     return null; // Trả về null nếu có lỗi

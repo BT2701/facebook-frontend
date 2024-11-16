@@ -3,8 +3,9 @@ import "./friendrequest.css";
 import { Leftsidebar } from "./Leftsidebar";
 import CustomCard from "./customCard";
 import { Box, SimpleGrid, Text } from "@chakra-ui/react";
-import { getDataRequests,getAllFriends ,getFriendSuggestions,getUserById} from "../../utils/getData"; 
+import { getDataRequests,getAllFriends ,getFriendSuggestions,getUserById,getAllRequests} from "../../utils/getData"; 
 import { useLocation } from "react-router-dom";
+import { useUser } from "../../context/UserContext";
 
 export const FriendRequest = () => {
     const [friendRequestswithUserInfo, setfriendRequestswithUserInfo] = useState([]);
@@ -13,7 +14,11 @@ export const FriendRequest = () => {
     const [page, setPage] = useState(1); // Theo dõi trang hiện tại
     const [loading, setLoading] = useState(false); // Theo dõi trạng thái tải dữ liệu
     const [hasMoreRequests, setHasMoreRequests] = useState(true); // Trạng thái để kiểm tra có còn yêu cầu hay không
-    const userId = 2; // Lấy ID người dùng từ context hoặc localStorage
+    const { currentUser } = useUser();
+
+    // *********************************************************************
+    const userId = currentUser; // Lấy ID người dùng
+    // *********************************************************************
     const location = useLocation(); // Sử dụng hook để lấy thông tin về đường dẫn hiện tại
 
     // Hàm fetch yêu cầu bạn bè
@@ -26,6 +31,7 @@ export const FriendRequest = () => {
 
             // Kiểm tra dữ liệu có tồn tại và không rỗng
             if (!data || data.length === 0) {
+                setHasMoreRequests(false);
                 console.error("No data received or data is empty.");
                 return;
             }
@@ -36,12 +42,14 @@ export const FriendRequest = () => {
             // Sử dụng vòng lặp for để lấy thông tin của sender cho từng yêu cầu
             const friendRequestsWithSenderInfo = [];
             for (const request of data) {
+                // Lấy thông tin người gửi từ API
+                const senderInfo = await getUserById(request.sender);
                 const requestWithSenderInfo = {
                     ...request,
                     Info: {
-                        id: request.sender, // Thay đổi ở đây để lấy ID người gửi từ request
-                        name: "Request ID="+request.id, // Hoặc bạn có thể gọi API để lấy tên thực tế
-                        avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe52w64lGbNV6RGGmd85bXiciZjcWu6XR5rg&s"
+                        id: senderInfo.data.id, // Thay đổi ở đây để lấy ID người gửi từ request
+                        name: senderInfo.data.name, // Hoặc bạn có thể gọi API để lấy tên thực tế
+                        avatar: senderInfo.data.avt || `${process.env.REACT_APP_DEFAULT_USER_IMG}`
                     },
                     status: "friendRequest" // Thêm thuộc tính status với giá trị là "friendRequest"
                 };
@@ -64,12 +72,14 @@ export const FriendRequest = () => {
     // Hàm fetch gợi ý bạn bè
     const fetchFriendSuggestions = async (pageNumber) => {
         setLoading(true); // Bắt đầu tải dữ liệu
+
         try {
-            const suggestions = await getFriendSuggestions(userId, pageNumber); // Giả định hàm này tồn tại
+            const suggestions = await getFriendSuggestions(userId, pageNumber); 
             console.log("Dữ liệu gợi ý bạn bè:", JSON.stringify(suggestions, null, 2)); // Hiển thị dữ liệu gợi ý
 
             // Kiểm tra dữ liệu có tồn tại và không rỗng
             if (!suggestions || suggestions.length === 0) {
+                setHasMoreRequests(false);
                 console.error("Không có dữ liệu gợi ý hoặc dữ liệu rỗng.");
                 return;
             }
@@ -80,12 +90,12 @@ export const FriendRequest = () => {
             }
 
             // Thêm thuộc tính Info và status cho từng gợi ý
-            const friendsWithInfo = suggestions.map(suggestion => ({
+            const friendsWithInfo = suggestions?.map(suggestion => ({
                 ...suggestion,
                 Info: {
-                    id: suggestion.Id, // Lấy Id từ gợi ý
-                    name: suggestion.Name || `Friend ID=${suggestion.Id}`, // Tên bạn bè, nếu không có thì sử dụng ID
-                    avatar: suggestion.Avt || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe52w64lGbNV6RGGmd85bXiciZjcWu6XR5rg&s" // Avatar giả lập
+                    id: suggestion.id, // Lấy Id từ gợi ý
+                    name: suggestion.name , // Tên bạn bè, nếu không có thì sử dụng ID
+                    avatar: suggestion.avt || `${process.env.REACT_APP_DEFAULT_USER_IMG}`
                 },
                 status: "suggest" // Thêm thuộc tính status với giá trị là "suggest"
             }));
@@ -112,12 +122,13 @@ export const FriendRequest = () => {
 
             // Kiểm tra dữ liệu có tồn tại và không rỗng
             if (!data || data.length === 0) {
+                setHasMoreRequests(false);
                 console.error("Không có dữ liệu hoặc dữ liệu rỗng.");
                 return;
             }
 
             // Nếu số lượng bạn bè nhỏ hơn 10 (hoặc bất kỳ số nào mà bạn muốn), đặt cờ để ngừng tải thêm
-            if (data.length < 16) {
+            if (data.length < 12) {
                 setHasMoreRequests(false);
             }
 
@@ -127,9 +138,9 @@ export const FriendRequest = () => {
                 const friendWithInfo = {
                     ...friend,
                     Info: {
-                        id: friend.otherUserId, // Lấy ID của người bạn
-                        name: "Friend ID=" + friend.otherUserId, // Tạm thời giả lập tên bạn bè
-                        avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe52w64lGbNV6RGGmd85bXiciZjcWu6XR5rg&s" // Avatar giả lập
+                        id: friend.id, // Lấy ID của người bạn
+                        name: friend.name, // Tạm thời giả lập tên bạn bè
+                        avatar: friend.avt || `${process.env.REACT_APP_DEFAULT_USER_IMG}`
                     },
                     status: "friend" // Thêm thuộc tính status với giá trị là "friendRequest"
                 };
@@ -148,7 +159,6 @@ export const FriendRequest = () => {
             setLoading(false);
         }
     };
-
 
     const handleScroll = () => {
         const bottom = window.innerHeight + window.scrollY;
