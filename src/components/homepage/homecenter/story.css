@@ -16,8 +16,12 @@
     transform: scale(1.07);
 }
 .story_avatar{
- margin: 10px;
- border: 1px solid black;
+    margin: 10px;
+    /* border: 1px solid black; */
+    border: 3px solid #2b8cf4 !important; /* Màu xanh dương */
+    border-radius: 50%; /* Để viền bọc quanh hình tròn */
+    padding: 1px; /* Thêm khoảng cách giữa viền và ảnh đại diện */
+    box-sizing: content-box;
 }
 .story > h4{
     position: absolute;

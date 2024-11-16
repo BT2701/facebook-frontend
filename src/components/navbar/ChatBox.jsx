@@ -6,6 +6,7 @@ import {
   HStack,
   IconButton,
   Input,
+  Spinner,
   Text,
 } from "@chakra-ui/react";
 
@@ -15,7 +16,7 @@ import { IoVideocamOutline } from "react-icons/io5";
 import { FiSend, FiSmile, FiPaperclip } from "react-icons/fi";
 import ChatMessage from "./ChatMessage";
 import { useChatBox } from "../../context/ChatBoxContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "../../context/UserContext";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
@@ -31,6 +32,12 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
 
   const { currentUser } = useUser();
 
+  const chatConnRef = useRef(null);
+
+  const [cursor, setCursor] = useState("");
+
+  const [isLoading, setIsLoading] = useState(false);
+
   // State for all messages
   const [messages, setMessages] = useState([]);
 
@@ -38,39 +45,45 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
   const [msgInput, setMsgInput] = useState("");
 
   // Get messages from server
-  const getMessages = async () => {
-    const response = await getMessagesByUserIdAndContactId(
-      currentUser,
-      contactId
-    );
+  const getMessages = async (cursor) => {
+    if (isLoading) {
+      const response = await getMessagesByUserIdAndContactId(
+        currentUser,
+        contactId,
+        cursor
+      );
 
-    if (response && response.data) {
-      const tempMsg = [];
+      if (response && response.data && response.data.messages) {
+        setCursor(response.data.cursor);
 
-      for (const msg of response.data) {
-        // if sender is current user
-        if (msg.sender === currentUser) {
-          tempMsg.push({
-            id: msg.id,
-            message: { text: msg.content },
-            isFromYou: true,
-          });
-        } else {
-          tempMsg.push({
-            id: msg.id,
-            message: {
-              senderName: contactName,
-              senderAvatar: avatar,
-              text: msg.content,
-            },
-            isFromYou: false,
-          });
+        const tempMsg = [];
+
+        for (const msg of response.data.messages) {
+          // if sender is current user
+          if (msg.sender === currentUser) {
+            tempMsg.push({
+              id: msg.id,
+              message: { text: msg.content },
+              isFromYou: true,
+            });
+          } else {
+            tempMsg.push({
+              id: msg.id,
+              message: {
+                senderName: contactName,
+                senderAvatar: avatar,
+                text: msg.content,
+              },
+              isFromYou: false,
+            });
+          }
         }
-      }
 
-      setMessages(tempMsg);
-    } else {
-      setMessages([]);
+        setMessages((prev) => [...prev, ...tempMsg]);
+      } else {
+        setCursor("");
+      }
+      setIsLoading(false);
     }
   };
 
@@ -108,23 +121,27 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
         if (response && response.data && response.data.id) {
           // Update messages
           setMessages((prev) => [
-            ...prev,
             {
               id: response.data.id,
               message: { text: msgInput },
               isFromYou: true,
             },
+            ...prev,
           ]);
 
-          // Send message to Signal R
-          await chatConn.invoke(
-            "SendMessage",
-            response.data.id,
-            currentUser,
-            contactId,
-            msgInput
-          );
-          console.log("Message sent!");
+          if (chatConnRef.current) {
+            // Send message to Signal R
+            await chatConnRef.current.invoke(
+              "SendMessage",
+              response.data.id,
+              currentUser,
+              contactId,
+              msgInput
+            );
+            console.log("Message sent!");
+          } else {
+            console.log("Cannot send message!");
+          }
         }
       } catch (error) {
         console.error("Error sending message:", error);
@@ -141,21 +158,27 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
 
   useEffect(() => {
     // If this component have contactId then get data from server
-    if (contactId) {
+    if (contactId && !isLoading) {
       // Get messages between user and contacter
-      getMessages();
+      setIsLoading(true);
     }
   }, [contactId]);
+
+  useEffect(() => {
+    if (isLoading) {
+      getMessages(cursor);
+    }
+  }, [isLoading]);
 
   // useEffect for chat connection
   useEffect(() => {
     // Listening from server
     if (chatConn) {
+      chatConnRef.current = chatConn;
       const listenFromServer = (msgId, fromId, message) => {
         if (fromId === contactId) {
           // Set incoming message
           setMessages((prev) => [
-            ...prev,
             {
               id: msgId,
               message: {
@@ -165,18 +188,17 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
               },
               isFromYou: false,
             },
+            ...prev,
           ]);
         }
       };
 
-      chatConn.on("ReceiveMessage", listenFromServer);
+      chatConnRef.current.on("ReceiveMessage", listenFromServer);
 
       // component unmount
       return () => {
-        if (chatConn) {
-          console.log("Off listener chat message");
-          chatConn.off("ReceiveMessage", listenFromServer);
-        }
+        console.log("Off listener chat message");
+        chatConnRef.current.off("ReceiveMessage", listenFromServer);
       };
     }
   }, [chatConn]);
@@ -250,7 +272,27 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
       {/* End Chat Header */}
 
       {/* Chat Message */}
-      <Box overflowY="auto" flex={1} p={2}>
+      {isLoading && (
+        <Box display="flex" p={3} justifyContent="center" alignItems="center">
+          <Spinner size="sm" />
+        </Box>
+      )}
+
+      <Box
+        overflowY="auto"
+        flex={1}
+        p={2}
+        display="flex"
+        flexDirection="column-reverse"
+        onScroll={(e) => {
+          const { scrollHeight, scrollTop, clientHeight } = e.target;
+          if (Math.abs(scrollHeight - clientHeight - Math.abs(scrollTop)) < 1) {
+            if (cursor) {
+              setIsLoading(true);
+            }
+          }
+        }}
+      >
         {messages.map((data) => (
           <ChatMessage
             key={data.id}

@@ -69,10 +69,22 @@ export const getMessagesByUserId = async (userId) => {
   }
 };
 
-export const getMessagesByUserIdAndContactId = async (userId, contactId) => {
+export const getMessagesByUserIdAndContactId = async (
+  userId,
+  contactId,
+  cursor = "",
+  pageSize = 10
+) => {
   try {
     const response = await axios.get(
-      `${process.env.REACT_APP_API_URL}/message/UserMessages/${userId}/${contactId}`
+      `${process.env.REACT_APP_API_URL}/message/UserMessages/` +
+        `${userId}/${contactId}`,
+      {
+        params: {
+          cursor,
+          pageSize,
+        },
+      }
     );
 
     return response;
@@ -140,6 +152,16 @@ export const fetchDataForStory = async () => {
   }
 };
 
+// post
+export const fetchDataForPostId = async (id) => {
+  try {
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/post/post-noti/${id}`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 //friend request
 export const getAllRequests = async (id) => {
   try {
@@ -156,13 +178,16 @@ export const getAllRequests = async (id) => {
 // Hàm lấy danh sách yêu cầu theo phân trang
 export const getDataRequests = async (id, pageNumber) => {
   try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/Request/requests`, {
-          params: { id, pageNumber }, // Truyền tham số vào URL
-      });
-      return response.data; // Đảm bảo trả về dữ liệu
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/Request/requests`,
+      {
+        params: { id, pageNumber }, // Truyền tham số vào URL
+      }
+    );
+    return response.data; // Đảm bảo trả về dữ liệu
   } catch (error) {
-      console.error('Error fetching requests:', error);
-      return null; // Trả về null nếu có lỗi
+    console.error("Error fetching requests:", error);
+    return null; // Trả về null nếu có lỗi
   }
 };
 
@@ -219,8 +244,8 @@ export const getAllFriends = async (userId, pageNumber) => {
 
     return paginatedFriends; // Trả về dữ liệu bạn bè đã phân trang
   } catch (error) {
-      console.error('Error fetching friends:', error);
-      return null; // Trả về null nếu có lỗi
+    console.error("Error fetching friends:", error);
+    return null; // Trả về null nếu có lỗi
   }
 };
 
@@ -328,7 +353,7 @@ export const getFriendSuggestions = async (userId, pageNumber = 1) => {
 
       return paginatedSuggestions;
   } catch (error) {
-      console.error('Error fetching friend suggestions:', error);
-      return null; // Trả về null nếu có lỗi
+    console.error("Error fetching friend suggestions:", error);
+    return null; // Trả về null nếu có lỗi
   }
 };

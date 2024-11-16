@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { Avatar, Box, Image, Input, Button, HStack, Text, Flex } from "@chakra-ui/react";
+import { Avatar, Box, Input, Button, HStack, Text, Flex, useDisclosure, useToast } from "@chakra-ui/react";
 import { Menu, MenuButton, MenuList, MenuItem } from "@chakra-ui/react";
 import { FiThumbsUp } from "react-icons/fi";
+import { AiFillLike } from "react-icons/ai";
 import { FaRegCommentAlt } from "react-icons/fa";
 import { RiShareForwardLine } from "react-icons/ri";
-import { FaEllipsisH } from 'react-icons/fa';
+import { CreatePost } from "./CreatePost";
 import "./feed.css";
 import axios from "axios";
+import { useNotification } from "../../../context/NotificationContext";
 
 export const Feed = ({
     postId,
@@ -20,100 +22,156 @@ export const Feed = ({
     commentList,
     currentUserId,
     userCreatePost,
-    handleDeletePost
+    setPosts,
+    posts,
+    updateComments,
+    updatePostInfor,
+    updateCommentInfor
 }) => {
     const [comments, setComments] = useState(commentList); // Stores comments
-    const [newComment, setNewComment] = useState(""); // New comment input
+    const [newCommentContent, setNewComment] = useState(""); // New comment input
     const [commentVisible, setCommentVisible] = useState(false); // Toggles comment section visibility
     const [currentUserLiked, setCurrentUserLiked] = useState(likedByCurrentUser); // Toggles like
     const [numberLiked, setNumberLiked] = useState(likeCount);
     const [editingCommentId, setEditingCommentId] = useState(null); // Track the comment currently being edited
-    const [editedContent, setEditedContent] = useState(""); // Track the content of the comment being edited
+    const [editedContentComment, setEditedContentComment] = useState(""); // Track the content of the comment being edited
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const toast = useToast();
+    const [isDeleting, setIsDeleting] = useState(false);
+    const { createNotification, deleteNotification } = useNotification();
 
     const handleLikeClicked = async () => {
         currentUserLiked ? handleUnLike() : handleLike();
     };
 
     const handleLike = async () => {
-        const data = {
+        const likeData = {
             UserId: currentUserId,
-            Timeline: "2024-10-16T00:00:00Z",
+            Timeline: new Date().toISOString(), // Update to the current timestamp
             PostId: postId,
         };
+
         try {
-            const response = await axios.post("http://localhost:8001/api/reaction", data, {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/reaction`, likeData, {
                 headers: {
                     "Content-Type": "application/json",
                 },
             });
+
+            // Check if the response indicates success
             if (response.status === 200) {
+                // Optimistically update the UI
                 setCurrentUserLiked(true);
-                setNumberLiked((prev) => prev + 1);
+                setNumberLiked((prev) => prev + 1); // Update local like count
+
+                // Update posts state with the new like information
+                setPosts((prevPosts) =>
+                    prevPosts.map((post) =>
+                        post.id === postId
+                            ? { ...post, likedByCurrentUser: true, reactions: { $values: Array.from({ length: numberLiked + 1 }) } } // Increment the likes
+                            : post
+                    )
+                );
             } else {
                 console.error("Error liking post");
             }
+            createNotification(userCreatePost, postId, "Liked your post", 1);
         } catch (error) {
             console.error("Error: ", error);
+            // Optional: revert optimistic update if there's an error
+            setCurrentUserLiked(false);
+            setNumberLiked((prev) => prev - 1); // Decrement local count if there was an error
         }
     };
 
     const handleUnLike = async () => {
         try {
             const response = await axios.delete(
-                `http://localhost:8001/api/reaction/${postId}/${currentUserId}`
+                `${process.env.REACT_APP_API_URL}/reaction/${postId}/${currentUserId}`
             );
+
+            // Check if the response indicates success
             if (response.status === 204) {
+                // Optimistically update the UI
                 setCurrentUserLiked(false);
-                setNumberLiked((prev) => prev - 1);
+                setNumberLiked((prev) => prev - 1); // Decrement local like count
+
+                // Update posts state to reflect the unlike action
+                setPosts((prevPosts) =>
+                    prevPosts.map((post) =>
+                        post.id === postId ? { ...post, likedByCurrentUser: false, reactions: { $values: Array.from({ length: numberLiked - 1 }) } } : post
+                    )
+                );
             } else {
                 console.error("Error unliking post");
             }
+            deleteNotification(userCreatePost, postId, 1);
+        } catch (error) {
+            console.error("Error: ", error);
+            // Optional: revert optimistic update if there's an error
+            setCurrentUserLiked(true);
+            setNumberLiked((prev) => prev + 1); // Increment local count if there was an error
+        }
+    };
+
+    const handleCommentSubmit = async () => {
+        if (!newCommentContent.trim()) {
+            toast({
+                title: "Error",
+                description: "Nội dung comment không được để trống",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        const commentInfo = {
+            UserId: currentUserId,
+            PostId: postId,
+            Content: newCommentContent,
+        };
+        try {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/comment`, commentInfo, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (response.status === 201) {
+                const commentCreated = response.data;
+                updateCommentInfor(commentCreated.userId, commentCreated).then((data) => {
+                    const updatedComments = [data, ...comments];
+                    setComments(updatedComments);
+                    setNewComment("");
+                    updateComments(postId, updatedComments); // Call update function
+                })
+
+            } else {
+                console.error("Error submitting comment");
+            }
+            createNotification(userCreatePost, postId, "Commented your post", 2);
+
         } catch (error) {
             console.error("Error: ", error);
         }
     };
 
-    const handleCommentSubmit = async () => {
-        if (newComment.trim() !== "") {
-            const data = {
-                UserId: currentUserId,
-                PostId: postId,
-                Content: newComment,
-            };
-            try {
-                const response = await axios.post("http://localhost:8001/api/comment", data, {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                if (response.status === 201) {
-                    const updatedComments = [response.data, ...comments];
-                    setComments(updatedComments);
-                    setNewComment("");
-                } else {
-                    console.error("Error submitting comment");
-                }
-            } catch (error) {
-                console.error("Error: ", error);
-            }
-        }
-    };
-
-    const handleMenuClick = async (action, commentid) => {
+    const handleCommentOperation = async (action, commentId) => {
         if (action === "edit") {
-            setEditingCommentId(commentid);
-            const commentToEdit = comments?.find((comment) => comment.id === commentid);
-            setEditedContent(commentToEdit.content);
+            setEditingCommentId(commentId);
+            const commentToEdit = comments.find((comment) => comment.id === commentId);
+            setEditedContentComment(commentToEdit.content);
         } else if (action === "delete") {
             const confirmDelete = window.confirm("Bạn muốn xóa comment?");
             if (!confirmDelete) return;
 
             try {
-                const response = await axios.delete(`http://localhost:8001/api/comment/${commentid}`);
+                const response = await axios.delete(`${process.env.REACT_APP_API_URL}/comment/${commentId}`);
                 if (response.status === 204) {
-                    const updatedComments = comments?.filter((comment) => comment.id !== commentid);
+                    const updatedComments = comments?.filter((comment) => comment.id !== commentId);
                     setComments(updatedComments);
+                    updateComments(postId, updatedComments); // Call update function
                 } else {
                     console.error("Error deleting comment");
                 }
@@ -123,14 +181,23 @@ export const Feed = ({
         }
     };
 
-    const handleSaveEdit = async (commentId) => {
-        if (!editedContent.trim()) return;
+    const handleSaveEditComment = async (commentEditId) => {
+        if (!editedContentComment.trim()) {
+            toast({
+                title: "Error",
+                description: "Nội dung comment không được để trống",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
 
         try {
             const response = await axios.put(
-                `http://localhost:8001/api/comment/${commentId}`,
+                `${process.env.REACT_APP_API_URL}/comment/${commentEditId}`,
                 {
-                    Content: editedContent
+                    Content: editedContentComment
                 },
                 {
                     headers: {
@@ -141,10 +208,12 @@ export const Feed = ({
 
             if (response.status === 204) {
                 const updatedComments = comments?.map((comment) =>
-                    comment.id === commentId ? { ...comment, content: editedContent } : comment
+                    comment.id === commentEditId ? { ...comment, content: editedContentComment } : comment
+
                 );
                 setComments(updatedComments);
                 setEditingCommentId(null);
+                updateComments(postId, updatedComments); // Call update function
             } else {
                 console.error("Error updating comment");
             }
@@ -154,22 +223,52 @@ export const Feed = ({
     };
 
 
+    const handleDeletePost = async (postDeleteId) => {
+        const confirmDelete = window.confirm("Bạn muốn xóa post?");
+        if (!confirmDelete) return;
+
+        try {
+            setIsDeleting(true);
+            const response = await axios.delete(`${process.env.REACT_APP_API_URL}/post/${postDeleteId}`);
+            if (response.status === 204) {
+                setIsDeleting(false);
+                toast({
+                    title: "Post deleted",
+                    description: "Your post has been successfully deleted",
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                });
+                const updatePosts = posts.filter((post) => post.id !== postDeleteId);
+                setPosts(updatePosts);
+            } else {
+                console.error("Error deleting post");
+            }
+        } catch (error) {
+            console.error("Error: ", error);
+        }
+    }
+
+
 
     return (
-        <Box w="100%" my="7px">
+        <Box w="100%" my="7px" position={"relative"}>
+
             <div className="feed" id={postId}>
                 {/* Feed Header */}
                 <div className="feed__top">
                     <Avatar src={profilePic} className="feed__avatar" />
                     <div className="feed__topInfo">
-                        <h3 style={{ marginBottom: "0px" }}>CreateBy(UserID): {userName}</h3>
+                        <h3 style={{ marginBottom: "0px" }}>{userName}</h3>
                         <span>{timeStamp}</span>
                     </div>
                     {currentUserId === userCreatePost && (
                         <Menu>
                             <MenuButton as={Button} ms="auto">...</MenuButton>
                             <MenuList>
-                                <MenuItem >
+                                <MenuItem
+                                    onClick={onOpen} // Open the modal when clicked
+                                >
                                     Edit
                                 </MenuItem>
                                 <MenuItem onClick={() => handleDeletePost(postId)}>
@@ -187,28 +286,29 @@ export const Feed = ({
 
                 {/* Feed Image */}
                 <div className="feed__image">
-                    <Box>
-                        <Image m={"auto"} h={"500px"} src={postImage} alt="" />
-                    </Box>
+                    <img src={postImage} alt="" />
                 </div>
 
 
                 {/* Feed Options (Like, Comment, Share) */}
                 <div className="feed__options">
                     <div className="feed__option" onClick={handleLikeClicked}>
-                        <FiThumbsUp />
-                        <span style={{ paddingLeft: "10px" }}>{currentUserLiked ? `${numberLiked} Liked` : `${numberLiked} Like`}</span>
+                        {currentUserLiked ? <AiFillLike style={{ color: "#0866fa" }} /> : <FiThumbsUp />}
+                        <span style={{ paddingLeft: "10px", userSelect: "none", webkitUserSelect: "none", mozUserSelect: "none" }}>{numberLiked} Like</span>
                     </div>
                     <div
                         className="feed__option"
-                        onClick={() => setCommentVisible(!commentVisible)}
+                        onClick={() => {
+                            setCommentVisible(!commentVisible);
+                            setEditingCommentId(null);
+                        }}
                     >
                         <FaRegCommentAlt />
-                        <span style={{ paddingLeft: "10px" }}>{comments?.length} Comment</span>
+                        <span style={{ paddingLeft: "10px", userSelect: "none", webkitUserSelect: "none", mozUserSelect: "none" }}>{comments?.length} Comment</span>
                     </div>
                     <div className="feed__option">
                         <RiShareForwardLine />
-                        <span style={{ paddingLeft: "10px" }}>Share</span>
+                        <span style={{ paddingLeft: "10px", userSelect: "none", webkitUserSelect: "none", mozUserSelect: "none" }}>Share</span>
                     </div>
                 </div>
 
@@ -218,8 +318,10 @@ export const Feed = ({
                         {/* Input field for new comments */}
                         <HStack px={4}>
                             <Input
+                                autoFocus
+                                maxLength={499}
                                 placeholder="Write a comment..."
-                                value={newComment}
+                                value={newCommentContent}
                                 onChange={(e) => setNewComment(e.target.value)}
                             />
                             <Button onClick={handleCommentSubmit} colorScheme="blue">
@@ -233,17 +335,19 @@ export const Feed = ({
                                 <div key={comment.id}>
                                     <Flex padding="15px">
                                         <Avatar
-                                            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9SRRmhH4X5N2e4QalcoxVbzYsD44C-sQv-w&s"
+                                            src={comment.profilePic}
                                             size="md"
                                         />
                                         <Box ml={2} bgColor="#f1f2f6" borderRadius="20px" padding="10px">
-                                            <Text as="h5" fontSize='md' >CommentBy(UserID):{comment.userId}</Text>
+                                            <Text as="h5" fontSize='md' bgColor="none" >{comment.profileName}</Text>
                                             {/* Conditionally show the textarea if the comment is being edited */}
                                             {editingCommentId === comment.id ? (
                                                 <Input
-                                                    value={editedContent}
-                                                    onChange={(e) => setEditedContent(e.target.value)}
+                                                    autoFocus
+                                                    value={editedContentComment}
+                                                    onChange={(e) => setEditedContentComment(e.target.value)}
                                                     mb={4}
+                                                    maxLength={499}
                                                 />
                                             ) : (
                                                 <Text mb={4} as="span">{comment.content}</Text>
@@ -255,7 +359,7 @@ export const Feed = ({
                                                     <Button
                                                         size="sm"
                                                         colorScheme="blue"
-                                                        onClick={() => handleSaveEdit(comment.id)}
+                                                        onClick={() => handleSaveEditComment(comment.id)}
                                                     >
                                                         Save
                                                     </Button>
@@ -275,10 +379,10 @@ export const Feed = ({
                                             <Menu>
                                                 <MenuButton as={Button}>...</MenuButton>
                                                 <MenuList>
-                                                    <MenuItem onClick={() => handleMenuClick("edit", comment.id)}>
+                                                    <MenuItem onClick={() => handleCommentOperation("edit", comment.id)}>
                                                         Edit
                                                     </MenuItem>
-                                                    <MenuItem onClick={() => handleMenuClick("delete", comment.id)}>
+                                                    <MenuItem onClick={() => handleCommentOperation("delete", comment.id)}>
                                                         Delete
                                                     </MenuItem>
                                                 </MenuList>
@@ -288,12 +392,29 @@ export const Feed = ({
                                     </Flex>
                                 </div>
                             ))
-                        ) : (
-                            <p>No comment</p>
-                        )}
+                        ) : null}
                     </Box>
                 )}
             </div>
-        </Box>
+            {/* Overlay Layer with Spinner when isDeleting is true */}
+            {isDeleting && (
+                <Box
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    right="0"
+                    bottom="0"
+                    backgroundColor="rgba(255, 255, 255, 0.8)" // Semi-transparent white overlay
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    zIndex="10" // Ensure it appears above other content
+                >
+                    <div className="spinner-border text-dark" role="status"></div>
+                    <span>Deleting...</span>
+                </Box>
+            )}
+            {isOpen && <CreatePost setPosts={setPosts} isOpen={isOpen} onClose={onClose} postEditId={postId} postEditContent={content} postEditImage={postImage} currentUserId={currentUserId} updatePostInfor={updatePostInfor} />}
+        </Box >
     );
 };

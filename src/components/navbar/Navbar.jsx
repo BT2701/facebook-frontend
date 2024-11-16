@@ -6,19 +6,15 @@ import { Outlet } from "react-router-dom";
 import { useChatConn } from "../../context/ChatConnContext";
 import { useEffect } from "react";
 import { useUser } from "../../context/UserContext";
-import { useCallConn } from "../../context/CallConnContext";
 import ChatManage from "./ChatManage";
 
 export const Navbar = () => {
   const { connectChat } = useChatConn();
-  const { connectCall } = useCallConn();
   const { currentUser } = useUser();
 
   const initializeConnection = async () => {
     // Connect to chathub
     await connectChat(currentUser);
-    // Connect to callhub
-    await connectCall(currentUser);
   };
 
   useEffect(() => {

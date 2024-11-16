@@ -1,71 +1,61 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, VStack, Text, Avatar, IconButton } from "@chakra-ui/react";
-import { FaMicrophone, FaMicrophoneSlash, FaPhoneSlash } from "react-icons/fa";
-import { useCallConn } from "../../context/CallConnContext";
-import WaitingCallUI from "./WaitingCallUI";
-import { useUser } from "../../context/UserContext";
+import {
+  FaMicrophone,
+  FaMicrophoneSlash,
+  FaPhoneSlash,
+  FaVideo,
+  FaVideoSlash,
+  FaVolumeMute,
+  FaVolumeUp,
+} from "react-icons/fa";
 
 export default function CallScreen({
   isVideoCall,
   userAvatar,
   userName,
+  stream,
+  localVideoRef,
+  remoteVideoRef,
   onCancelCall,
 }) {
-  // State for waiting call
-  const [isWaitingCall, setIsWaitingCall] = useState(true);
+  const [isMicroMuted, setIsMicroMuted] = useState(false);
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
 
-  const { startAudioCall, startVideoCall } = useCallConn();
-  const { currentUser } = useUser();
-
-  const [isMuted, setIsMuted] = useState(false);
-  const localVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
-
-  const toggleMute = () => {
-    setIsMuted((prev) => !prev);
-    if (localVideoRef.current && localVideoRef.current.srcObject) {
-      localVideoRef.current.srcObject.getAudioTracks().forEach((track) => {
-        track.enabled = !isMuted;
+  const toggleMicroMute = () => {
+    if (stream) {
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = !track.enabled; // Disable/enable audio track
       });
+
+      setIsMicroMuted((prev) => !prev);
+    }
+  };
+
+  const toggleSpeakerMute = () => {
+    setIsSpeakerMuted((prev) => !prev);
+  };
+
+  const toggleVideo = () => {
+    if (stream) {
+      stream.getVideoTracks().forEach((track) => {
+        track.enabled = !track.enabled; // Disable/enable video track
+      });
+
+      setIsVideoOff((prev) => !prev);
     }
   };
 
   useEffect(() => {
-    console.log("Call screen mounted");
-    const startCall = async () => {
-      try {
-        // const peerConnection = isVideoCall
-        //   ? await startVideoCall(currentUser)
-        //   : await startAudioCall(currentUser);
-        // setupStream(peerConnection);
-
-        setIsWaitingCall(false);
-      } catch (error) {
-        console.error("Error calling " + error);
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop()); // Stop all tracks of the current stream
       }
     };
+  }, []);
 
-    const setupStream = (peerConnection) => {
-      peerConnection.ontrack = (event) => {
-        remoteVideoRef.current.srcObject = event.streams[0];
-      };
-    };
-
-    startCall();
-
-    return () => {
-      if (localVideoRef.current) localVideoRef.current.srcObject = null;
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-    };
-  }, [isVideoCall]);
-
-  return isWaitingCall ? (
-    <WaitingCallUI
-      userAvatar={userAvatar}
-      userName={userName}
-      onCancelCall={onCancelCall}
-    />
-  ) : (
+  return (
     <Box
       display="flex"
       alignItems="center"
@@ -92,6 +82,7 @@ export default function CallScreen({
             <video
               ref={remoteVideoRef}
               autoPlay
+              muted={isSpeakerMuted}
               playsInline
               style={{
                 background: "white",
@@ -100,36 +91,66 @@ export default function CallScreen({
                 objectFit: "cover",
               }}
             />
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              style={{
-                background: "black",
-                width: "150px",
-                height: "100px",
-                position: "absolute",
-                bottom: "10px",
-                right: "10px",
-                borderRadius: "md",
-                objectFit: "cover",
-              }}
-            />
+            {stream && (
+              <video
+                ref={localVideoRef}
+                autoPlay
+                muted={isSpeakerMuted}
+                playsInline
+                style={{
+                  background: "black",
+                  width: "150px",
+                  height: "100px",
+                  position: "absolute",
+                  bottom: "10px",
+                  right: "10px",
+                  borderRadius: "md",
+                  objectFit: "cover",
+                }}
+              />
+            )}
           </Box>
         ) : (
           <VStack align="center" spacing={3}>
             <Avatar size="2xl" name={userName} src={userAvatar} />
             <Text fontSize="xl">Calling {isVideoCall ? "Video" : "Audio"}</Text>
+            {stream && (
+              <audio
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted={isSpeakerMuted}
+              />
+            )}
+            <audio
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+              muted={isSpeakerMuted}
+            />
           </VStack>
         )}
 
         <Box display="flex" gap={4}>
           <IconButton
-            icon={isMuted ? <FaMicrophoneSlash /> : <FaMicrophone />}
-            onClick={toggleMute}
-            colorScheme={isMuted ? "red" : "blue"}
+            icon={isMicroMuted ? <FaMicrophoneSlash /> : <FaMicrophone />}
+            onClick={toggleMicroMute}
+            colorScheme={isMicroMuted ? "red" : "blue"}
             aria-label="Toggle Mute"
+          />
+          {isVideoCall && (
+            <IconButton
+              icon={isVideoOff ? <FaVideoSlash /> : <FaVideo />}
+              onClick={toggleVideo}
+              colorScheme={isVideoOff ? "red" : "blue"}
+              aria-label="Toggle Video"
+            />
+          )}
+          <IconButton
+            icon={isSpeakerMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+            onClick={toggleSpeakerMute}
+            colorScheme={isSpeakerMuted ? "red" : "blue"}
+            aria-label="Toggle Speaker"
           />
           <IconButton
             icon={<FaPhoneSlash />}

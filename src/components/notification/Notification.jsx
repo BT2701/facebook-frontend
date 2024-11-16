@@ -18,7 +18,11 @@ import './Notification.css'
 import { useEffect, useState } from "react";
 import axios from "axios";
 import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
-import { fetchDataForNotification, markAllAsReadNotification, markAsReadNotification } from "../../utils/getData";
+import { fetchDataForNotification, getUserById, markAllAsReadNotification, markAsReadNotification } from "../../utils/getData";
+import { useUser } from "../../context/UserContext";
+import PostRedirect from "./PostRedirect";
+import { useChatConn } from "../../context/ChatConnContext";
+
 
 const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick }) => (
     <MenuItem
@@ -33,7 +37,13 @@ const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick })
         <Avatar src={avatarSrc} size="mm" mr={3} className="notification-item-avt" />
         <Box className="notification-item-box">
             <Box className="notification-item-box-content">
-                <Text fontWeight="bold" fontSize="md" className="notification-item-title">
+                <Text
+                    fontWeight="bold"
+                    fontSize="md"
+                    className="notification-item-title"
+                    maxWidth="200px"
+                    isTruncated
+                >
                     {title}
                 </Text>
                 <Text fontSize="sm" color="gray.600" className="notification-item-mess" noOfLines={1}>
@@ -50,9 +60,20 @@ const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick })
 
 const Notifications = () => {
     const [notificationList, setNotificationList] = useState([]);
-    const [currentUser, setCurrentUser] = useState(5); //dat tam gia tri, doi co du lieu tu user service
     const [readNotification, setReadNotification] = useState(0);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [userNames, setUserNames] = useState({});
+    const { currentUser } = useUser();
+    const [openDialog, setOpenDialog] = useState(false);
+    const [feedId, setFeedId] = useState(null);
+    const { chatConn } = useChatConn();
+
+
+
+    const fetchUser = async (id) => {
+        const user = await getUserById(id);
+        return user?.data || 'Unknown';
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -61,11 +82,32 @@ const Notifications = () => {
                 setNotificationList(response.data);
                 const unreadCount = response.data.filter(item => item.is_read === 0).length;
                 setUnreadCount(unreadCount);
+
+                const users = await Promise.all(
+                    response.data.map(async (notification) => {
+                        const user = await fetchUser(notification.user);
+                        return { [notification.user]: user };
+                    })
+                );
+
+                // Combine each result into a single object with user IDs as keys
+                setUserNames(Object.assign({}, ...users));
             }
         };
         fetchData();
         setReadNotification(0);
-    }, [readNotification]);
+    }, [readNotification, notificationList.length]);
+
+    useEffect(() => {
+        if (chatConn) {
+            chatConn.on("ReceiveNotification", (notification) => {
+                setNotificationList((prev) => [...prev, notification]);
+            });
+            chatConn.on("DeleteNotification", (notification1) => {
+                setNotificationList((prev) => prev.filter(notification => notification.id !== notification1.id));
+            });
+        }
+    }, [chatConn]);
 
     const markAllAsRead = async () => {
         try {
@@ -75,10 +117,17 @@ const Notifications = () => {
             console.error('Error marking all as read:', error);
         }
     };
-    const markAsRead = async (id) => {
+    const markAsRead = async (id, feedId, action) => {
         try {
             await markAsReadNotification(id);
             setReadNotification(1);
+            if (action === 1 || action === 2) {
+                setFeedId(feedId);
+                setOpenDialog(true);
+            }
+            else if (action === 3) {
+                window.location.href = `/friends`;
+            }
         } catch (error) {
             console.error('Error marking notification as read:', error);
         }
@@ -121,11 +170,11 @@ const Notifications = () => {
                     <Box p={3} borderBottom="1px solid #e2e8f0">
                         <Flex justifyContent="space-between" alignItems="center" height={8}>
                             <Text fontSize="lg" fontWeight="bold">
-                                Thông báo
+                                Notifications
                             </Text>
                             {notificationList.length > 0 && (
                                 <Button className="notification-read-all" size="sm" colorScheme="blue" onClick={markAllAsRead}>
-                                    Đánh dấu đã đọc
+                                    Mark all as read
                                 </Button>
                             )}
                         </Flex>
@@ -139,12 +188,12 @@ const Notifications = () => {
                                 notificationList.map((notification) => (
                                     <NotificationItem
                                         key={notification.id}
-                                        avatarSrc="https://via.placeholder.com/50"
-                                        title={notification.user}
+                                        avatarSrc={userNames[notification.user]?.avt}
+                                        title={userNames[notification.user]?.name || 'Loading...'}
                                         message={notification.content}
                                         time={formatTimeFromDatabase(notification.timeline)}
                                         is_read={notification.is_read}
-                                        onClick={() => markAsRead(notification.id)}
+                                        onClick={() => markAsRead(notification.id, notification.post, notification.action_n)}
                                     />
                                 ))
                             )}
@@ -152,6 +201,12 @@ const Notifications = () => {
                     </Box>
                 </MenuList>
             </Menu>
+            <PostRedirect
+                feedId={feedId}
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                currentUser={currentUser}
+            />
         </Center>
     );
 };
