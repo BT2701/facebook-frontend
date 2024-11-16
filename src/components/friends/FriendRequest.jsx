@@ -5,6 +5,7 @@ import CustomCard from "./customCard";
 import { Box, SimpleGrid, Text } from "@chakra-ui/react";
 import { getDataRequests,getAllFriends ,getFriendSuggestions,getUserById,getAllRequests} from "../../utils/getData"; 
 import { useLocation } from "react-router-dom";
+import { useUser } from "../../context/UserContext";
 
 export const FriendRequest = () => {
     const [friendRequestswithUserInfo, setfriendRequestswithUserInfo] = useState([]);
@@ -13,8 +14,10 @@ export const FriendRequest = () => {
     const [page, setPage] = useState(1); // Theo dõi trang hiện tại
     const [loading, setLoading] = useState(false); // Theo dõi trạng thái tải dữ liệu
     const [hasMoreRequests, setHasMoreRequests] = useState(true); // Trạng thái để kiểm tra có còn yêu cầu hay không
+    const { currentUser } = useUser();
+
     // *********************************************************************
-    const userId = 1; // Lấy ID người dùng
+    const userId = currentUser; // Lấy ID người dùng
     // *********************************************************************
     const location = useLocation(); // Sử dụng hook để lấy thông tin về đường dẫn hiện tại
 

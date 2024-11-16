@@ -2,6 +2,7 @@ import React, { useState,useEffect } from 'react';
 import { Box, Image, Text, Center, Button } from '@chakra-ui/react';
 import confirmDialog from '../sharedComponents/confirmDialog'; // Import hàm confirmDialo
 import { deleteRequestById ,addRequest,removeFriend,addFriendAndDeleteRequest} from '../../utils/getData';
+import { useUser } from '../../context/UserContext';
 
 
 const CustomCard = ({ data }) => {
@@ -13,10 +14,11 @@ const CustomCard = ({ data }) => {
     const [idRequest,setIdRequest]=useState('');
     const [idSendRequest,setIdSendRequest]=useState(0);// lưu trạng thái khi đã gửi kết bạn thì sẽ hiện nút hủy lời mời
     const [isDisplay,setIsDisplay]=useState(true);// lưu trạng thái khi đã gửi kết bạn thì sẽ hiện nút hủy lời mời
+    const { currentUser } = useUser();
 
 
     // ******************************************************************
-    const userId = 1; // Lấy ID người dùng
+    const userId = currentUser; // Lấy ID người dùng
     // *********************************************************************
      // Cập nhật hasData khi dữ liệu thay đổi
      useEffect(() => {
