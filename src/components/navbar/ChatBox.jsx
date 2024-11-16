@@ -3,34 +3,89 @@ import {
   Avatar,
   AvatarBadge,
   Box,
+  HStack,
   IconButton,
   Input,
+  Spinner,
   Text,
 } from "@chakra-ui/react";
 
+import { AiOutlinePhone } from "react-icons/ai";
+import { IoVideocamOutline } from "react-icons/io5";
+
 import { FiSend, FiSmile, FiPaperclip } from "react-icons/fi";
 import ChatMessage from "./ChatMessage";
-import { useEffect, useState } from "react";
+import { useChatBox } from "../../context/ChatBoxContext";
+import { useEffect, useRef, useState } from "react";
+import { useUser } from "../../context/UserContext";
 import { getMessagesByUserIdAndContactId } from "../../utils/getData";
 import axios from "axios";
 import { useChatConn } from "../../context/ChatConnContext";
-import { useChatBox } from "../../context/ChatBoxContext";
-import { useUser } from "../../context/UserContext";
 
-export default function ChatBox() {
+export default function ChatBox({ onCallAudio, onCallVideo }) {
   const {
-    chatInfo: { isOpen, avatar, isOnline, contactId, contactName, status },
+    chatInfo: { avatar, isOnline, contactId, contactName, status },
     setChatInfo,
   } = useChatBox();
 
   const { chatConn } = useChatConn();
+
   const { currentUser } = useUser();
+
+  const chatConnRef = useRef(null);
+
+  const [cursor, setCursor] = useState("");
+
+  const [isLoading, setIsLoading] = useState(false);
 
   // State for all messages
   const [messages, setMessages] = useState([]);
 
   // State for message input
   const [msgInput, setMsgInput] = useState("");
+
+  // Get messages from server
+  const getMessages = async (cursor) => {
+    if (isLoading) {
+      const response = await getMessagesByUserIdAndContactId(
+        currentUser,
+        contactId,
+        cursor
+      );
+
+      if (response && response.data && response.data.messages) {
+        setCursor(response.data.cursor);
+
+        const tempMsg = [];
+
+        for (const msg of response.data.messages) {
+          // if sender is current user
+          if (msg.sender === currentUser) {
+            tempMsg.push({
+              id: msg.id,
+              message: { text: msg.content },
+              isFromYou: true,
+            });
+          } else {
+            tempMsg.push({
+              id: msg.id,
+              message: {
+                senderName: contactName,
+                senderAvatar: avatar,
+                text: msg.content,
+              },
+              isFromYou: false,
+            });
+          }
+        }
+
+        setMessages((prev) => [...prev, ...tempMsg]);
+      } else {
+        setCursor("");
+      }
+      setIsLoading(false);
+    }
+  };
 
   // Add message to db
   const postMsg = async (msg) => {
@@ -66,28 +121,32 @@ export default function ChatBox() {
         if (response && response.data && response.data.id) {
           // Update messages
           setMessages((prev) => [
-            ...prev,
             {
               id: response.data.id,
               message: { text: msgInput },
               isFromYou: true,
             },
+            ...prev,
           ]);
 
-          // Send message to Signal R
-          await chatConn.invoke(
-            "SendMessage",
-            response.data.id,
-            currentUser,
-            contactId,
-            msgInput
-          );
-          console.log("Message sent!");
-          setMsgInput(""); // Reset message input
+          if (chatConnRef.current) {
+            // Send message to Signal R
+            await chatConnRef.current.invoke(
+              "SendMessage",
+              response.data.id,
+              currentUser,
+              contactId,
+              msgInput
+            );
+            console.log("Message sent!");
+          } else {
+            console.log("Cannot send message!");
+          }
         }
       } catch (error) {
         console.error("Error sending message:", error);
       }
+      setMsgInput(""); // Reset message input
     }
   };
 
@@ -97,51 +156,29 @@ export default function ChatBox() {
     }
   };
 
-  // Get messages from server
-  const getMessages = async () => {
-    const response = await getMessagesByUserIdAndContactId(
-      currentUser,
-      contactId
-    );
-
-    if (response && response.data) {
-      const tempMsg = [];
-
-      for (const msg of response.data) {
-        // if sender is current user
-        if (msg.sender === currentUser) {
-          tempMsg.push({
-            id: msg.id,
-            message: { text: msg.content },
-            isFromYou: true,
-          });
-        } else {
-          tempMsg.push({
-            id: msg.id,
-            message: {
-              senderName: contactName,
-              senderAvatar: avatar,
-              text: msg.content,
-            },
-            isFromYou: false,
-          });
-        }
-      }
-
-      setMessages(tempMsg);
-    } else {
-      setMessages([]);
+  useEffect(() => {
+    // If this component have contactId then get data from server
+    if (contactId && !isLoading) {
+      // Get messages between user and contacter
+      setIsLoading(true);
     }
-  };
+  }, [contactId]);
 
+  useEffect(() => {
+    if (isLoading) {
+      getMessages(cursor);
+    }
+  }, [isLoading]);
+
+  // useEffect for chat connection
   useEffect(() => {
     // Listening from server
     if (chatConn) {
-      chatConn.on("ReceiveMessage", (msgId, fromId, message) => {
+      chatConnRef.current = chatConn;
+      const listenFromServer = (msgId, fromId, message) => {
         if (fromId === contactId) {
           // Set incoming message
           setMessages((prev) => [
-            ...prev,
             {
               id: msgId,
               message: {
@@ -151,34 +188,26 @@ export default function ChatBox() {
               },
               isFromYou: false,
             },
+            ...prev,
           ]);
         }
-      });
-    }
+      };
 
-    return () => {
-      if (chatConn) {
-        chatConn.off("ReceiveMessage", (msgId, fromId, message) => {
-          console.log("off listener");
-        });
-      }
-    };
-  }, []);
+      chatConnRef.current.on("ReceiveMessage", listenFromServer);
 
-  useEffect(() => {
-    // If this component have contactId then get data from server
-    if (contactId) {
-      console.log("H;;;;;;;");
-      // Get messages between user and contacter
-      getMessages();
+      // component unmount
+      return () => {
+        console.log("Off listener chat message");
+        chatConnRef.current.off("ReceiveMessage", listenFromServer);
+      };
     }
-  }, [contactId]);
+  }, [chatConn]);
 
   return (
     <Box
       w="338px"
       h="450px"
-      display={isOpen ? "flex" : "none"}
+      display="flex"
       flexDirection="column"
       position="fixed"
       bgColor="gray.300"
@@ -210,18 +239,60 @@ export default function ChatBox() {
           </Box>
         </Box>
 
-        <IconButton
-          colorScheme=""
-          icon={<CloseIcon />}
-          onClick={() => {
-            setChatInfo((prev) => ({ ...prev, isOpen: false }));
-          }}
-        />
+        <HStack spacing={1}>
+          <IconButton
+            aria-label="Audio Call"
+            colorScheme=""
+            icon={<AiOutlinePhone />}
+            onClick={onCallAudio}
+          />
+          <IconButton
+            aria-label="Video Call"
+            colorScheme=""
+            icon={<IoVideocamOutline />}
+            onClick={onCallVideo}
+          />
+          <IconButton
+            aria-label="Close button"
+            colorScheme=""
+            icon={<CloseIcon />}
+            onClick={() => {
+              setChatInfo({
+                isOpen: false,
+                avatar: null,
+                isOnline: null,
+                contactId: null,
+                contactName: null,
+                status: null,
+              });
+            }}
+          />
+        </HStack>
       </Box>
       {/* End Chat Header */}
 
       {/* Chat Message */}
-      <Box overflowY="auto" flex={1} p={2}>
+      {isLoading && (
+        <Box display="flex" p={3} justifyContent="center" alignItems="center">
+          <Spinner size="sm" />
+        </Box>
+      )}
+
+      <Box
+        overflowY="auto"
+        flex={1}
+        p={2}
+        display="flex"
+        flexDirection="column-reverse"
+        onScroll={(e) => {
+          const { scrollHeight, scrollTop, clientHeight } = e.target;
+          if (Math.abs(scrollHeight - clientHeight - Math.abs(scrollTop)) < 1) {
+            if (cursor) {
+              setIsLoading(true);
+            }
+          }
+        }}
+      >
         {messages.map((data) => (
           <ChatMessage
             key={data.id}

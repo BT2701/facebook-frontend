@@ -11,6 +11,7 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Spinner,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -29,7 +30,9 @@ export default function ChatMenu() {
 
   const [messages, setMessages] = useState([]);
 
-  const [unreadChat, setUnreadChat] = useState(2);
+  const [unreadChat, setUnreadChat] = useState(0);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
     setChatInfo({
@@ -65,12 +68,12 @@ export default function ChatMenu() {
         let userData = await getUserById(userId);
 
         //   Add message to array
-        if (!!userData.data) {
+        if (userData && userData.data) {
           messageArray.push({
             id: msg.id,
             contactId: userId,
             contactName: userData.data.name,
-            avatar: userData.data.avatar,
+            avatar: userData.data.avt,
             isOnline: userData.data.isOnline,
             content,
           });
@@ -79,31 +82,42 @@ export default function ChatMenu() {
 
       setMessages(messageArray);
     }
+    setIsLoading(false);
   };
 
+  // Load data for chat menu
   useEffect(() => {
-    getDataForChatMenu();
-
-    // Listening from server for chat notification
-    if (chatConn) {
-      chatConn.on("ReceiveMsgNotification", () => {
-        setUnreadChat((prev) => prev + 1);
-      });
+    if (isLoading) {
+      getDataForChatMenu();
     }
+  }, [isLoading]);
 
-    return () => {
-      if (chatConn) {
-        chatConn.off("ReceiveMsgNotification", () => {
-          console.log("off listener");
-        });
-      }
-    };
-  }, []);
+  useEffect(() => {
+    // Listening from server for message to display notification
+    if (chatConn) {
+      const incrementUnreadChat = () => {
+        setUnreadChat((prev) => prev + 1);
+      };
+
+      chatConn.on("ReceiveMessage", incrementUnreadChat);
+
+      return () => {
+        if (chatConn) {
+          chatConn.off("ReceiveMessage", incrementUnreadChat);
+        }
+      };
+    }
+  }, [chatConn]);
 
   return (
     <>
       <Center mr={4}>
-        <Menu>
+        <Menu
+          onOpen={() => {
+            setUnreadChat(0);
+            setIsLoading(true);
+          }}
+        >
           <MenuButton
             as={IconButton}
             aria-label="Options"
@@ -135,6 +149,18 @@ export default function ChatMenu() {
             <Heading as="h2" mb={3}>
               Chat
             </Heading>
+
+            {isLoading && (
+              <Box
+                display="flex"
+                p={3}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Spinner size="md" />
+              </Box>
+            )}
+
             <VStack gap={2}>
               {messages.map((msg) => (
                 <MenuItem
@@ -160,7 +186,13 @@ export default function ChatMenu() {
                     <Text fontSize="lg" mb={0}>
                       {msg.contactName}
                     </Text>
-                    <Text fontSize="sm" mb={0} noOfLines={1} opacity="85%">
+                    <Text
+                      fontSize="sm"
+                      mb={0}
+                      noOfLines={1}
+                      opacity="85%"
+                      sx={{ wordBreak: "break-word" }}
+                    >
                       {msg.content}
                     </Text>
                   </Box>
