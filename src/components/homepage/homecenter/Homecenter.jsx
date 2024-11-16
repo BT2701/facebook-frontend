@@ -137,7 +137,7 @@ export const Homecenter = () => {
 
 
       {posts?.length > 0 ? (
-        posts.map((post, index) => (
+        posts.map((post) => (
           <div key={post.id}>
             <Feed
               postId={post.id}
@@ -156,7 +156,7 @@ export const Homecenter = () => {
               updateComments={updateCommentsForPost}
               updatePostInfor={updatePostInfor}
               updateCommentInfor={updateCommentInfor}
-              userId={post?.user}
+              userId={post?.userId}
             />
           </div>
         ))

@@ -8,6 +8,7 @@ import { useSearchContext } from '../../context/SearchContext';
 import { useUser } from '../../context/UserContext';
 import { getUserById } from '../../utils/getData';
 import formatTimeFromDatabase from '../sharedComponents/formatTimeFromDatabase';
+import axios from 'axios';
 
 function SearchPage() {
     const { currentUser } = useUser();
@@ -83,8 +84,8 @@ function SearchPage() {
 
     const fetchPostsData = async (keywords, offset) => {
         try {
-            const postResponse = await fetch(`http://localhost:8001/api/post/search?content=${keywords}&limit=${limitPost}&offset=${offset}`);
-            const postData = await postResponse.json();
+            const postResponse = await axios.get(`${process.env.REACT_APP_API_URL}/post/search?content=${keywords}&limit=${limitPost}&offset=${offset}`);
+            const postData = await postResponse.data;
     
             if (postData && Array.isArray(postData?.$values)) {
                 const postsWithUserData = await Promise.all(
@@ -110,8 +111,8 @@ function SearchPage() {
 
     const fetchUsersData = async (keywords, offset) => {
         try {
-            const userResponse = await fetch(`http://localhost:8001/api/user/search?name=${keywords}&limit=${limitUser}&offset=${offset}`);
-            const userData = await userResponse.json();
+            const userResponse = await axios.get(`${process.env.REACT_APP_API_URL}/user/search?name=${keywords}&limit=${limitUser}&offset=${offset}`);
+            const userData = await userResponse.data;
 
             if (Array.isArray(userData)) {
                 // setErrorFetchUser("");
