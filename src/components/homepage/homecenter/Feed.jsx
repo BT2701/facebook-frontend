@@ -25,8 +25,8 @@ export const Feed = ({
     setPosts,
     posts,
     updateComments,
-    fetchPosts, // receive the update function
-    setPage
+    updatePostInfor,
+    updateCommentInfor
 }) => {
     const [comments, setComments] = useState(commentList); // Stores comments
     const [newCommentContent, setNewComment] = useState(""); // New comment input
@@ -38,7 +38,7 @@ export const Feed = ({
     const { isOpen, onOpen, onClose } = useDisclosure();
     const toast = useToast();
     const [isDeleting, setIsDeleting] = useState(false);
-    // const { createNotification, deleteNotification } = useNotification();
+    const { createNotification, deleteNotification } = useNotification();
 
     const handleLikeClicked = async () => {
         currentUserLiked ? handleUnLike() : handleLike();
@@ -52,7 +52,7 @@ export const Feed = ({
         };
 
         try {
-            const response = await axios.post("http://localhost:8001/api/reaction", likeData, {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/reaction`, likeData, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -75,7 +75,7 @@ export const Feed = ({
             } else {
                 console.error("Error liking post");
             }
-            // createNotification(userCreatePost, postId, "đã thích bài viết của bạn");
+            createNotification(userCreatePost, postId, "Liked your post", 1);
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
@@ -87,7 +87,7 @@ export const Feed = ({
     const handleUnLike = async () => {
         try {
             const response = await axios.delete(
-                `http://localhost:8001/api/reaction/${postId}/${currentUserId}`
+                `${process.env.REACT_APP_API_URL}/reaction/${postId}/${currentUserId}`
             );
 
             // Check if the response indicates success
@@ -105,7 +105,7 @@ export const Feed = ({
             } else {
                 console.error("Error unliking post");
             }
-            // deleteNotification(userCreatePost, postId, 1);
+            deleteNotification(userCreatePost, postId, 1);
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
@@ -132,21 +132,25 @@ export const Feed = ({
             Content: newCommentContent,
         };
         try {
-            const response = await axios.post("http://localhost:8001/api/comment", commentInfo, {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/comment`, commentInfo, {
                 headers: {
                     "Content-Type": "application/json",
                 },
             });
 
             if (response.status === 201) {
-                const updatedComments = [response.data, ...comments];
-                setComments(updatedComments);
-                setNewComment("");
-                updateComments(postId, updatedComments); // Call update function
+                const commentCreated = response.data;
+                updateCommentInfor(commentCreated.userId, commentCreated).then((data) => {
+                    const updatedComments = [data, ...comments];
+                    setComments(updatedComments);
+                    setNewComment("");
+                    updateComments(postId, updatedComments); // Call update function
+                })
+
             } else {
                 console.error("Error submitting comment");
             }
-            // createNotification(userCreatePost, postId, "đã bình luận bài viết của bạn");
+            createNotification(userCreatePost, postId, "Commented your post", 2);
 
         } catch (error) {
             console.error("Error: ", error);
@@ -163,7 +167,7 @@ export const Feed = ({
             if (!confirmDelete) return;
 
             try {
-                const response = await axios.delete(`http://localhost:8001/api/comment/${commentId}`);
+                const response = await axios.delete(`${process.env.REACT_APP_API_URL}/comment/${commentId}`);
                 if (response.status === 204) {
                     const updatedComments = comments?.filter((comment) => comment.id !== commentId);
                     setComments(updatedComments);
@@ -191,7 +195,7 @@ export const Feed = ({
 
         try {
             const response = await axios.put(
-                `http://localhost:8001/api/comment/${commentEditId}`,
+                `${process.env.REACT_APP_API_URL}/comment/${commentEditId}`,
                 {
                     Content: editedContentComment
                 },
@@ -225,7 +229,7 @@ export const Feed = ({
 
         try {
             setIsDeleting(true);
-            const response = await axios.delete(`http://localhost:8001/api/post/${postDeleteId}`);
+            const response = await axios.delete(`${process.env.REACT_APP_API_URL}/post/${postDeleteId}`);
             if (response.status === 204) {
                 setIsDeleting(false);
                 toast({
@@ -255,7 +259,7 @@ export const Feed = ({
                 <div className="feed__top">
                     <Avatar src={profilePic} className="feed__avatar" />
                     <div className="feed__topInfo">
-                        <h3 style={{ marginBottom: "0px" }}>CreateBy(UserID): {userName}</h3>
+                        <h3 style={{ marginBottom: "0px" }}>{userName}</h3>
                         <span>{timeStamp}</span>
                     </div>
                     {currentUserId === userCreatePost && (
@@ -331,11 +335,11 @@ export const Feed = ({
                                 <div key={comment.id}>
                                     <Flex padding="15px">
                                         <Avatar
-                                            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9SRRmhH4X5N2e4QalcoxVbzYsD44C-sQv-w&s"
+                                            src={comment.profilePic}
                                             size="md"
                                         />
                                         <Box ml={2} bgColor="#f1f2f6" borderRadius="20px" padding="10px">
-                                            <Text as="h5" fontSize='md' bgColor="none" >CommentBy(UserID):{comment.userId}</Text>
+                                            <Text as="h5" fontSize='md' bgColor="none" >{comment.profileName}</Text>
                                             {/* Conditionally show the textarea if the comment is being edited */}
                                             {editingCommentId === comment.id ? (
                                                 <Input
@@ -410,7 +414,7 @@ export const Feed = ({
                     <span>Deleting...</span>
                 </Box>
             )}
-            {isOpen && <CreatePost setPosts={setPosts} isOpen={isOpen} onClose={onClose} postEditId={postId} postEditContent={content} postEditImage={postImage} currentUserId={currentUserId} />}
+            {isOpen && <CreatePost setPosts={setPosts} isOpen={isOpen} onClose={onClose} postEditId={postId} postEditContent={content} postEditImage={postImage} currentUserId={currentUserId} updatePostInfor={updatePostInfor} />}
         </Box >
     );
 };

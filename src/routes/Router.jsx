@@ -16,20 +16,22 @@ import { Groups } from "../components/groups/Groups";
 import SearchPage from "../components/filter/SearchPage";
 import { ChatConnProvider } from "../context/ChatConnContext";
 import { ChatBoxProvider } from "../context/ChatBoxContext";
+import ConfirmEmail from "../components/auth/confirmEmail";
 
 export const Router = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/confirm-email/:email" element={<ConfirmEmail />} />
       <Route element={<PrivateRoute />}>
         <Route
           path="/"
           element={
-            <ChatConnProvider>
+            // <ChatConnProvider>
               <ChatBoxProvider>
                 <Navbar />
               </ChatBoxProvider>
-            </ChatConnProvider>
+            // </ChatConnProvider>
           }
         >
           <Route path="/" element={<Homepage />} />

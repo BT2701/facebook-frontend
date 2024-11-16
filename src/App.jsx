@@ -1,13 +1,15 @@
 import "./App.css";
 import { Router } from "./routes/Router";
-// import { NotificationProvider } from './context/NotificationContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { ChatConnProvider } from "./context/ChatConnContext";
 function App() {
   return (
     <div>
-      {/* <NotificationProvider>
-        <Router />
-      </NotificationProvider> */}
-      <Router />
+      <ChatConnProvider>
+        <NotificationProvider>
+          <Router />
+        </NotificationProvider>
+      </ChatConnProvider>
     </div>
   );
 }
