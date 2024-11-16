@@ -8,13 +8,16 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import { useSearchContext } from "../../context/SearchContext";
 
 export const Search = () => {
   const [inputValue, setInputValue] = useState("");
   const navigate = useNavigate();
+  const { setInput } = useSearchContext();
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && inputValue !== "") {
+      setInput(inputValue);
       navigate(`/search?keywords="${inputValue}"`);
     }
   };

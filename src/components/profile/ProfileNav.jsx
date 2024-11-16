@@ -22,6 +22,7 @@ export const ProfileNav = () => {
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
+    const [myPic, setMyPic] = useState("");
 
     useEffect(() => {
         const getUser = async () => {
@@ -33,6 +34,7 @@ export const ProfileNav = () => {
             if (userId && userId !== -1) {
                 const response = await getUserById(userId);
                 setUser(response.data);
+                setMyPic(response.data.avt);
                 console.log(response);
             } 
             else {
@@ -61,7 +63,7 @@ export const ProfileNav = () => {
                                 justifyContent="center"
                             >
                                 <Image 
-                                    src={user?.avt || "https://archive.org/download/placeholder-image/placeholder-image.jpg"} 
+                                    src={myPic || "https://archive.org/download/placeholder-image/placeholder-image.jpg"} 
                                     objectFit="cover" 
                                     w="100%" 
                                     h="100%"
@@ -78,10 +80,9 @@ export const ProfileNav = () => {
                                     <EditProfilePic 
                                         m="120px 50px" 
                                         title="Edit avatar" 
-                                        pic="pic" 
-                                        setPic="setPic" 
-                                        mycpic="mycpic" 
-                                        setMycpic="setMycpic" 
+                                        user={user}
+                                        setMyPic={setMyPic}
+                                        myPic={myPic} 
                                     />
                                 )}
                             </Box>

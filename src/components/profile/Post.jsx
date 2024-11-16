@@ -16,10 +16,15 @@ import { useUser } from "../../context/UserContext";
 
 const IntroText = ({ icon, title }) => {
     return (
-        <Flex my={3}>
+        <div style={{
+                display: "flex",
+                alignItem: "center",
+                margin: "0.75rem 0"
+        }}
+       >
             <Icon as={icon} w={6} h={6} color={'grey'} mr={4} />
             <Text fontSize={18}>{title}</Text>
-        </Flex>
+        </div>
     );
 };
 
@@ -44,7 +49,7 @@ export const Post = () => {
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-              const response = await axios.get(`http://localhost:8001/api/post/${user?.id}/${user?.id}`)
+              const response = await axios.get(`http://localhost:8001/api/post/${user?.id}/${user?.id}?limit=10`)
               setPosts(response.data.$values);  
               console.log(response)
             } catch (error) {
@@ -89,22 +94,34 @@ export const Post = () => {
             <Box bg={'#f0f2f5'} minH={'300px'} pt={5} pb={'100px'}>
                 <Box w={'1000px'} m={'auto'}>
                     <Grid templateColumns='38% 60%' gap={5}>
-                        <Box minH={20} maxH={520} bg={'white'} rounded={6} p={5} boxShadow={'lg'}>
-                            <Heading fontSize={23}>Intro</Heading>
-                            <IntroText title={`Studied at ${user?.education}`} icon={MdSchool} />
-                            <IntroText title={`Lives in ${user?.address}`} icon={MdMapsHomeWork} /> 
-                            <IntroText title={`${user?.phone}`} icon={MdOutlinePhone} /> 
-                            <IntroText title={`${user?.gender}`} icon={FaTransgender} /> 
-                            <IntroText title={`${user?.birth && convertToViDate(user?.birth)}`} icon={FaBirthdayCake} /> 
-                            <IntroText title={`${user?.relationship}`} icon={AiFillHeart} />
-                            <IntroLink title={`${user?.social}`} icon={IoShareSocialOutline } />
+                        <div>
+                            <div 
+                                style={{
+                                    minHeight: "20px",
+                                    maxHeight: "520px",
+                                    backgroundColor: "white",
+                                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                                    padding: "1.25rem",
+                                    borderRadius: "6px",
+                                    borderColor: "#E2E8F0"
+                                }}
+                            >
+                                <Heading fontSize={23}>Intro</Heading>
+                                { user?.education  && <IntroText title={`Studied at ${user?.education}`} icon={MdSchool} /> }
+                                { user?.education  && <IntroText title={`Lives in ${user?.education}`} icon={MdMapsHomeWork} /> } 
+                                { user?.phone  && <IntroText title={`${user?.phone}`} icon={MdOutlinePhone} /> } 
+                                { user?.gender  && <IntroText title={`${user?.gender}`} icon={FaTransgender} /> } 
+                                { user?.birth  && <IntroText title={`${user?.birth && convertToViDate(user?.birth)}`} icon={FaBirthdayCake} /> } 
+                                { user?.relationship  && <IntroText title={`${user?.relationship}`} icon={AiFillHeart} /> }
+                                { user?.social && <IntroLink title={`${user?.social}`} icon={IoShareSocialOutline } /> }
 
-                            {
-                                currentUser === user?.id && (
-                                    <EditProfile w={'100%'} m={'15px auto 5px'} title={'Edit Intro'} userData={user} setUser={setUser} />
-                                )
-                            }
-                        </Box>
+                                {
+                                    currentUser === user?.id && (
+                                        <EditProfile w={'100%'} m={'15px auto 5px'} title={'Edit Intro'} userData={user} setUser={setUser} />
+                                    )
+                                }
+                            </div>
+                        </div>
                         
                         {/* Feed section */}
                         <Box minH={20}>
