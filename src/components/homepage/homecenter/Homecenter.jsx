@@ -16,6 +16,7 @@ export const Homecenter = () => {
   const { currentUser } = useUser(); // id current user 
   const postsPerPage = 3; // Number of posts to fetch at once
   const [lastPostId, setLastPostId] = useState(null);
+  const [hasMore, setHasMore] = useState(true); // Track if there are more posts
   const updatePostInfor = async (userId, post) => {
     try {
       const response = await getUserById(userId);
@@ -70,30 +71,37 @@ export const Homecenter = () => {
   };
 
   const fetchPosts = async () => {
+    if (loading || !hasMore) return; // Prevent fetch if already loading or no more posts
     setLoading(true);
     try {
-      // Construct the URL based on lastId
       const url = lastPostId
         ? `${process.env.REACT_APP_API_URL}/post/${currentUser}?lastPostId=${lastPostId}&limit=${postsPerPage}`
         : `${process.env.REACT_APP_API_URL}/post/${currentUser}?limit=${postsPerPage}`;
-
       const response = await axios.get(url);
-      // Check if $values is an array and not null
-      if (response.data.$values && Array.isArray(response.data.$values)) {
-        const fetchedPosts = response.data.$values;
-        if (fetchedPosts.length > 0) {
-          fetchedPosts.map((post) => updatePostInfor(post.userId, post));
-          setLastPostId(fetchedPosts[fetchedPosts.length - 1].id);
-          setPosts((prevPosts) => [...prevPosts, ...fetchedPosts]);
-        } else {
-          console.warn("No new posts found.");
+
+      if (response.data?.$values?.length) {
+        const fetchedPosts = await Promise.all(
+          response.data.$values.map((post) =>
+            updatePostInfor(post.userId, post)
+          )
+        );
+        const uniquePosts = fetchedPosts.filter(
+          (newPost) => !posts.some((existingPost) => existingPost.id === newPost.id)
+        );
+        setLastPostId(fetchedPosts[fetchedPosts.length - 1].id);
+        setPosts((prevPosts) => [...prevPosts, ...uniquePosts]);
+
+        // Check if fewer posts than expected are fetched, indicating no more posts
+        if (fetchedPosts.length < postsPerPage) {
+          setHasMore(false); // No more posts to load
         }
       } else {
         console.error("Unexpected response format:", response.data);
         setPosts((prevPosts) => [...prevPosts]);
+        setHasMore(false); // No posts in the response
       }
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      console.error('Error fetching posts:', error);
     } finally {
       setLoading(false);
     }
@@ -102,7 +110,7 @@ export const Homecenter = () => {
   // Initial fetch of posts
   useEffect(() => {
     fetchPosts();
-  }, [lastPostId]);
+  }, []);
 
   // Update comments for a specific post
   const updateCommentsForPost = (postId, updatedComments) => {
@@ -115,11 +123,10 @@ export const Homecenter = () => {
   // Handle scrolling to load more posts
   const handleScroll = useCallback(() => {
     const bottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
-    if (bottom && !loading) {
-      // alert(lastPostId);
+    if (bottom && !loading && hasMore) {
       fetchPosts();
     }
-  }, [loading]);
+  }, [lastPostId, loading, hasMore]);
   // // Add event listener for scrolling
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
