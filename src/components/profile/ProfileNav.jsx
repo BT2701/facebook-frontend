@@ -8,6 +8,7 @@ import { EditProfilePic } from "./EditProfilePic";
 import { useUser } from "../../context/UserContext";
 import { addFriend, addRequest, deleteRequestById, deleteRequestBySenderIdAndReceiverId, getFriendByUserId1AndUserId2, getRequestBySenderAndReceiver, getUserById, removeFriend } from "../../utils/getData"; // Giả sử các API này tồn tại
 import { AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay } from "@chakra-ui/react";
+import { handleAcceptRequest, handleCancelRequest, handleRemoveFriend, handleRemoveRequest, handleSendRequest } from "../../utils/handleRequestFriend";
 
 const NewButton = ({ title, path }) => {
     return (
@@ -25,8 +26,6 @@ export const ProfileNav = () => {
     const location = useLocation();
     const [myPic, setMyPic] = useState("");
     const [isRefreshFriends, setIsRefreshFriends] = useState(false);
-
-    const refreshFriends = () => setIsRefreshFriends((prev) => !prev);
 
     const { isOpen, onOpen, onClose } = useDisclosure(); // Dialog quản lý xóa bạn bè
     const cancelRef = React.useRef();
@@ -85,57 +84,6 @@ export const ProfileNav = () => {
         handleRequestAndFriend();
     }, [currentUser, user, isRefreshFriends])
 
-    // Hàm xử lý khi nhấn "Thêm bạn bè"
-    const handleSendRequest = async () => {
-        const response = await addRequest(currentUser, user?.id);
-        if (response) {
-            setFriendStatus("waiting");
-            refreshFriends();
-        }
-    };
-
-    // Hàm xử lý khi xác nhận lời mời kết bạn
-    const handleAcceptRequest = async () => {
-        const resGetReq = await getRequestBySenderAndReceiver(currentUser, user?.id);
-        if(resGetReq) {
-            const response = await addFriend(currentUser, user?.id);
-            if (response) {
-                await deleteRequestById(resGetReq[0]?.id);
-                setFriendStatus("friend");
-                refreshFriends();
-            }
-        }
-    };
-
-    // Hàm xử lý khi từ chối lời mời kết bạn
-    const handleCancelRequest = async () => {
-        const response = await deleteRequestBySenderIdAndReceiverId(user?.id, currentUser);
-        if (response) {
-            setFriendStatus("notFriend");
-            refreshFriends();
-            onClose();
-        }
-    };
-
-    // Hàm xử lý khi xóa bạn bè
-    const handleRemoveFriend = async () => {
-        const response = await removeFriend(currentUser, user?.id);
-        if (response) {
-            setFriendStatus("notFriend");
-            refreshFriends();
-            onClose();
-        }
-    };
-
-    const handleRemoveRequest = async () => {
-        const response = await deleteRequestBySenderIdAndReceiverId(currentUser, user?.id);
-        if (response) {
-            setFriendStatus("notFriend");
-            refreshFriends();
-            onClose();
-        }
-    };
-
     return (
         <>
             <Box h={'300px'} bg={'white'}>
@@ -176,7 +124,7 @@ export const ProfileNav = () => {
                                 ) : (
                                     <>
                                         {friendStatus === "notFriend" && (
-                                            <Button colorScheme="blue" onClick={handleSendRequest}>
+                                            <Button colorScheme="blue" onClick={() => handleSendRequest(currentUser, user?.id, setFriendStatus, setIsRefreshFriends)}>
                                                 Add friend
                                             </Button>
                                         )}
@@ -202,7 +150,7 @@ export const ProfileNav = () => {
                                                                 <Button ref={cancelRef} onClick={onClose}>
                                                                     Cancel
                                                                 </Button>
-                                                                <Button colorScheme="red" onClick={handleRemoveFriend} ml={3}>
+                                                                <Button colorScheme="red" onClick={() => handleRemoveFriend(currentUser, user?.id, setFriendStatus, setIsRefreshFriends, onClose)} ml={3}>
                                                                     Remove
                                                                 </Button>
                                                             </AlertDialogFooter>
@@ -233,7 +181,7 @@ export const ProfileNav = () => {
                                                                 <Button ref={cancelRef} onClick={onClose}>
                                                                     Cancel
                                                                 </Button>
-                                                                <Button colorScheme="red" onClick={handleRemoveRequest} ml={3}>
+                                                                <Button colorScheme="red" onClick={() => handleRemoveRequest(currentUser, user?.id, setFriendStatus, setIsRefreshFriends, onClose)} ml={3}>
                                                                     Remove
                                                                 </Button>
                                                             </AlertDialogFooter>
@@ -244,10 +192,10 @@ export const ProfileNav = () => {
                                         )}
                                         {friendStatus === "requestFriend" && (
                                             <>
-                                                <Button colorScheme="green" onClick={handleAcceptRequest}>
+                                                <Button colorScheme="green" onClick={() => handleAcceptRequest(currentUser, user?.id, setFriendStatus, setIsRefreshFriends)}>
                                                     Accept
                                                 </Button>
-                                                <Button colorScheme="red" onClick={handleCancelRequest} ml={2}>
+                                                <Button colorScheme="red" onClick={() => handleCancelRequest(currentUser, user?.id, setFriendStatus, setIsRefreshFriends, onClose)} ml={2}>
                                                     Refuse
                                                 </Button>
                                             </>
