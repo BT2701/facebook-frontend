@@ -74,65 +74,52 @@ export const Post = () => {
     }
 
     const updatePostInfor = async (userId, post) => {
-        try {
-          const response = await getUserById(userId);
-          console.log(response)
-          if (response && response.data) {
+      try {
+        const response = await getUserById(userId);
+        if (response && response.data) {
             post.profilePic = response.data.avt;
             post.profileName = response.data.name;
-          } else {
-            console.error('Error: response or response.data is undefined');
-            // // Handle the case where response or response.data is missing
-            // post.profilePic = 'https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp'; // Or some default value
-            // post.profileName = 'Anonymous'; // Or some default name
-          }
-          if (post.comments.$values.length && Array.isArray(post.comments.$values)) {
+        } else {
+            console.error('Lỗi: response hoặc response.data không xác định');
+        }
+        if (post.comments.$values.length && Array.isArray(post.comments.$values)) {
             const updatedComments = await Promise.all(
-              post.comments.$values.map(async (comment) => {
-                return await updateCommentInfor(comment.userId, comment);
-              })
+                post.comments.$values.map(async (comment) => {
+                    return await updateCommentInfor(comment.userId, comment);
+                })
             );
             post.comments.$value = updatedComments;
-          }
-          return post;
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          // // Handle the error (e.g., return default values or an empty object)
-          // post.profilePic = "https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp';
-          // post.profileName = 'Anonymous';
-          return post;
         }
+        return post;
+    } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu người dùng:', error);
+        return post;
+    }
       };
     
       const updateCommentInfor = async (userId, comment) => {
         try {
           const response = await getUserById(userId);
           if (response && response.data) {
-            comment.profilePic = response.data.avt;
-            comment.profileName = response.data.name;
+              comment.profilePic = response.data.avt;
+              comment.profileName = response.data.name;
           } else {
-            console.error('Error: response or response.data is undefined');
-            // // Handle the case where response or response.data is missing
-            // post.profilePic = 'https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp'; // Or some default value
-            // post.profileName = 'Anonymous'; // Or some default name
+              console.error('Lỗi: response hoặc response.data không xác định');
           }
-    
+
           return comment;
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          // // Handle the error (e.g., return default values or an empty object)
-          // post.profilePic = "https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp';
-          // post.profileName = 'Anonymous';
+      } catch (error) {
+          console.error('Lỗi khi lấy dữ liệu người dùng:', error);
           return comment;
-        }
+      }
     };
 
     const updateCommentsForPost = (postId, updatedComments) => {
-        setPosts((prevPosts) =>
-          prevPosts.map((post) =>
-            post.id === postId ? { ...post, comments: { $values: updatedComments } } : post
-          )
-        );
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, comments: { $values: updatedComments } } : post
+        )
+      );
     };
 
     return (

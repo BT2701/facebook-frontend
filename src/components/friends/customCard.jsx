@@ -1,9 +1,10 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Image, Text, Center, Button } from '@chakra-ui/react';
 import confirmDialog from '../sharedComponents/confirmDialog'; // Import hàm confirmDialo
-import { deleteRequestById ,addRequest,removeFriend,addFriendAndDeleteRequest} from '../../utils/getData';
+import { deleteRequestById, addRequest, removeFriend, addFriendAndDeleteRequest } from '../../utils/getData';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useNavigate } from 'react-router-dom';
 
 
 const CustomCard = ({ data }) => {
@@ -11,19 +12,21 @@ const CustomCard = ({ data }) => {
     const [hasData, setHasData] = useState(false); // Trạng thái kiểm tra dữ liệu// Kiểm tra dữ liệu có tồn tại hay không
     const [status, setStatus] = useState(''); // Trạng thái lưu status
     const [statusBtn, setStatusBtn] = useState(''); // Trạng thái lưu button ẩn
-    const [idFriend,setIdFriend]=useState('');
-    const [idRequest,setIdRequest]=useState('');
-    const [idSendRequest,setIdSendRequest]=useState(0);// lưu trạng thái khi đã gửi kết bạn thì sẽ hiện nút hủy lời mời
-    const [isDisplay,setIsDisplay]=useState(true);// lưu trạng thái khi đã gửi kết bạn thì sẽ hiện nút hủy lời mời
+    const [idFriend, setIdFriend] = useState('');
+    const [idRequest, setIdRequest] = useState('');
+    const [idSendRequest, setIdSendRequest] = useState(0);// lưu trạng thái khi đã gửi kết bạn thì sẽ hiện nút hủy lời mời
+    const [isDisplay, setIsDisplay] = useState(true);// lưu trạng thái khi đã gửi kết bạn thì sẽ hiện nút hủy lời mời
     const { currentUser } = useUser();
     const { createNotification, deleteNotification } = useNotification();
+    const nav = useNavigate();
+
 
 
     // ******************************************************************
     const userId = currentUser; // Lấy ID người dùng
     // *********************************************************************
-     // Cập nhật hasData khi dữ liệu thay đổi
-     useEffect(() => {
+    // Cập nhật hasData khi dữ liệu thay đổi
+    useEffect(() => {
         console.log("Data in CustomCard:", data); // In ra dữ liệu nhận được
         setHasData(!!data); // Kiểm tra xem dữ liệu có tồn tại không
         setStatus(data?.status); // Lấy status từ data (nếu có)
@@ -34,13 +37,13 @@ const CustomCard = ({ data }) => {
     const handleConfirm = async () => {
         try {
             // Gọi hàm xử lý xác nhận ở đây (ví dụ, API call)
-            const response = await addFriendAndDeleteRequest(userId,idFriend,idRequest); // Giả sử có một hàm xác nhận yêu cầu
+            const response = await addFriendAndDeleteRequest(userId, idFriend, idRequest); // Giả sử có một hàm xác nhận yêu cầu
             if (response === 204) { // Nếu thành công
                 setIsRequested(true); // Cập nhật trạng thái
                 setStatusBtn('Request accepted');
                 createNotification(idFriend, 0, 'accepted your friend request', 4);
                 deleteNotification(data.Info.id, userId, 0, 3);
-            }else if (response === 404) { // Không tìm thấy yêu cầu kết bạn
+            } else if (response === 404) { // Không tìm thấy yêu cầu kết bạn
                 alert("Yêu cầu kết bạn không tồn tại.");
                 setIsRequested(true); // Cập nhật trạng thái
                 setStatusBtn('Request accepted');
@@ -56,7 +59,7 @@ const CustomCard = ({ data }) => {
     const handleAddFriend = async () => {
         try {
             // Gọi hàm xử lý xác nhận ở đây (ví dụ, API call)
-            const response = await addRequest(userId,data.Info.id); // Giả sử có một hàm xác nhận yêu cầu
+            const response = await addRequest(userId, data.Info.id); // Giả sử có một hàm xác nhận yêu cầu
             if (response) { // Nếu thành công
                 setIdSendRequest(response.id)
                 createNotification(data.Info.id, 0, 'sent you a friend request', 3);
@@ -72,7 +75,7 @@ const CustomCard = ({ data }) => {
             'Bạn có chắc chắn muốn xóa không?', // Nội dung
             'warning' // Icon (có thể sử dụng 'warning', 'info', 'success', 'error', 'question')
         );
-    
+
         if (isConfirmed) {
             try {
                 // Kiểm tra giá trị của status để gọi hàm xử lý phù hợp
@@ -97,22 +100,22 @@ const CustomCard = ({ data }) => {
                     }
                 } else if (status === 'friend') {
                     // Gọi hàm removeFriend để xóa bạn bè qua API
-                    response= await removeFriend(userId, idFriend);
+                    response = await removeFriend(userId, idFriend);
                     if (response === 200) {
-                        setIsRequested(true); 
+                        setIsRequested(true);
                         setStatusBtn('Friend deleted');
                         console.log("Xóa bạn bè thành công.");
                     } else if (response === 404) {
                         console.log("Không tìm thấy quan hệ bạn bè.");
-                        setIsRequested(true); 
+                        setIsRequested(true);
                         setStatusBtn('Friend deleted');
                     } else if (response === 500) {
                         console.log("Có lỗi xảy ra trên server khi xóa bạn bè.");
                     } else {
                         console.log("Trạng thái không xác định hoặc có lỗi khác:", response);
                     }
-                
-                
+
+
                 }
             } catch (error) {
                 console.error("Error deleting request:", error);
@@ -153,18 +156,26 @@ const CustomCard = ({ data }) => {
                 {hasData ? (
                     <>
                         <Box h={'200px'} overflow={'hidden'}>
-                            <Image 
-                                w={'100%'} 
-                                src={data.Info.avatar || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe52w64lGbNV6RGGmd85bXiciZjcWu6XR5rg&s'} 
-                                alt={data.Info.name} 
+                            <Image
+                                w={'100%'}
+                                src={data.Info.avatar || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe52w64lGbNV6RGGmd85bXiciZjcWu6XR5rg&s'}
+                                alt={data.Info.name}
                             />
                         </Box>
                         <Box h={'20px'} p={4} mb={5}>
-                            <Text fontWeight={500} fontSize={20}>{data.Info.name}</Text>
+                            {/* <Text fontWeight={500} fontSize={20}>{data.Info.name}</Text> */}
+                            <Text
+                                fontWeight={500}
+                                fontSize={20}
+                                cursor="pointer"
+                                onClick={() => nav( `/profile?id=${data.Info.id}`)}
+                            >
+                                {data.Info.name}
+                            </Text>
                         </Box>
-    
+
                         <Box flexGrow={1} /> {/* Khoảng trống để đẩy nút xuống dưới */}
-    
+
                         {/* Nút Confirm, Delete, hoặc Add Friend */}
                         {!isRequested ? (
                             <>
@@ -192,7 +203,7 @@ const CustomCard = ({ data }) => {
                                         </Center>
                                     </>
                                 )}
-                                
+
                                 {status === 'friend' && (
                                     <>
                                         <Center h={'50px'} w={'100%'} p={4} mr={'5px'}>
@@ -216,7 +227,7 @@ const CustomCard = ({ data }) => {
                                         </Center>
                                     </>
                                 )}
-    
+
                                 {status === 'suggest' && (
                                     <>
                                         {/* Kiểm tra nếu có idSendRequest thì không hiển thị nút Add Friend */}
@@ -260,11 +271,11 @@ const CustomCard = ({ data }) => {
                             </>
                         ) : (
                             <Center h={'50px'} w={'100%'} p={4} mr={'5px'} pb="29%">
-                                <Button 
-                                    w={'100%'} 
-                                    isDisabled={true} 
-                                    bg="#808080" 
-                                    color="black" 
+                                <Button
+                                    w={'100%'}
+                                    isDisabled={true}
+                                    bg="#808080"
+                                    color="black"
                                     _hover={{ bg: undefined }} // Ngăn hiệu ứng hover
                                 >
                                     {statusBtn}
@@ -279,7 +290,7 @@ const CustomCard = ({ data }) => {
                 )}
             </Box>
         ) : null
-    );    
+    );
 };
 
 
