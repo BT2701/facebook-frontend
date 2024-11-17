@@ -70,9 +70,6 @@ const Notifications = () => {
     const { chatConn } = useChatConn();
     const nav = useNavigate();
 
-
-
-
     const fetchUser = async (id) => {
         const user = await getUserById(id);
         return user?.data || 'Unknown';

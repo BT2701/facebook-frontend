@@ -9,7 +9,8 @@ import { useUser } from '../../context/UserContext';
 import { getFriendByUserId1AndUserId2, getRequestBySenderAndReceiver, getUserById } from '../../utils/getData';
 import formatTimeFromDatabase from '../sharedComponents/formatTimeFromDatabase';
 import axios from 'axios';
-import { handleAcceptRequest, handleCancelRequest, handleRemoveFriend, handleRemoveRequest, handleSendRequest } from '../../utils/handleRequestFriend';
+import { handleRemoveFriend } from '../../utils/handleRequestFriend';
+import { useNotification } from '../../context/NotificationContext';
 
 function SearchPage() {
     const { currentUser } = useUser();
@@ -28,6 +29,7 @@ function SearchPage() {
     const userScrollRef = useRef(null);
     const location = useLocation();
     const [idToRemove, setIdToRemove] = useState(-1);
+    const { handleSendRequestv2, handleAcceptRequestv2, handleCancelRequestv2, handleRemoveRequestv2 } = useNotification();
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
@@ -257,7 +259,7 @@ function SearchPage() {
                                         </Flex>
                                         <>
                                             {user.friendStatus === "notFriend" && (
-                                                <Button key={user.id} colorScheme="blue" onClick={() => handleSendRequest(currentUser, user.id, (status) => updateUserStatus(user.id, status))}>
+                                                <Button key={user.id} colorScheme="blue" onClick={() => handleSendRequestv2(currentUser, user.id, (status) => updateUserStatus(user.id, status))}>
                                                     Add friend
                                                 </Button>
                                             )}
@@ -320,7 +322,7 @@ function SearchPage() {
                                                                     <Button ref={cancelRef} onClick={onClose}>
                                                                         Cancel
                                                                     </Button>
-                                                                    <Button colorScheme="red" onClick={() => handleRemoveRequest(currentUser, idToRemove, (status) => updateUserStatus(idToRemove, status), onClose)} ml={3}>
+                                                                    <Button colorScheme="red" onClick={() => handleRemoveRequestv2(currentUser, idToRemove, (status) => updateUserStatus(idToRemove, status), onClose)} ml={3}>
                                                                         Remove
                                                                     </Button>
                                                                 </AlertDialogFooter>
@@ -331,10 +333,10 @@ function SearchPage() {
                                             )}
                                             {user.friendStatus === "requestFriend" && (
                                                 <div key={user.id}>
-                                                    <Button colorScheme="green" onClick={() => handleAcceptRequest(currentUser, user.id, (status) => updateUserStatus(user.id, status))}>
+                                                    <Button colorScheme="green" onClick={() => handleAcceptRequestv2(currentUser, user.id, (status) => updateUserStatus(user.id, status))}>
                                                         Accept
                                                     </Button>
-                                                    <Button colorScheme="red" onClick={() => handleCancelRequest(currentUser, user.id, (status) => updateUserStatus(user.id, status))} ml={2}>
+                                                    <Button colorScheme="red" onClick={() => handleCancelRequestv2(currentUser, user.id, (status) => updateUserStatus(user.id, status))} ml={2}>
                                                         Refuse
                                                     </Button>
                                                 </div>
