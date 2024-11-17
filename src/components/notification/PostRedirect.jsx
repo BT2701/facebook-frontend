@@ -59,9 +59,10 @@ const PostRedirect = ({ feedId, open, onClose, currentUser }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetchDataForPostId(feedId);
+                const response = await fetchDataForPostId(feedId, currentUser);
                 const data = await response.data;
                 const p = await updatePostInfo(data.userId, data);
+                console.log('Data:', p);
                 setPost(p || {}); // Đảm bảo post luôn được xác định
             } catch (error) {
                 console.error('Lỗi khi lấy dữ liệu:', error);

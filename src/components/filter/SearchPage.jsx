@@ -89,7 +89,7 @@ function SearchPage() {
 
     const fetchPostsData = async (keywords, offset) => {
         try {
-            const postResponse = await axios.get(`${process.env.REACT_APP_API_URL}/post/search?content=${keywords}&limit=${limitPost}&offset=${offset}`);
+            const postResponse = await axios.get(`${process.env.REACT_APP_API_URL}/post/search?content=${keywords}&limit=${limitPost}&offset=${offset}&currentUserId=${currentUser}`);
             const postData = await postResponse.data;
 
             if (postData && Array.isArray(postData?.$values)) {

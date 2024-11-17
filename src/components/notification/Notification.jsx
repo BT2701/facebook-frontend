@@ -122,11 +122,14 @@ const Notifications = () => {
             await markAsReadNotification(id);
             setReadNotification(1);
             if (action === 1 || action === 2) {
-                setFeedId(feedId);
-                setOpenDialog(true);
+                if (!feedId) return; //bài viết không tồn tại rồi xóa
+                else {
+                    setFeedId(feedId);
+                    setOpenDialog(true);
+                }
             }
             else if (action === 3 || action === 4) {
-                nav( `/profile?id=${user}`);
+                nav(`/profile?id=${user}`);
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);

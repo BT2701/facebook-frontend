@@ -153,9 +153,9 @@ export const fetchDataForStory = async () => {
 };
 
 // post
-export const fetchDataForPostId = async (id) => {
+export const fetchDataForPostId = async (id, currentUserId) => {
   try {
-    const response = await axios.get(`${process.env.REACT_APP_API_URL}/post/post-noti/${id}`);
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/post/post-noti/${id}/${currentUserId}`);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
