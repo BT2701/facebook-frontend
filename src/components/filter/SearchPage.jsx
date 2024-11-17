@@ -3,12 +3,13 @@ import './search.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link, useLocation } from 'react-router-dom';
 import { Feed } from '../homepage/homecenter/Feed';
-import { Box, Image, Spinner } from '@chakra-ui/react';
+import { AlertDialog, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Box, Button, Flex, Image, Spinner, useDisclosure } from '@chakra-ui/react';
 import { useSearchContext } from '../../context/SearchContext';
 import { useUser } from '../../context/UserContext';
-import { getUserById } from '../../utils/getData';
+import { getFriendByUserId1AndUserId2, getRequestBySenderAndReceiver, getUserById } from '../../utils/getData';
 import formatTimeFromDatabase from '../sharedComponents/formatTimeFromDatabase';
 import axios from 'axios';
+import { handleAcceptRequest, handleCancelRequest, handleRemoveFriend, handleRemoveRequest, handleSendRequest } from '../../utils/handleRequestFriend';
 
 function SearchPage() {
     const { currentUser } = useUser();
@@ -26,18 +27,20 @@ function SearchPage() {
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const userScrollRef = useRef(null);
     const location = useLocation();
+    const [idToRemove, setIdToRemove] = useState(-1);
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const query = searchParams.get('keywords') || ''; 
+        const querySearch = input === "" ? query.replace(/"/g, '') : input;
 
-        setKeywords(input === "" ? query : input);
+        setKeywords(querySearch);
         setUsers([]);
         setPosts([]);
         setOffsetUser(0); 
         setOffsetPost(0); 
-        fetchPostsData(input, 0);
-        fetchUsersData(input, 0);
+        fetchPostsData(querySearch, 0);
+        fetchUsersData(querySearch, 0);
     }, [input]);
 
     useEffect(() => {
@@ -86,7 +89,7 @@ function SearchPage() {
         try {
             const postResponse = await axios.get(`${process.env.REACT_APP_API_URL}/post/search?content=${keywords}&limit=${limitPost}&offset=${offset}`);
             const postData = await postResponse.data;
-    
+
             if (postData && Array.isArray(postData?.$values)) {
                 const postsWithUserData = await Promise.all(
                     postData.$values.map(async (post) => {
@@ -109,15 +112,24 @@ function SearchPage() {
     };
     
 
+    const { isOpen, onOpen, onClose } = useDisclosure(); // Dialog quản lý xóa bạn bè
+    const cancelRef = React.useRef();
     const fetchUsersData = async (keywords, offset) => {
         try {
             const userResponse = await axios.get(`${process.env.REACT_APP_API_URL}/user/search?name=${keywords}&limit=${limitUser}&offset=${offset}`);
             const userData = await userResponse.data;
 
             if (Array.isArray(userData)) {
-                // setErrorFetchUser("");
-                setUsers((prevUsers) => [...prevUsers, ...userData]);
-                setOffsetUser(offset); // Cập nhật offset sau khi fetch thành công
+                // Lấy thông tin trạng thái bạn bè cho mỗi người dùng
+                const usersWithStatus = await Promise.all(
+                    userData.map(async (user) => {
+                        const friendStatus = await fetchFriendStatus(currentUser, user.id); // Giả sử bạn có hàm fetchFriendStatus
+                        return { ...user, friendStatus };
+                    })
+                );
+    
+                setUsers((prevUsers) => [...prevUsers, ...usersWithStatus]);
+                setOffsetUser(offset); // Cập nhật offset
             }
         } catch (error) {
             // setErrorFetchUser(error.message);
@@ -125,6 +137,36 @@ function SearchPage() {
         } finally {
             setIsLoadingUsers(false);
         }
+    };
+    const fetchFriendStatus = async (currentUserId, friendId) => {
+        try {
+            const resGetReq3 = await getFriendByUserId1AndUserId2(currentUserId, friendId);
+            if(resGetReq3 && resGetReq3.length !== 0) {
+                return "friend";
+            }
+
+            const resGetReq = await getRequestBySenderAndReceiver(friendId, currentUserId);
+            if(resGetReq && resGetReq.length !== 0) {
+                return "waiting";
+            }
+
+            const resGetReq2 = await getRequestBySenderAndReceiver(currentUserId, friendId);
+            if(resGetReq2 && resGetReq2.length !== 0) {
+                return "requestFriend";
+            }
+
+            return "notFriend";
+        } catch (error) {
+            console.error("Error fetching friend status:", error);
+            return "notFriend"; 
+        }
+    };
+    const updateUserStatus = (userId, status) => {
+        setUsers((prevUsers) =>
+            prevUsers.map((user) =>
+                user.id === userId ? { ...user, friendStatus: status } : user
+            )
+        );
     };
 
     const updatePostInfor = async (userId, post) => {
@@ -204,29 +246,112 @@ function SearchPage() {
                             </div>
                         ) : (
                             <div className="search-content-user">
-                                {users?.map(user => (
+                                {users?.filter((u) => u?.id !== currentUser).map((user) => (
                                     <div key={user.id} className="search-content-user-box">
-                                        <Box 
-                                            style={{ marginLeft: "10px" }}
-                                            w={'50px'} 
-                                            h={'50px'} 
-                                            overflow={'hidden'} 
-                                            rounded={'full'}
-                                            display="flex" 
-                                            alignItems="center" 
-                                            justifyContent="center"
-                                        >
-                                            <Image src={user.avt} alt={user.name} objectFit="cover" w="100%" h="100%" />
-                                        </Box>
-                                        <div className="search-content-user-box-mid">
-                                            <div style={{ marginLeft: "0.5em" }} className="search-content-user-box-mid-name">
-                                                <Link to={`/profile?id=${user.id}`}>{user.name}</Link>
+                                        <Flex alignItems={"center"}>
+                                            <Box
+                                                style={{ marginLeft: "10px" }}
+                                                w={'50px'}
+                                                h={'50px'}
+                                                overflow={'hidden'}
+                                                rounded={'full'}
+                                                display="flex"
+                                                alignItems="center"
+                                                justifyContent="center"
+                                            >
+                                                <Image src={user?.avt} alt={user?.name} objectFit="cover" w="100%" h="100%" />
+                                            </Box>
+                                            <div className="search-content-user-box-mid">
+                                                <div style={{ marginLeft: "0.5em" }} className="search-content-user-box-mid-name">
+                                                    <Link to={`/profile?id=${user?.id}`}>{user?.name}</Link>
+                                                </div>
                                             </div>
-                                            <div className="search-content-user-box-mid-bonus">
-                                                <li>{user.friendsCount} {user.friendsCount > 1 ? 'Friends' : 'Friend'}</li>
-                                                <li>{user.education || 'Unknown'}</li>
-                                            </div>
-                                        </div>
+                                        </Flex>
+                                        <>
+                                            {user.friendStatus === "notFriend" && (
+                                                <Button key={user.id} colorScheme="blue" onClick={() => handleSendRequest(currentUser, user.id, (status) => updateUserStatus(user.id, status))}>
+                                                    Add friend
+                                                </Button>
+                                            )}
+                                            {user.friendStatus === "friend" && (
+                                                <div key={user.id}>
+                                                    <Button colorScheme="green" onClick={() => {
+                                                        setIdToRemove(user?.id)
+                                                        onOpen()
+                                                    }}>
+                                                        Friend
+                                                    </Button>
+                                                    <AlertDialog
+                                                        isOpen={isOpen}
+                                                        leastDestructiveRef={cancelRef}
+                                                        onClose={onClose}
+                                                    >
+                                                        <AlertDialogOverlay>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                                                                    Remove friend
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogBody>
+                                                                    Are you sure you want to remove friends?
+                                                                </AlertDialogBody>
+                                                                <AlertDialogFooter>
+                                                                    <Button ref={cancelRef} onClick={onClose}>
+                                                                        Cancel
+                                                                    </Button>
+                                                                    <Button colorScheme="red" onClick={() => handleRemoveFriend(currentUser, idToRemove, (status) => updateUserStatus(idToRemove, status), onClose)} ml={3}>
+                                                                        Remove
+                                                                    </Button>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialogOverlay>
+                                                    </AlertDialog>
+                                                </div>
+                                            )}
+                                            {user.friendStatus === "waiting" && (
+                                                <div key={user.id}>
+                                                    <Button colorScheme="green" onClick={() => {
+                                                        setIdToRemove(user?.id)
+                                                        onOpen()
+                                                    }}>
+                                                        Waiting for response
+                                                    </Button>
+                                                    <AlertDialog
+                                                        isOpen={isOpen}
+                                                        leastDestructiveRef={cancelRef}
+                                                        onClose={onClose}
+                                                    >
+                                                        <AlertDialogOverlay>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                                                                    Remove friend request
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogBody>
+                                                                    Are you sure you want to remove friend request?
+                                                                </AlertDialogBody>
+                                                                <AlertDialogFooter>
+                                                                    <Button ref={cancelRef} onClick={onClose}>
+                                                                        Cancel
+                                                                    </Button>
+                                                                    <Button colorScheme="red" onClick={() => handleRemoveRequest(currentUser, idToRemove, (status) => updateUserStatus(idToRemove, status), onClose)} ml={3}>
+                                                                        Remove
+                                                                    </Button>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialogOverlay>
+                                                    </AlertDialog>
+                                                </div>
+                                            )}
+                                            {user.friendStatus === "requestFriend" && (
+                                                <div key={user.id}>
+                                                    <Button colorScheme="green" onClick={() => handleAcceptRequest(currentUser, user.id, (status) => updateUserStatus(user.id, status))}>
+                                                        Accept
+                                                    </Button>
+                                                    <Button colorScheme="red" onClick={() => handleCancelRequest(currentUser, user.id, (status) => updateUserStatus(user.id, status))} ml={2}>
+                                                        Refuse
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </>
                                     </div>
                                 ))}
                             </div>
