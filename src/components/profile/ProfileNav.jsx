@@ -6,7 +6,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom/dist";
 import { EditProfilePic } from "./EditProfilePic";
 import { useUser } from "../../context/UserContext";
-import { addFriend, addFriendAndDeleteRequest, addRequest, deleteRequestById, deleteRequestBySenderIdAndReceiverId, getFriendByUserId1AndUserId2, getRequestBySenderAndReceiver, getUserById, removeFriend } from "../../utils/getData"; // Giả sử các API này tồn tại
+import { addFriend, addRequest, deleteRequestById, deleteRequestBySenderIdAndReceiverId, getFriendByUserId1AndUserId2, getRequestBySenderAndReceiver, getUserById, removeFriend } from "../../utils/getData"; // Giả sử các API này tồn tại
 import { AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay } from "@chakra-ui/react";
 
 const NewButton = ({ title, path }) => {
@@ -24,6 +24,9 @@ export const ProfileNav = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [myPic, setMyPic] = useState("");
+    const [isRefreshFriends, setIsRefreshFriends] = useState(false);
+
+    const refreshFriends = () => setIsRefreshFriends((prev) => !prev);
 
     const { isOpen, onOpen, onClose } = useDisclosure(); // Dialog quản lý xóa bạn bè
     const cancelRef = React.useRef();
@@ -80,13 +83,14 @@ export const ProfileNav = () => {
             }
         }
         handleRequestAndFriend();
-    }, [currentUser, user])
+    }, [currentUser, user, isRefreshFriends])
 
     // Hàm xử lý khi nhấn "Thêm bạn bè"
     const handleSendRequest = async () => {
         const response = await addRequest(currentUser, user?.id);
         if (response) {
             setFriendStatus("waiting");
+            refreshFriends();
         }
     };
 
@@ -98,6 +102,7 @@ export const ProfileNav = () => {
             if (response) {
                 await deleteRequestById(resGetReq[0]?.id);
                 setFriendStatus("friend");
+                refreshFriends();
             }
         }
     };
@@ -107,6 +112,8 @@ export const ProfileNav = () => {
         const response = await deleteRequestBySenderIdAndReceiverId(user?.id, currentUser);
         if (response) {
             setFriendStatus("notFriend");
+            refreshFriends();
+            onClose();
         }
     };
 
@@ -115,14 +122,17 @@ export const ProfileNav = () => {
         const response = await removeFriend(currentUser, user?.id);
         if (response) {
             setFriendStatus("notFriend");
+            refreshFriends();
+            onClose();
         }
-        onClose();
     };
 
     const handleRemoveRequest = async () => {
         const response = await deleteRequestBySenderIdAndReceiverId(currentUser, user?.id);
         if (response) {
             setFriendStatus("notFriend");
+            refreshFriends();
+            onClose();
         }
     };
 
@@ -167,13 +177,13 @@ export const ProfileNav = () => {
                                     <>
                                         {friendStatus === "notFriend" && (
                                             <Button colorScheme="blue" onClick={handleSendRequest}>
-                                                Thêm bạn bè
+                                                Add friend
                                             </Button>
                                         )}
                                         {friendStatus === "friend" && (
                                             <>
                                                 <Button colorScheme="green" onClick={onOpen}>
-                                                    Bạn bè
+                                                    Friend
                                                 </Button>
                                                 <AlertDialog
                                                     isOpen={isOpen}
@@ -183,17 +193,17 @@ export const ProfileNav = () => {
                                                     <AlertDialogOverlay>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                                                                Xóa bạn bè
+                                                                Remove friend
                                                             </AlertDialogHeader>
                                                             <AlertDialogBody>
-                                                                Bạn có chắc chắn muốn xóa bạn bè không?
+                                                                Are you sure you want to remove friends?
                                                             </AlertDialogBody>
                                                             <AlertDialogFooter>
                                                                 <Button ref={cancelRef} onClick={onClose}>
-                                                                    Hủy
+                                                                    Cancel
                                                                 </Button>
                                                                 <Button colorScheme="red" onClick={handleRemoveFriend} ml={3}>
-                                                                    Xóa
+                                                                    Remove
                                                                 </Button>
                                                             </AlertDialogFooter>
                                                         </AlertDialogContent>
@@ -204,7 +214,7 @@ export const ProfileNav = () => {
                                         {friendStatus === "waiting" && (
                                             <>
                                                 <Button colorScheme="green" onClick={onOpen}>
-                                                    Đang đợi phản hồi 
+                                                    Waiting for response
                                                 </Button>
                                                 <AlertDialog
                                                     isOpen={isOpen}
@@ -214,17 +224,17 @@ export const ProfileNav = () => {
                                                     <AlertDialogOverlay>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                                                                Xóa lời mời 
+                                                                Remove friend request
                                                             </AlertDialogHeader>
                                                             <AlertDialogBody>
-                                                                Bạn có chắc chắn muốn xóa lời mời không?
+                                                                Are you sure you want to remove friend request?
                                                             </AlertDialogBody>
                                                             <AlertDialogFooter>
                                                                 <Button ref={cancelRef} onClick={onClose}>
-                                                                    Hủy
+                                                                    Cancel
                                                                 </Button>
                                                                 <Button colorScheme="red" onClick={handleRemoveRequest} ml={3}>
-                                                                    Xóa
+                                                                    Remove
                                                                 </Button>
                                                             </AlertDialogFooter>
                                                         </AlertDialogContent>
@@ -235,10 +245,10 @@ export const ProfileNav = () => {
                                         {friendStatus === "requestFriend" && (
                                             <>
                                                 <Button colorScheme="green" onClick={handleAcceptRequest}>
-                                                    Chấp nhận
+                                                    Accept
                                                 </Button>
                                                 <Button colorScheme="red" onClick={handleCancelRequest} ml={2}>
-                                                    Từ chối
+                                                    Refuse
                                                 </Button>
                                             </>
                                         )}
@@ -259,7 +269,7 @@ export const ProfileNav = () => {
                 </Box>
             </Box>
 
-            <Outlet context={[user, setUser]} />
+            <Outlet context={[user, setUser, isRefreshFriends]} />
         </>
     );
 };
