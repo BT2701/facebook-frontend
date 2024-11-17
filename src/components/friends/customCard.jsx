@@ -3,6 +3,7 @@ import { Box, Image, Text, Center, Button } from '@chakra-ui/react';
 import confirmDialog from '../sharedComponents/confirmDialog'; // Import hàm confirmDialo
 import { deleteRequestById ,addRequest,removeFriend,addFriendAndDeleteRequest} from '../../utils/getData';
 import { useUser } from '../../context/UserContext';
+import { useNotification } from '../../context/NotificationContext';
 
 
 const CustomCard = ({ data }) => {
@@ -15,6 +16,7 @@ const CustomCard = ({ data }) => {
     const [idSendRequest,setIdSendRequest]=useState(0);// lưu trạng thái khi đã gửi kết bạn thì sẽ hiện nút hủy lời mời
     const [isDisplay,setIsDisplay]=useState(true);// lưu trạng thái khi đã gửi kết bạn thì sẽ hiện nút hủy lời mời
     const { currentUser } = useUser();
+    const { createNotification, deleteNotification } = useNotification();
 
 
     // ******************************************************************
@@ -36,6 +38,8 @@ const CustomCard = ({ data }) => {
             if (response === 204) { // Nếu thành công
                 setIsRequested(true); // Cập nhật trạng thái
                 setStatusBtn('Request accepted');
+                createNotification(idFriend, 0, 'accepted your friend request', 4);
+                deleteNotification(data.Info.id, userId, 0, 3);
             }else if (response === 404) { // Không tìm thấy yêu cầu kết bạn
                 alert("Yêu cầu kết bạn không tồn tại.");
                 setIsRequested(true); // Cập nhật trạng thái
@@ -55,6 +59,7 @@ const CustomCard = ({ data }) => {
             const response = await addRequest(userId,data.Info.id); // Giả sử có một hàm xác nhận yêu cầu
             if (response) { // Nếu thành công
                 setIdSendRequest(response.id)
+                createNotification(data.Info.id, 0, 'sent you a friend request', 3);
             }
         } catch (error) {
             console.error("Error confirming request:", error);
@@ -79,6 +84,7 @@ const CustomCard = ({ data }) => {
                     if (response === 204) { // Nếu xóa thành công (status 204)
                         setIsRequested(true);
                         setStatusBtn('Request deleted');
+                        deleteNotification(data.Info.id, userId, 0, 3);
                     } else if (response === 404) { // Nếu không tìm thấy yêu cầu (status 404)
                         alert("Yêu cầu kết bạn không tồn tại.");
                         setIsRequested(true);
@@ -124,6 +130,7 @@ const CustomCard = ({ data }) => {
 
             if (response === 204) { // Nếu xóa thành công (status 204)
                 setIdSendRequest(0); // Cập nhật idSendRequest sau khi xóa thành công
+                deleteNotification(userId, data.Info.id, 0, 3);
             } else if (response === 404) { // Nếu không tìm thấy yêu cầu (status 404)
                 alert("yêu cầu kết bạn đã được xử lý");
                 handleRemove();

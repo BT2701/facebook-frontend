@@ -13,9 +13,11 @@ export const NotificationProvider = ({ children }) => {
     const { chatConn } = useChatConn();
 
 
-    const deleteNotification = (receiver, post = null, action) => {
+    const deleteNotification = (user = null, receiver, post = null, action) => {
         const postId = post || 0;
-        axios.delete(`${process.env.REACT_APP_API_URL}/notification/delete/${currentUser}/${receiver}/${postId}/${action}`)
+        const user1 = user || currentUser;
+        console.log('Deleting notification:', user1, receiver, postId, action);
+        axios.delete(`${process.env.REACT_APP_API_URL}/notification/delete/${user1}/${receiver}/${postId}/${action}`)
             .then(response => {
                 console.log('Notification deleted:', response.data);
                 if (chatConn) {
@@ -29,7 +31,7 @@ export const NotificationProvider = ({ children }) => {
 
 
     const createNotification = (receiverId, postId = null, contentStr, action) => {
-        const post = postId;
+        const post = postId || 0;
         if (post === null) {
             post = 0;
         }

@@ -107,7 +107,7 @@ export const Feed = ({
             } else {
                 console.error("Error unliking post");
             }
-            deleteNotification(userCreatePost, postId, 1);
+            deleteNotification(null, userCreatePost, postId, 1);
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
