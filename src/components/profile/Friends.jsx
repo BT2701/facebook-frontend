@@ -35,11 +35,10 @@ const NewText = () => {
 }
 
 export const Friends = () => {
-    const [ user ] = useOutletContext();
+    const [ user, setUser, isRefreshFriends ] = useOutletContext();
     const [friends, setFriends] = useState([]);
     
     useEffect(() => {
-        console.log(user);
         if(user?.id) {
             const getFriends = async () => {
                 const friendRes = await getFriendsByUserId(user?.id);
@@ -47,7 +46,7 @@ export const Friends = () => {
             }
             getFriends();
         }
-    }, [user])
+    }, [user, isRefreshFriends])
 
     return (
         <>

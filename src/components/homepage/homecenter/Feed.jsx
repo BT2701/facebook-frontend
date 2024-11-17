@@ -252,9 +252,6 @@ export const Feed = ({
     }
 
     const nav = useNavigate();
-    const formatTimeAgo = (dateString) => {
-        return dateString;
-    };
 
     return (
         <Box w="100%" my="7px" position={"relative"}>
@@ -274,7 +271,7 @@ export const Feed = ({
                         <Avatar src={profilePic} className="feed__avatar" />
                         <div className="feed__topInfo">
                             <h3 style={{ marginBottom: "0px" }}>{userName}</h3>
-                            <span>{formatTimeAgo(timeStamp)}</span>
+                            <span>{timeStamp}</span>
                         </div>
                     </div>
                     {currentUserId === userCreatePost && (

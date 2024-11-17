@@ -157,13 +157,13 @@ export const EditProfile = ({ m, w, title, userData, setUser }) => {
 
                         <Divider />
 
-                        <Box m={'20px'}>
+                        {/* <Box m={'20px'}>
                             <Heading fontSize={20}>Change Password</Heading>
                             <VStack mt={3} spacing={3}>
                                 <Input name='password' value={formData.password} onChange={handleChange} placeholder='New Password' type="password" />
                                 <Input name='confirmPassword' value={formData.confirmPassword} onChange={handleChange} placeholder='Confirm New Password' type="password" />
                             </VStack>
-                        </Box>
+                        </Box> */}
                     </ModalBody>
 
                     <ModalFooter>
