@@ -33,12 +33,13 @@
 }
 .search-content-user-box{
     display: flex;
-    justify-content: left;
+    justify-content: space-between;
     align-items: center;
     /* background-color: rgb(211, 210, 210); */
     width: 100%;
     border-radius: 10px;
     margin: 1em;
+    padding: 15px 20px 15px 10px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
 }
 .search-content-user-box-left, .search-content-post-header-left{
