@@ -20,6 +20,7 @@ import { getMessagesByUserId, getUserById } from "../../utils/getData";
 import { useChatBox } from "../../context/ChatBoxContext";
 import { useChatConn } from "../../context/ChatConnContext";
 import { useUser } from "../../context/UserContext";
+import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
 
 export default function ChatMenu() {
   const { setChatInfo } = useChatBox();
@@ -75,6 +76,7 @@ export default function ChatMenu() {
             contactName: userData.data.name,
             avatar: userData.data.avt,
             isOnline: userData.data.isOnline,
+            lastActive: userData.data.lastActive,
             content,
           });
         }
@@ -173,7 +175,9 @@ export default function ChatMenu() {
                       msg.isOnline,
                       msg.contactId,
                       msg.contactName,
-                      "Active"
+                      msg.isOnline === 1
+                        ? "active"
+                        : formatTimeFromDatabase(msg.lastActive)
                     )
                   }
                 >
