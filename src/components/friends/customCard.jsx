@@ -155,9 +155,11 @@ const CustomCard = ({ data }) => {
             <Box rounded={8} bg={'white'} h={'360px'} overflow={'hidden'} boxShadow={'lg'} display="flex" flexDirection="column">
                 {hasData ? (
                     <>
-                        <Box h={'200px'} overflow={'hidden'}>
+                        <Box h="220px" w="100%" overflow="hidden" borderRadius="10px">
                             <Image
-                                w={'100%'}
+                                h="100%"
+                                w="100%"
+                                objectFit="cover"
                                 src={data.Info.avatar || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe52w64lGbNV6RGGmd85bXiciZjcWu6XR5rg&s'}
                                 alt={data.Info.name}
                             />
@@ -168,7 +170,7 @@ const CustomCard = ({ data }) => {
                                 fontWeight={500}
                                 fontSize={20}
                                 cursor="pointer"
-                                onClick={() => nav( `/profile?id=${data.Info.id}`)}
+                                onClick={() => nav(`/profile?id=${data.Info.id}`)}
                             >
                                 {data.Info.name}
                             </Text>
