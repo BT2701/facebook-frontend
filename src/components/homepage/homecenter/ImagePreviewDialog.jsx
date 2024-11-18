@@ -43,7 +43,7 @@ const ImagePreviewDialog = ({ previewImage, onConfirm, onCancel, uploadProgress,
                 <canvas ref={canvasRef} width={300} height={500} className="preview-image" />
                 {/* Thanh tiến trình */}
                 {isUploading && (
-                    <div className="upload-progress">
+                    <div className="upload-progress" style={{ marginBottom: '0.3em' }}>
                         <div className="progress-bar" style={{ width: `${uploadProgress}%` }} />
                     </div>
                 )}

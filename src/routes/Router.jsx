@@ -4,7 +4,6 @@ import { Login } from "../components/auth/login";
 import PrivateRoute from "../components/auth/PrivateRouter";
 import { Navbar } from "../components/navbar/Navbar";
 import { Post } from "../components/profile/Post";
-import { About } from "../components/profile/About";
 import { Friends } from "../components/profile/Friends";
 import { Photos } from "../components/profile/Photos";
 import { FriendRequest } from "../components/friends/FriendRequest";
@@ -28,20 +27,21 @@ export const Router = () => {
         <Route
           path="/"
           element={
-            <ChatConnProvider>
+            // <ChatConnProvider>
               <ChatBoxProvider>
                 <Navbar />
               </ChatBoxProvider>
-            </ChatConnProvider>
+            // </ChatConnProvider>
           }
         >
           <Route path="/" element={<Homepage />} />
           <Route path="groups" element={<Groups />} />
           <Route path="friends" element={<FriendRequest />} />
+          <Route path="friends/suggestions" element={<FriendRequest />} />
+          <Route path="friends/all-friends" element={<FriendRequest />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="profile" element={<ProfileNav />}>
             <Route path="" element={<Post />} />
-            <Route path="about" element={<About />} />
             <Route path="friends" element={<Friends />} />
             <Route path="photos" element={<Photos />} />
           </Route>

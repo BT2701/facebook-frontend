@@ -10,6 +10,7 @@ import { useChatBox } from "../../context/ChatBoxContext";
 import { useUser } from "../../context/UserContext";
 import { getFriendsByUserId } from "../../utils/getData";
 import { useEffect, useState } from "react";
+import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
 
 export default function FriendList() {
   const { setChatInfo } = useChatBox();
@@ -33,6 +34,7 @@ export default function FriendList() {
             name: friend.name,
             avatar: friend.avt,
             isOnline: friend.isOnline,
+            lastActive: friend.lastActive,
           });
         });
       }
@@ -74,7 +76,9 @@ export default function FriendList() {
                   friend.isOnline,
                   friend.id,
                   friend.name,
-                  "active"
+                  friend.isOnline === 1
+                    ? "active"
+                    : formatTimeFromDatabase(friend.lastActive)
                 )
               }
             >
