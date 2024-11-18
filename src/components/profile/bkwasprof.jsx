@@ -40,17 +40,17 @@ return (
  formData.append("file", this.state.picture);
 
    $.ajax({
-   url: "http://localhost:1234/user/61ea57eae6a5be4e7d9fe54b",
-   method: "POST",
-   data: formData,
-   cache: false,
-      contentType: false,
- processData: false,
-success: function(response) {
-    console.log("response", response)
-    // Code to handle a succesful upload
-   }
-  });
+    url: "http://localhost:1234/user/61ea57eae6a5be4e7d9fe54b",
+    method: "POST",
+    data: formData,
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: function(response) {
+      console.log("response", response)
+      // Code to handle a succesful upload
+    }
+    });
  }
 
 render() {

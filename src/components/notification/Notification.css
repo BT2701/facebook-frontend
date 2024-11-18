@@ -29,7 +29,7 @@
 }
 .notification-item-avt{
     width: 55px !important;
-    height: 55px;
+    height: 55px !important;
     border-radius: 50%;
     margin-left: 0.5em;
 }

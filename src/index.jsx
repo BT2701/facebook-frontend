@@ -9,6 +9,7 @@ import { store } from "./featuresRedux/store";
 import { BrowserRouter } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 import * as process from "process";
+import { SearchProvider } from "./context/SearchContext";
 window.global = window;
 window.process = process;
 window.Buffer = [];
@@ -17,11 +18,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
   <ReduxProvider store={store}>
     <BrowserRouter>
-      <ChakraProvider>
-        <UserProvider>
-          <App />
-        </UserProvider>
-      </ChakraProvider>
+      <SearchProvider>
+        <ChakraProvider>
+          <UserProvider>
+            <App />
+          </UserProvider>
+        </ChakraProvider>
+      </SearchProvider>
     </BrowserRouter>
   </ReduxProvider>
 );

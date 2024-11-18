@@ -64,8 +64,20 @@ export const StoryReel = () => {
         const formData = new FormData();
         formData.append('userId', user);
         formData.append('image', image);
-    
+
         try {
+            // Giả lập tải lên
+            const uploadInterval = setInterval(() => {
+                setUploadProgress((prevProgress) => {
+                    if (prevProgress < 100) {
+                        return prevProgress + 1;
+                    }
+                    clearInterval(uploadInterval);
+                    return 100;
+                });
+            }, 50);  // Cập nhật mỗi 50ms
+
+
             const response = await axios.post(`${process.env.REACT_APP_API_URL}/story/create`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -82,7 +94,7 @@ export const StoryReel = () => {
             setIsUploading(false); // Kết thúc tải lên
         }
     };
-    
+
 
     const handleSelectImage = () => {
         const input = document.createElement('input');
@@ -135,10 +147,10 @@ export const StoryReel = () => {
                 </div>
             )}
             {/* Sử dụng ImagePreviewDialog */}
-            <ImagePreviewDialog 
-                previewImage={previewImage} 
-                onConfirm={handleConfirm} 
-                onCancel={handleCancel} 
+            <ImagePreviewDialog
+                previewImage={previewImage}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
                 uploadProgress={uploadProgress}
                 isUploading={isUploading}
             />

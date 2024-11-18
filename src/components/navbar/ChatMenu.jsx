@@ -11,6 +11,7 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Spinner,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -30,6 +31,8 @@ export default function ChatMenu() {
   const [messages, setMessages] = useState([]);
 
   const [unreadChat, setUnreadChat] = useState(0);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOpenChat = (avatar, isOnline, contactId, contactName, status) => {
     setChatInfo({
@@ -79,7 +82,15 @@ export default function ChatMenu() {
 
       setMessages(messageArray);
     }
+    setIsLoading(false);
   };
+
+  // Load data for chat menu
+  useEffect(() => {
+    if (isLoading) {
+      getDataForChatMenu();
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     // Listening from server for message to display notification
@@ -101,16 +112,17 @@ export default function ChatMenu() {
   return (
     <>
       <Center mr={4}>
-        <Menu>
+        <Menu
+          onOpen={() => {
+            setUnreadChat(0);
+            setIsLoading(true);
+          }}
+        >
           <MenuButton
             as={IconButton}
             aria-label="Options"
             icon={<ChatIcon />}
             rounded="full"
-            onClick={() => {
-              setUnreadChat(0);
-              getDataForChatMenu();
-            }}
           ></MenuButton>
 
           {/* Chat notification */}
@@ -137,6 +149,18 @@ export default function ChatMenu() {
             <Heading as="h2" mb={3}>
               Chat
             </Heading>
+
+            {isLoading && (
+              <Box
+                display="flex"
+                p={3}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Spinner size="md" />
+              </Box>
+            )}
+
             <VStack gap={2}>
               {messages.map((msg) => (
                 <MenuItem

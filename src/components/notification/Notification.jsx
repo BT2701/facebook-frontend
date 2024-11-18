@@ -14,7 +14,6 @@ import {
     Flex
 } from "@chakra-ui/react";
 import { BellIcon } from "@chakra-ui/icons";
-import { HubConnectionBuilder } from '@microsoft/signalr';
 import './Notification.css'
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -22,6 +21,9 @@ import formatTimeFromDatabase from "../sharedComponents/formatTimeFromDatabase";
 import { fetchDataForNotification, getUserById, markAllAsReadNotification, markAsReadNotification } from "../../utils/getData";
 import { useUser } from "../../context/UserContext";
 import PostRedirect from "./PostRedirect";
+import { useChatConn } from "../../context/ChatConnContext";
+import { useNavigate } from "react-router-dom";
+
 
 const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick }) => (
     <MenuItem
@@ -65,7 +67,8 @@ const Notifications = () => {
     const { currentUser } = useUser();
     const [openDialog, setOpenDialog] = useState(false);
     const [feedId, setFeedId] = useState(null);
-
+    const { chatConn } = useChatConn();
+    const nav = useNavigate();
 
     const fetchUser = async (id) => {
         const user = await getUserById(id);
@@ -93,30 +96,18 @@ const Notifications = () => {
         };
         fetchData();
         setReadNotification(0);
-    }, [readNotification]);
+    }, [readNotification, notificationList.length]);
 
     useEffect(() => {
-        const connection = new HubConnectionBuilder()
-            .withUrl("http://localhost:8001/notificationHub") // Thay bằng URL của NotificationHub
-            .withAutomaticReconnect()
-            .build();
-
-        connection.start()
-            .then(() => {
-                console.log("Connected to SignalR!");
-                connection.on("ReceiveNotification", (notification) => {
-                    setNotificationList((prevList) => [notification, ...prevList]);
-                    if (notification.receiver === currentUser) {
-                        setUnreadCount(prevCount => prevCount + 1);
-                    }
-                });
-            })
-            .catch(error => console.error("SignalR Notification Connection Error: ", error));
-
-        return () => {
-            connection.stop();
-        };
-    }, [currentUser]);
+        if (chatConn) {
+            chatConn.on("ReceiveNotification", (notification) => {
+                setNotificationList((prev) => [...prev, notification]);
+            });
+            chatConn.on("DeleteNotification", (notification1) => {
+                setNotificationList((prev) => prev.filter(notification => notification.id !== notification1.id));
+            });
+        }
+    }, [chatConn]);
 
     const markAllAsRead = async () => {
         try {
@@ -126,16 +117,19 @@ const Notifications = () => {
             console.error('Error marking all as read:', error);
         }
     };
-    const markAsRead = async (id, feedId, action) => {
+    const markAsRead = async (id, feedId, action, user) => {
         try {
             await markAsReadNotification(id);
             setReadNotification(1);
             if (action === 1 || action === 2) {
-                setFeedId(feedId);
-                setOpenDialog(true);
+                if (!feedId) return; //bài viết không tồn tại rồi xóa
+                else {
+                    setFeedId(feedId);
+                    setOpenDialog(true);
+                }
             }
-            else if (action === 3) {
-                window.location.href = `/friends`;
+            else if (action === 3 || action === 4) {
+                nav(`/profile?id=${user}`);
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -202,7 +196,7 @@ const Notifications = () => {
                                         message={notification.content}
                                         time={formatTimeFromDatabase(notification.timeline)}
                                         is_read={notification.is_read}
-                                        onClick={() => markAsRead(notification.id, notification.post, notification.action_n)}
+                                        onClick={() => markAsRead(notification.id, notification.post, notification.action_n, notification.user)}
                                     />
                                 ))
                             )}
