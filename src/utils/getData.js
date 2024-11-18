@@ -50,7 +50,6 @@ export const getUserById = async (userId) => {
     const response = await axios.get(
       `${process.env.REACT_APP_API_URL}/user/${userId}`
     );
-    console.log("dadfgdfgfddddddta"+response.data);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -155,7 +154,9 @@ export const fetchDataForStory = async () => {
 // post
 export const fetchDataForPostId = async (id, currentUserId) => {
   try {
-    const response = await axios.get(`${process.env.REACT_APP_API_URL}/post/post-noti/${id}/${currentUserId}`);
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/post/post-noti/${id}/${currentUserId}`
+    );
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -165,44 +166,57 @@ export const fetchDataForPostId = async (id, currentUserId) => {
 //friend request
 export const getAllRequests = async (id) => {
   try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/Request`, {
-          params: { id }, // Truyền tham số vào URL
-      });
-      return response.data; // Đảm bảo trả về dữ liệu
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/Request`,
+      {
+        params: { id }, // Truyền tham số vào URL
+      }
+    );
+    return response.data; // Đảm bảo trả về dữ liệu
   } catch (error) {
-      console.error('Error fetching requests:', error);
-      return null; // Trả về null nếu có lỗi
+    console.error("Error fetching requests:", error);
+    return null; // Trả về null nếu có lỗi
   }
 };
 
 export const getFriendByUserId1AndUserId2 = async (UserId1, UserId2) => {
   try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/friend/${UserId1}/${UserId2}`)
-      return response.data; // Đảm bảo trả về dữ liệu
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/friend/${UserId1}/${UserId2}`
+    );
+    return response.data; // Đảm bảo trả về dữ liệu
   } catch (error) {
-      console.error('Error fetching requests:', error);
-      return null; // Trả về null nếu có lỗi
+    console.error("Error fetching requests:", error);
+    return null; // Trả về null nếu có lỗi
   }
 };
 export const getRequestBySenderAndReceiver = async (Sender, Receiver) => {
   try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/Request/${Sender}/${Receiver}`)
-      return response.data; // Đảm bảo trả về dữ liệu
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/Request/${Sender}/${Receiver}`
+    );
+    return response.data; // Đảm bảo trả về dữ liệu
   } catch (error) {
-      console.error('Error fetching requests:', error);
-      return null; // Trả về null nếu có lỗi
+    console.error("Error fetching requests:", error);
+    return null; // Trả về null nếu có lỗi
   }
 };
-export const deleteRequestBySenderIdAndReceiverId = async (senderId, receiverId) => {
+export const deleteRequestBySenderIdAndReceiverId = async (
+  senderId,
+  receiverId
+) => {
   try {
-      const response = await axios.delete(`${process.env.REACT_APP_API_URL}/Request/delete?senderId=${senderId}&receiverId=${receiverId}`); // Gọi API DELETE
+    const response = await axios.delete(
+      `${process.env.REACT_APP_API_URL}/Request/delete?senderId=${senderId}&receiverId=${receiverId}`
+    ); // Gọi API DELETE
 
-      if (response.status === 204) { // Nếu thành công
-          return true; // Trả về true để xác nhận xóa thành công
-      }
+    if (response.status === 204) {
+      // Nếu thành công
+      return true; // Trả về true để xác nhận xóa thành công
+    }
   } catch (error) {
-      console.error('Error deleting request:', error);
-      return false; // Trả về false nếu có lỗi
+    console.error("Error deleting request:", error);
+    return false; // Trả về false nếu có lỗi
   }
 };
 
@@ -225,45 +239,50 @@ export const getDataRequests = async (id, pageNumber) => {
 // Hàm xóa yêu cầu theo ID
 export const deleteRequestById = async (id) => {
   try {
-      const response = await axios.delete(`${process.env.REACT_APP_API_URL}/Request/${id}`); // Gọi API DELETE
+    const response = await axios.delete(
+      `${process.env.REACT_APP_API_URL}/Request/${id}`
+    ); // Gọi API DELETE
 
-      // Trả về status code từ response
-      return response.status; // Ví dụ: 204, 404, 500, v.v.
+    // Trả về status code từ response
+    return response.status; // Ví dụ: 204, 404, 500, v.v.
   } catch (error) {
-      console.error('Error deleting request:', error);
-      
-      // Kiểm tra lỗi và trả về mã trạng thái lỗi tương ứng
-      if (error.response) {
-          // Nếu có lỗi từ server (ví dụ: 404, 500)
-          return error.response.status; // Trả về mã lỗi từ server
-      } else if (error.request) {
-          // Nếu không nhận được phản hồi từ server
-          return 500; // Trả về 500 cho lỗi server
-      } else {
-          // Lỗi khác
-          return 500; // Trả về 500 cho lỗi không xác định
-      }
+    console.error("Error deleting request:", error);
+
+    // Kiểm tra lỗi và trả về mã trạng thái lỗi tương ứng
+    if (error.response) {
+      // Nếu có lỗi từ server (ví dụ: 404, 500)
+      return error.response.status; // Trả về mã lỗi từ server
+    } else if (error.request) {
+      // Nếu không nhận được phản hồi từ server
+      return 500; // Trả về 500 cho lỗi server
+    } else {
+      // Lỗi khác
+      return 500; // Trả về 500 cho lỗi không xác định
+    }
   }
 };
-
 
 // Hàm thêm yêu cầu
 export const addRequest = async (sender, receiver) => {
   try {
-      const requestBody = {
-          sender,       // Giá trị sender
-          receiver,     // Giá trị receiver
-          time: new Date().toISOString() // Sửa trường Timeline thành time
-      };
+    const requestBody = {
+      sender, // Giá trị sender
+      receiver, // Giá trị receiver
+      time: new Date().toISOString(), // Sửa trường Timeline thành time
+    };
 
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/Request`, requestBody); // Gọi API POST
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_URL}/Request`,
+      requestBody
+    ); // Gọi API POST
 
-      if (response.status === 200) { // Nếu thành công, thường thì 201 là cho tạo mới
-          return response.data; // Trả về dữ liệu của yêu cầu mới tạo
-      }
+    if (response.status === 200) {
+      // Nếu thành công, thường thì 201 là cho tạo mới
+      return response.data; // Trả về dữ liệu của yêu cầu mới tạo
+    }
   } catch (error) {
-      console.error('Error adding request:', error);
-      return false; // Trả về null nếu có lỗi
+    console.error("Error adding request:", error);
+    return false; // Trả về null nếu có lỗi
   }
 };
 
@@ -272,8 +291,8 @@ export const addRequest = async (sender, receiver) => {
 export const getAllFriends = async (userId, pageNumber) => {
   const pageSize = 12;
   try {
-    const FriendsData = await getFriendsByUserId(userId); 
-    const friendsData=FriendsData.data;
+    const FriendsData = await getFriendsByUserId(userId);
+    const friendsData = FriendsData.data;
     // Tính toán chỉ số bắt đầu và kết thúc dựa trên số trang và kích thước trang
     const startIndex = (pageNumber - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -311,7 +330,6 @@ export const removeFriend = async (userId, friendId) => {
   }
 };
 
-
 // Hàm thêm bạn bè mới với TimeLine
 export const addFriend = async (userId1, userId2) => {
   try {
@@ -342,7 +360,11 @@ export const addFriend = async (userId1, userId2) => {
   }
 };
 
-export const addFriendAndDeleteRequest = async (userId1, userId2, requestId) => {
+export const addFriendAndDeleteRequest = async (
+  userId1,
+  userId2,
+  requestId
+) => {
   try {
     // Lấy thời gian hiện tại làm TimeLine
     const timeLine = new Date().toISOString(); // ISO 8601 format
@@ -364,7 +386,6 @@ export const addFriendAndDeleteRequest = async (userId1, userId2, requestId) => 
     );
 
     return addFriendResponse.status; // Ví dụ: 201 (Thành công), 404 (Không tìm thấy), 500 (Lỗi server)
-
   } catch (error) {
     if (error.response) {
       // Trả về mã lỗi từ backend nếu có
@@ -375,29 +396,27 @@ export const addFriendAndDeleteRequest = async (userId1, userId2, requestId) => 
   }
 };
 
-
-
 // Hàm để lấy gợi ý bạn bè với phân trang
 export const getFriendSuggestions = async (userId, pageNumber = 1) => {
   const pageSize = 12;
   try {
-      // Tạo URL với query params bao gồm userId và friendRequests
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/friend/nonfriends/${userId}`
-      );    
-      let suggestions=response.data; 
+    // Tạo URL với query params bao gồm userId và friendRequests
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/friend/nonfriends/${userId}`
+    );
+    let suggestions = response.data;
 
-      // Giả lập thời gian chờ như gọi API thực tế
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    // Giả lập thời gian chờ như gọi API thực tế
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Tính toán phân trang
-      const startIndex = (pageNumber - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
+    // Tính toán phân trang
+    const startIndex = (pageNumber - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
 
-      // Cắt mảng dữ liệu gợi ý theo phân trang
-      const paginatedSuggestions = suggestions.slice(startIndex, endIndex);
+    // Cắt mảng dữ liệu gợi ý theo phân trang
+    const paginatedSuggestions = suggestions.slice(startIndex, endIndex);
 
-      return paginatedSuggestions;
+    return paginatedSuggestions;
   } catch (error) {
     console.error("Error fetching friend suggestions:", error);
     return null; // Trả về null nếu có lỗi
