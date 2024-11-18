@@ -7,6 +7,7 @@ import './postRedirect.css';
 const PostRedirect = ({ feedId, open, onClose, currentUser }) => {
     const [post, setPost] = useState({});
     const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const updatePostInfo = async (userId, post) => {
         try {
@@ -56,26 +57,30 @@ const PostRedirect = ({ feedId, open, onClose, currentUser }) => {
         );
       };
 
-    useEffect(() => {
+      useEffect(() => {
         const fetchData = async () => {
+            setLoading(true); 
             try {
                 const response = await fetchDataForPostId(feedId, currentUser);
                 const data = await response.data;
                 const p = await updatePostInfo(data.userId, data);
-                console.log('Data:', p);
-                setPost(p || {}); // Đảm bảo post luôn được xác định
+                setPost(p || {}); 
             } catch (error) {
                 console.error('Lỗi khi lấy dữ liệu:', error);
+            } finally {
+                setLoading(false); 
             }
         };
-
-        if (open) { // Lấy dữ liệu chỉ khi dialog mở
+    
+        if (open) {
             fetchData();
         }
-    }, [feedId, open]); // Thêm 'open' vào dependency để reload khi mở modal
+    }, [feedId, open]);
 
-    // Nếu 'open' là false, không render dialog
     if (!open) return null;
+    if (loading) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div className="pr-custom-dialog-overlay">

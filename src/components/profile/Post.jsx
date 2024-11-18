@@ -51,7 +51,7 @@ export const Post = () => {
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-              const response = await axios.get(`http://localhost:8001/api/post/${currentUser}/${user?.id}?lastPostId=${100}&limit=100`)
+              const response = await axios.get(`${process.env.REACT_APP_API_URL}/post/${currentUser}/${user?.id}?lastPostId=${100}&limit=100`)
               setPosts(response.data.$values);  
               console.log(response)
             } catch (error) {

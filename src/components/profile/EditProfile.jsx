@@ -82,7 +82,7 @@ export const EditProfile = ({ m, w, title, userData, setUser }) => {
         console.log(payload);
     
         try {
-            const response = await axios.put(`http://localhost:8001/api/user/${userData.id}`, payload);
+            const response = await axios.put(`${process.env.REACT_APP_API_URL}/user/${userData.id}`, payload);
             console.log(response.data); 
             setUser(response.data);
     
