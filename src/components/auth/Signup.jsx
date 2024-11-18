@@ -180,14 +180,26 @@ export const Signup = () => {
         onClose();
       }
     } catch (error) {
-      toast({
-        title: "Error.",
-        description:
-          error.response?.data?.message || "Failed to create account",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      if (
+        error.response?.status === 400 &&
+        error.response.data === "Email already exists."
+      ) {
+        toast({
+          title: "Error.",
+          description: "Email already exists.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Error.",
+          description: "Failed to create account!",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     }
   };
 
