@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   Avatar,
   Center,
@@ -19,6 +20,7 @@ import {
   TriangleDownIcon,
 } from "@chakra-ui/icons";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import Notifications from "../notification/Notification";
 import ChatMenu from "./ChatMenu";
 
@@ -31,6 +33,26 @@ const Item = ({ iconName, title }) => {
 };
 
 export const Option = () => {
+  const navigate = useNavigate();
+
+  // Hàm xử lý logout
+  const handleLogout = async () => {
+    try {
+      // Gọi API để logout
+      await axios.post("http://localhost:8001/api/user/logout", null, {
+        withCredentials: true,
+      });
+
+      // Xóa session ở phía frontend
+      sessionStorage.clear();
+
+      // Chuyển hướng người dùng về trang login
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
     <>
       {/* Profile Avatar */}
@@ -94,7 +116,12 @@ export const Option = () => {
                 iconName={<MoonIcon w={6} h={6} />}
                 title="Display & accessibility"
               />
-              <MenuItem icon={<ArrowForwardIcon w={6} h={6} />}>
+
+              {/* Log Out Item */}
+              <MenuItem
+                icon={<ArrowForwardIcon w={6} h={6} />}
+                onClick={handleLogout}
+              >
                 <Text fontWeight={500}>Log Out</Text>
               </MenuItem>
             </VStack>

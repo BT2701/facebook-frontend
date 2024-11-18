@@ -51,7 +51,8 @@ export const Signup = () => {
   // Hàm kiểm tra mật khẩu hợp lệ
   const isValidPassword = (password) => {
     const passwordRegex =
-      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#<>])[A-Za-z\d@$!%*?&]{8,}$/;
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*^?&#<>])[A-Za-z\d@$!%*^?&#<>]{8,}$/;
+
     return passwordRegex.test(password);
   };
 
@@ -70,10 +71,37 @@ export const Signup = () => {
     );
   };
 
+  // Hàm kiểm tra các trường không được để trống
+  const areFieldsNotEmpty = () => {
+    const { firstName, lastName, email, password, dateOfBirth, gender } =
+      formData;
+
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !dateOfBirth ||
+      !gender
+    ) {
+      return false;
+    }
+    return true;
+  };
   // Hàm xử lý khi submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!areFieldsNotEmpty()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill out all fields.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
     // Kết hợp firstName và lastName thành name
     const userData = {
       name: `${formData.firstName} ${formData.lastName}`,
@@ -83,7 +111,7 @@ export const Signup = () => {
       email: formData.email,
       gender: formData.gender,
       desc: "", // Thay null bằng chuỗi rỗng
-      isonline: 1,
+      isonline: 0,
       lastActive: new Date(),
       password: formData.password,
       Address: "", // Tương tự với Address
