@@ -100,7 +100,7 @@ const PostRedirect = ({ feedId, open, onClose, currentUser }) => {
                         userName={post.profileName}
                         postImage={post.image}
                         likedByCurrentUser={post.likedByCurrentUser}
-                        likeCount={post.reactions?.$values.length || []}
+                        likeCount={post.reactions?.$values.length || 0}
                         commentList={post.comments?.$values || []}
                         currentUserId={currentUser}
                         userCreatePost={post.userId}

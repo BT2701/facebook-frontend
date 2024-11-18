@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import {
   Avatar,
   Center,
@@ -20,7 +19,7 @@ import {
   TriangleDownIcon,
 } from "@chakra-ui/icons";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import Notifications from "../notification/Notification";
 import ChatMenu from "./ChatMenu";
 import { useUser } from "../../context/UserContext.js";
@@ -52,7 +51,7 @@ export const Option = () => {
       sessionStorage.clear();
 
       // Chuyển hướng người dùng về trang login
-      navigate("/login");
+      nav("/login");
     } catch (error) {
       console.error("Logout failed:", error);
     }
