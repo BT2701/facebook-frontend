@@ -22,8 +22,8 @@ function SearchPage() {
     // const [errorFetchPost, setErrorFetchPost] = useState("");
     const limitUser = 10;
     const limitPost = 5;
-    const [offsetUser, setOffsetUser] = useState(0); 
-    const [offsetPost, setOffsetPost] = useState(0); 
+    const [offsetUser, setOffsetUser] = useState(0);
+    const [offsetPost, setOffsetPost] = useState(0);
     const [isLoadingPosts, setIsLoadingPosts] = useState(false);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const userScrollRef = useRef(null);
@@ -33,14 +33,14 @@ function SearchPage() {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
-        const query = searchParams.get('keywords') || ''; 
+        const query = searchParams.get('keywords') || '';
         const querySearch = input === "" ? query.replace(/"/g, '') : input;
 
         setKeywords(querySearch);
         setUsers([]);
         setPosts([]);
-        setOffsetUser(0); 
-        setOffsetPost(0); 
+        setOffsetUser(0);
+        setOffsetPost(0);
         fetchPostsData(querySearch, 0);
         fetchUsersData(querySearch, 0);
     }, [input]);
@@ -93,17 +93,26 @@ function SearchPage() {
             const postData = await postResponse.data;
 
             if (postData && Array.isArray(postData?.$values)) {
-                const postsWithUserData = await Promise.all(
-                    postData.$values.map(async (post) => {
-                        const user = await getUserById(post?.userId);
-                        return {
-                            user: user?.data,
-                            ...post,
-                        };
-                    })
+                // const postsWithUserData = await Promise.all(
+                //     postData.$values.map(async (post) => {
+                //         // const user = await getUserById(post?.userId);
+                //         // return {
+                //         //     user: user?.data,
+                //         //     ...post,
+                //         // };
+                //     })
+                // );
+                // console.log("postwith", postsWithUserData);
+                // setPosts((prevPosts) => [...prevPosts, ...postsWithUserData]);
+                const fetchedPosts = await Promise.all(
+                    postData.$values.map((post) =>
+                        updatePostInfor(post.userId, post)
+                    )
                 );
-    
-                setPosts((prevPosts) => [...prevPosts, ...postsWithUserData]);
+                const uniquePosts = fetchedPosts.filter(
+                    (newPost) => !posts.some((existingPost) => existingPost.id === newPost.id)
+                );
+                setPosts((prevPosts) => [...prevPosts, ...uniquePosts]);
                 setOffsetPost(offset); // Update offset
             }
         } catch (error) {
@@ -112,7 +121,8 @@ function SearchPage() {
             setIsLoadingPosts(false);
         }
     };
-    
+
+
 
     const { isOpen, onOpen, onClose } = useDisclosure(); // Dialog quản lý xóa bạn bè
     const cancelRef = React.useRef();
@@ -129,7 +139,7 @@ function SearchPage() {
                         return { ...user, friendStatus };
                     })
                 );
-    
+
                 setUsers((prevUsers) => [...prevUsers, ...usersWithStatus]);
                 setOffsetUser(offset); // Cập nhật offset
             }
@@ -143,24 +153,24 @@ function SearchPage() {
     const fetchFriendStatus = async (currentUserId, friendId) => {
         try {
             const resGetReq3 = await getFriendByUserId1AndUserId2(currentUserId, friendId);
-            if(resGetReq3 && resGetReq3.length !== 0) {
+            if (resGetReq3 && resGetReq3.length !== 0) {
                 return "friend";
             }
 
             const resGetReq = await getRequestBySenderAndReceiver(friendId, currentUserId);
-            if(resGetReq && resGetReq.length !== 0) {
+            if (resGetReq && resGetReq.length !== 0) {
                 return "waiting";
             }
 
             const resGetReq2 = await getRequestBySenderAndReceiver(currentUserId, friendId);
-            if(resGetReq2 && resGetReq2.length !== 0) {
+            if (resGetReq2 && resGetReq2.length !== 0) {
                 return "requestFriend";
             }
 
             return "notFriend";
         } catch (error) {
             console.error("Error fetching friend status:", error);
-            return "notFriend"; 
+            return "notFriend";
         }
     };
     const updateUserStatus = (userId, status) => {
@@ -193,9 +203,9 @@ function SearchPage() {
             console.error('Lỗi khi lấy dữ liệu người dùng:', error);
             return post;
         }
-      };
-    
-      const updateCommentInfor = async (userId, comment) => {
+    };
+
+    const updateCommentInfor = async (userId, comment) => {
         try {
             const response = await getUserById(userId);
             if (response && response.data) {
@@ -214,11 +224,11 @@ function SearchPage() {
 
     const updateCommentsForPost = (postId, updatedComments) => {
         setPosts((prevPosts) =>
-          prevPosts.map((post) =>
-            post.id === postId ? { ...post, comments: { $values: updatedComments } } : post
-          )
+            prevPosts.map((post) =>
+                post.id === postId ? { ...post, comments: { $values: updatedComments } } : post
+            )
         );
-      };
+    };
 
     return (
         <div className="search-container">
@@ -226,7 +236,7 @@ function SearchPage() {
                 <div className="search-mid-title">
                     <h2>Search Results for "{keywords}"</h2>
                 </div>
-                
+
                 {/* Render Users */}
                 <div className='search-content-user-scroll' ref={userScrollRef}>
                     {
@@ -353,7 +363,7 @@ function SearchPage() {
                         </div>
                     )}
                 </div>
-                
+
                 {/* Render Posts */}
                 <div className="search-content-post">
                     {
@@ -366,10 +376,10 @@ function SearchPage() {
                                 {posts?.map(post => (
                                     <Feed
                                         postId={post.id}
-                                        profilePic={post.user.avt}
+                                        profilePic={post.profilePic}
                                         content={post.content}
                                         timeStamp={formatTimeFromDatabase(post.timeline)}
-                                        userName={post.user.name}
+                                        userName={post.profileName}
                                         postImage={post.image}
                                         likedByCurrentUser={post.likedByCurrentUser}
                                         likeCount={post.reactions.$values.length}
@@ -381,7 +391,7 @@ function SearchPage() {
                                         updateComments={updateCommentsForPost}
                                         updatePostInfor={updatePostInfor}
                                         updateCommentInfor={updateCommentInfor}
-                                        userId={post?.userId}
+                                    // userId={post?.userId}
                                     />
                                 ))}
                             </div>

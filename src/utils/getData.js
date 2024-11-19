@@ -50,6 +50,7 @@ export const getUserById = async (userId) => {
     const response = await axios.get(
       `${process.env.REACT_APP_API_URL}/user/${userId}`
     );
+
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -210,6 +211,14 @@ export const deleteRequestBySenderIdAndReceiverId = async (
       `${process.env.REACT_APP_API_URL}/Request/delete?senderId=${senderId}&receiverId=${receiverId}`
     ); // Gọi API DELETE
 
+//     if (response.status === 204) {
+//       // Nếu thành công
+//       return true; // Trả về true để xác nhận xóa thành công
+//     }
+//   } catch (error) {
+//     console.error("Error deleting request:", error);
+//     return false; // Trả về false nếu có lỗi
+
       console.log("status"+response.status);
       if (response.status === 204) { // Nếu thành công
           return response.status; // Trả về true để xác nhận xóa thành công
@@ -284,6 +293,13 @@ export const addRequest = async (sender, receiver) => {
       requestBody
     ); // Gọi API POST
 
+//     if (response.status === 200) {
+//       // Nếu thành công, thường thì 201 là cho tạo mới
+//       return response.data; // Trả về dữ liệu của yêu cầu mới tạo
+//     }
+//   } catch (error) {
+//     console.error("Error adding request:", error);
+//     return false; // Trả về null nếu có lỗi
       // Nếu response trả về 200, yêu cầu đã thành công
       if (response.status === 200) {
         return response; // Trả về response nếu thành công
