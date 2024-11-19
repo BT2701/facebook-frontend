@@ -10,25 +10,29 @@ export const handleSendRequest = async (currentUserId, friendId, setFriendStatus
 };
 
 // Hàm xử lý khi xác nhận lời mời kết bạn
+// *****************
+//gọi hàm addFriendAndDeleteRequest để đồng bộ
 export const handleAcceptRequest = async (currentUserId, friendId, setFriendStatus, setIsUpdateFriends) => {
     const resGetReq = await getRequestBySenderAndReceiver(currentUserId, friendId);
-    if (resGetReq) {
-        const response = await addFriend(currentUserId, friendId);
-        if (response) {
-            await deleteRequestById(resGetReq[0]?.id);
-            setFriendStatus("friend");
-            if (setIsUpdateFriends) setIsUpdateFriends(prev => !prev);
-        }
-    }
+    console.log("request"+resGetReq);
+    // if (resGetReq) {
+    //     const response = await addFriendAndDeleteRequest(currentUserId, friendId,resGetReq[0]?.id);
+    //     if (response) {
+    //         setFriendStatus("friend");
+    //         if (setIsUpdateFriends) setIsUpdateFriends(prev => !prev);
+    //     }
+    // }
 };
 
 // Hàm xử lý khi từ chối lời mời kết bạn
 export const handleCancelRequest = async (currentUserId, friendId, setFriendStatus, setIsUpdateFriends, onClose) => {
     const response = await deleteRequestBySenderIdAndReceiverId(friendId, currentUserId);
-    if (response) {
+    if (response == 204 || response ==404) {
         setFriendStatus("notFriend");
         if (setIsUpdateFriends) setIsUpdateFriends(prev => !prev);
         if (onClose) onClose();
+    }else if(response==500){
+        console.error("error serve");
     }
 };
 
