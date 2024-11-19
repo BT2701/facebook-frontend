@@ -109,12 +109,17 @@ export default function ChatBox({ onCallAudio, onCallVideo }) {
   // Handle send message
   const handleSendMsg = async () => {
     if (msgInput) {
+      const timezoneOffset = 7 * 60; // GMT+7
+      const vietnamTime = new Date(
+        new Date().getTime() + timezoneOffset * 60 * 1000
+      ).toISOString();
+
       try {
         // Add message to database
         const response = await postMsg({
           Sender: currentUser,
           Receiver: contactId,
-          CreatedAt: new Date().toISOString().split(".")[0],
+          CreatedAt: vietnamTime,
           Content: msgInput,
         });
 
