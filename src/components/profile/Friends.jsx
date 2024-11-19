@@ -90,7 +90,7 @@ const FriendBox = ({ currentUserId, name, src, friendId, setIsUpdateFriends }) =
                     )}
                     {friendStatus === "waiting" && (
                         <>
-                            <Button colorScheme="green" onClick={onOpen}>
+                            {/* <Button colorScheme="green" onClick={onOpen}>
                                 Waiting for response
                             </Button>
                             <AlertDialog
@@ -116,16 +116,33 @@ const FriendBox = ({ currentUserId, name, src, friendId, setIsUpdateFriends }) =
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialogOverlay>
-                            </AlertDialog>
+                            </AlertDialog> */}
+                        <Button 
+                            colorScheme="blue" 
+                            onClick={() => handleRemoveRequest(currentUserId, friendId, setFriendStatus, setIsUpdateFriends, onClose)} ml={3}>
+                            Cancel Request
+                        </Button>
                         </>
                     )}
                     {friendStatus === "requestFriend" && (
                         <>
-                            <Button colorScheme="green" onClick={() => handleAcceptRequest(currentUserId, friendId, setFriendStatus, setIsUpdateFriends)}>
+                            {/* <Button colorScheme="green" onClick={() => handleAcceptRequest(currentUserId, friendId, setFriendStatus, setIsUpdateFriends)}>
                                 Accept
                             </Button>
                             <Button colorScheme="red" onClick={() => handleCancelRequest(currentUserId, friendId, setFriendStatus, setIsUpdateFriends, onClose)} ml={2}>
                                 Refuse
+                            </Button> */}
+
+                            <Button 
+                                colorScheme="blue" 
+                                onClick={() => handleAcceptRequest(currentUserId, friendId, setFriendStatus, setIsUpdateFriends)}>
+                                Confirm
+                            </Button>
+                            <Button 
+                                onClick={() => handleCancelRequest(currentUserId, friendId, setFriendStatus, setIsUpdateFriends, onClose)} ml={2}
+                                _hover={{ bg: "#d3d3d3" }}
+                            >
+                                Cancel
                             </Button>
                         </>
                     )}
