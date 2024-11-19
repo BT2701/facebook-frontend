@@ -19,12 +19,7 @@ const CustomCard = ({ data }) => {
     const { currentUser } = useUser();
     const { createNotification, deleteNotification } = useNotification();
     const nav = useNavigate();
-
-
-
-    // ******************************************************************
     const userId = currentUser; // Lấy ID người dùng
-    // *********************************************************************
     // Cập nhật hasData khi dữ liệu thay đổi
     useEffect(() => {
         console.log("Data in CustomCard:", data); // In ra dữ liệu nhận được
@@ -60,9 +55,13 @@ const CustomCard = ({ data }) => {
         try {
             // Gọi hàm xử lý xác nhận ở đây (ví dụ, API call)
             const response = await addRequest(userId, data.Info.id); // Giả sử có một hàm xác nhận yêu cầu
-            if (response) { // Nếu thành công
-                setIdSendRequest(response.id)
+            if (response.status == 200) { // Nếu thành công
+                setIdSendRequest(response.data.id)
                 createNotification(data.Info.id, 0, 'sent you a friend request', 3);
+            }else if(response.status == 409){
+                alert("người này đã gửi yêu cầu kết bạn đến bạn vui lòng tải lại trang để chấp nhận");
+            }else{
+                alert("có lỗi ở máy chủ");
             }
         } catch (error) {
             console.error("Error confirming request:", error);
@@ -155,9 +154,11 @@ const CustomCard = ({ data }) => {
             <Box rounded={8} bg={'white'} h={'360px'} overflow={'hidden'} boxShadow={'lg'} display="flex" flexDirection="column">
                 {hasData ? (
                     <>
-                        <Box h={'200px'} overflow={'hidden'}>
+                        <Box h="220px" w="100%" overflow="hidden" borderRadius="10px">
                             <Image
-                                w={'100%'}
+                                h="100%"
+                                w="100%"
+                                objectFit="cover"
                                 src={data.Info.avatar || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe52w64lGbNV6RGGmd85bXiciZjcWu6XR5rg&s'}
                                 alt={data.Info.name}
                             />
@@ -168,7 +169,7 @@ const CustomCard = ({ data }) => {
                                 fontWeight={500}
                                 fontSize={20}
                                 cursor="pointer"
-                                onClick={() => nav( `/profile?id=${data.Info.id}`)}
+                                onClick={() => nav(`/profile?id=${data.Info.id}`)}
                             >
                                 {data.Info.name}
                             </Text>

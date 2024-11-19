@@ -50,7 +50,7 @@ export const getUserById = async (userId) => {
     const response = await axios.get(
       `${process.env.REACT_APP_API_URL}/user/${userId}`
     );
-    console.log("dadfgdfgfddddddta" + response.data);
+
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -211,13 +211,29 @@ export const deleteRequestBySenderIdAndReceiverId = async (
       `${process.env.REACT_APP_API_URL}/Request/delete?senderId=${senderId}&receiverId=${receiverId}`
     ); // Gọi API DELETE
 
-    if (response.status === 204) {
-      // Nếu thành công
-      return true; // Trả về true để xác nhận xóa thành công
-    }
+//     if (response.status === 204) {
+//       // Nếu thành công
+//       return true; // Trả về true để xác nhận xóa thành công
+//     }
+//   } catch (error) {
+//     console.error("Error deleting request:", error);
+//     return false; // Trả về false nếu có lỗi
+
+      console.log("status"+response.status);
+      if (response.status === 204) { // Nếu thành công
+          return response.status; // Trả về true để xác nhận xóa thành công
+      }
   } catch (error) {
-    console.error("Error deleting request:", error);
-    return false; // Trả về false nếu có lỗi
+    console.error('Error deleting request:', error);
+      
+    // Kiểm tra lỗi và trả về mã trạng thái lỗi tương ứng
+    if (error.response) {
+        // Nếu có lỗi từ server (ví dụ: 404, 500)
+        return error.response.status; // Trả về mã lỗi từ server
+    } else {
+        // Lỗi khác
+        return 500; // Trả về 500 cho lỗi không xác định
+    }
   }
 };
 
@@ -277,13 +293,27 @@ export const addRequest = async (sender, receiver) => {
       requestBody
     ); // Gọi API POST
 
-    if (response.status === 200) {
-      // Nếu thành công, thường thì 201 là cho tạo mới
-      return response.data; // Trả về dữ liệu của yêu cầu mới tạo
-    }
+//     if (response.status === 200) {
+//       // Nếu thành công, thường thì 201 là cho tạo mới
+//       return response.data; // Trả về dữ liệu của yêu cầu mới tạo
+//     }
+//   } catch (error) {
+//     console.error("Error adding request:", error);
+//     return false; // Trả về null nếu có lỗi
+      // Nếu response trả về 200, yêu cầu đã thành công
+      if (response.status === 200) {
+        return response; // Trả về response nếu thành công
+      }
+
   } catch (error) {
-    console.error("Error adding request:", error);
-    return false; // Trả về null nếu có lỗi
+    if (error.response) {
+      // Trả về mã lỗi và thông tin lỗi từ backend nếu có
+      console.error('Error response:', error.response.data);
+      return error.response; // Trả về toàn bộ phản hồi lỗi từ backend
+    }
+    // Nếu có lỗi không phải là phản hồi từ server (ví dụ lỗi mạng)
+    console.error("Lỗi không xác định:", error.message);
+    return { status: 500, message: "Lỗi không xác định" }; // Lỗi không xác định
   }
 };
 

@@ -20,14 +20,25 @@ const CreateStory = () => {
     }, [currentUser]);
     return (
         <div style={{
-        }} className="story">
-            <div>
-                <img style={{ borderRadius: '10px' }}
-                    alt=""
-                    className="x5yr21d xl1xv1r xh8yej3"
-                    referrerPolicy="origin-when-cross-origin"
-                    src={user?.avt || `${process.env.REACT_APP_DEFAULT_USER_IMG}`}
-                />
+        }}  className="story">
+        <div style={{ 
+            width: '100%', // Đặt kích thước cụ thể cho hộp ảnh
+            height: '70%', 
+            overflow: 'hidden', 
+            borderRadius: '10px'
+        }}>
+            <img
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '10px'
+                }}
+                alt=""
+                className="x5yr21d xl1xv1r xh8yej3"
+                referrerPolicy="origin-when-cross-origin"
+                src={user?.avt || `${process.env.REACT_APP_DEFAULT_USER_IMG}`}
+            />
             </div>
             <div></div>
             <div>

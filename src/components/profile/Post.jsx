@@ -101,6 +101,19 @@ export const Post = () => {
             window.removeEventListener("scroll", handleScroll);
         };
     }, [handleScroll]);
+//     useEffect(() => {
+//         const fetchPosts = async () => {
+//             try {
+//                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/post/${currentUser}/${user?.id}?lastPostId=${100}&limit=100`)
+//                 setPosts(response.data.$values);
+//                 console.log(response)
+//             } catch (error) {
+//                 console.error("Error fetching posts:", error);
+//             }
+//         };
+
+//         fetchPosts();
+//     }, [user])
 
     const convertToViDate = (dateStr) => {
         const date = new Date(dateStr);
@@ -229,6 +242,7 @@ export const Post = () => {
                                 )
 
                             }
+
                         </Box>
                     </Grid>
                 </Box>
