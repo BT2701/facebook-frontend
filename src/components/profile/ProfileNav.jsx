@@ -1,5 +1,5 @@
-import { 
-    Box, Button, Divider, Flex, Heading, HStack, Image, Spacer, Text, useDisclosure 
+import {
+    Box, Button, Divider, Flex, Heading, HStack, Image, Spacer, Text, useDisclosure
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
@@ -61,7 +61,7 @@ export const ProfileNav = () => {
             // console.log(1)
             const resGetReq3 = await getFriendByUserId1AndUserId2(currentUser, userId);
             // console.log(resGetReq3);
-            if(resGetReq3 && resGetReq3.length !== 0) {
+            if (resGetReq3 && resGetReq3.length !== 0) {
                 setFriendStatus("friend");
                 return;
             }
@@ -69,7 +69,7 @@ export const ProfileNav = () => {
             // console.log(2)
             const resGetReq = await getRequestBySenderAndReceiver(userId, currentUser);
             // console.log(resGetReq);
-            if(resGetReq && resGetReq.length !== 0) {
+            if (resGetReq && resGetReq.length !== 0) {
                 setFriendStatus("waiting");
                 return;
             }
@@ -77,7 +77,7 @@ export const ProfileNav = () => {
             // console.log(3)
             const resGetReq2 = await getRequestBySenderAndReceiver(currentUser, userId);
             // console.log(resGetReq2);
-            if(resGetReq2 && resGetReq2.length !== 0) {
+            if (resGetReq2 && resGetReq2.length !== 0) {
                 setFriendStatus("requestFriend");
                 return;
             }
@@ -91,20 +91,20 @@ export const ProfileNav = () => {
                 <Box w={'950px'} h={'250px'} m={'auto'}>
                     <Box h={'190px'} mt={10}>
                         <Flex alignItems={"center"}>
-                            <Box 
-                                w={'180px'} 
-                                h={'180px'} 
-                                rounded={'full'} 
-                                overflow={'hidden'} 
-                                border={'2px solid #ececec'} 
-                                display="flex" 
-                                alignItems="center" 
+                            <Box
+                                w={'180px'}
+                                h={'180px'}
+                                rounded={'full'}
+                                overflow={'hidden'}
+                                border={'2px solid #ececec'}
+                                display="flex"
+                                alignItems="center"
                                 justifyContent="center"
                             >
-                                <Image 
-                                    src={myPic || "https://archive.org/download/placeholder-image/placeholder-image.jpg"} 
-                                    objectFit="cover" 
-                                    w="100%" 
+                                <Image
+                                    src={myPic || "https://archive.org/download/placeholder-image/placeholder-image.jpg"}
+                                    objectFit="cover"
+                                    w="100%"
                                     h="100%"
                                 />
                             </Box>
@@ -116,11 +116,11 @@ export const ProfileNav = () => {
                             <Spacer />
                             <Box>
                                 {currentUser === user?.id ? (
-                                    <EditProfilePic 
-                                        title="Edit avatar" 
+                                    <EditProfilePic
+                                        title="Edit avatar"
                                         user={user}
                                         setMyPic={setMyPic}
-                                        myPic={myPic} 
+                                        myPic={myPic}
                                     />
                                 ) : (
                                     <>
@@ -222,7 +222,7 @@ export const ProfileNav = () => {
 
                     <Box h={'50px'} mt={3}>
                         <HStack>
-                            <NewButton title={'Post'} path={'/profile?id='  + user?.id} />
+                            <NewButton title={'Post'} path={'/profile?id=' + user?.id} />
                             <NewButton title={'Friends'} path={'/profile/friends?id=' + user?.id} />
                         </HStack>
                     </Box>
