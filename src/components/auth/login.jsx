@@ -29,12 +29,10 @@ export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [captcha, setCaptcha] = useState(null);
-  const [captchaCode, setCaptchaCode] = useState("");
   const [loginAttempts, setLoginAttempts] = useState(0);
-  const [randomCode, setRandomCode] = useState("");
-  const [userEnteredCode, setUserEnteredCode] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [forgetEmail, setForgetEmail] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const { setCurrentUser } = useUser();
   const toast = useToast();
   const navigate = useNavigate();
@@ -49,29 +47,15 @@ export const Login = () => {
 
   const handleCaptchaChange = (value) => {
     setCaptcha(value);
-    setCaptchaCode(""); // Reset mã captcha khi ReCAPTCHA được tải lại
-
-    // Tạo mã 6 ký tự ngẫu nhiên
-    const code = Math.random().toString(36).substring(2, 8);
-    setRandomCode(code); // Lưu mã ngẫu nhiên
-  };
-
-  const handleUserEnteredCodeChange = (e) => {
-    setUserEnteredCode(e.target.value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      loginAttempts >= 5 &&
-      (!captcha ||
-        userEnteredCode.trim() === "" ||
-        userEnteredCode !== randomCode)
-    ) {
-      // Kiểm tra xem người dùng đã nhập mã ngẫu nhiên đúng chưa
+    // Check if the user has made too many login attempts
+    if (loginAttempts >= 5 && !captcha) {
       toast({
-        title: "Vui lòng xác nhận bạn không phải là robot và nhập mã xác thực.",
+        title: "Please confirm you are not a robot.",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -82,7 +66,7 @@ export const Login = () => {
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/user/login`,
-        { email, password, captcha: captchaCode },
+        { email, password },
         {
           headers: {
             "Content-Type": "application/json",
@@ -98,11 +82,10 @@ export const Login = () => {
         );
 
         const userId = sessionResponse.data.userId;
-        console.log("Session userId:", userId);
         setCurrentUser(parseInt(userId));
 
         toast({
-          title: "Đăng nhập thành công!",
+          title: "Login successful!",
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -111,33 +94,22 @@ export const Login = () => {
       }
     } catch (error) {
       setLoginAttempts((prevAttempts) => prevAttempts + 1);
-
-      if (error.response) {
-        if (
-          error.response.status === 400 &&
-          error.response.data.message === "Email not verified."
-        ) {
-          toast({
-            title: "Đăng nhập không thành công!",
-            description:
-              "Chưa xác thực email. Vui lòng kiểm tra email để xác thực tài khoản của bạn.",
-            status: "warning",
-            duration: 3000,
-            isClosable: true,
-          });
-        } else {
-          toast({
-            title: "Đăng nhập không thành công!",
-            description: "Tài khoản hoặc mật khẩu không đúng!",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-        }
+      console.log("Error toJSON:", error.toJSON());
+      if (
+        error.response?.status === 400 &&
+        error.response.data === "Email not verified."
+      ) {
+        toast({
+          title: "Login failed!",
+          description: "Email not verified. Please check your email.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
       } else {
         toast({
-          title: "Đăng nhập không thành công!",
-          description: "Có lỗi xảy ra, vui lòng thử lại sau.",
+          title: "Login failed!",
+          description: "Incorrect email or password!",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -146,29 +118,47 @@ export const Login = () => {
     }
   };
 
-  // Hàm xử lý khi nhấn phím Enter
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       handleSubmit(e);
     }
   };
 
-  // Hàm mở modal
   const openModal = () => {
     setIsModalOpen(true);
   };
 
-  // Hàm đóng modal
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
-  // Hàm xử lý quên mật khẩu
   const handleForgetPassword = async () => {
+    if (!forgetEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!birthDate) {
+      toast({
+        title: "Error",
+        description: "Please select your date of birth.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/user/forgetpassword`,
-        { Email: forgetEmail }, // Thay đổi để khớp với yêu cầu của API
+        { Email: forgetEmail, BirthDate: birthDate },
         {
           headers: {
             "Content-Type": "application/json",
@@ -178,18 +168,18 @@ export const Login = () => {
 
       if (response.status === 200) {
         toast({
-          title: "Email đã được gửi!",
-          description: "Vui lòng kiểm tra email của bạn để biết hướng dẫn.",
+          title: "Email sent!",
+          description: "Please check your email for further instructions.",
           status: "success",
           duration: 3000,
           isClosable: true,
         });
-        closeModal(); // Đóng modal khi thành công
+        closeModal();
       }
     } catch (error) {
       toast({
-        title: "Lỗi",
-        description: error.response?.data || "Có lỗi xảy ra.",
+        title: "Error",
+        description: error.response?.data || "An error occurred.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -210,8 +200,7 @@ export const Login = () => {
             facebook
           </Heading>
           <Text lineHeight={1.2} fontWeight={500} fontSize={26}>
-            Facebook giúp bạn kết nối và chia sẻ với mọi người trong cuộc sống
-            của bạn.
+            Facebook helps you connect and share with the people in your life.
           </Text>
         </Box>
 
@@ -229,42 +218,26 @@ export const Login = () => {
               <form onSubmit={handleSubmit}>
                 <Input
                   type="email"
-                  name="email"
-                  placeholder="Địa chỉ email"
+                  placeholder="Email address"
                   h={"50px"}
-                  mb={4} // Thêm margin bottom cho khoảng cách
+                  mb={4}
                   onChange={handleChangeEmail}
-                  onKeyDown={handleKeyDown} // Xử lý phím Enter
+                  onKeyDown={handleKeyDown}
                 />
                 <Input
                   type="password"
-                  name="password"
-                  placeholder="Mật khẩu"
+                  placeholder="Password"
                   h={"50px"}
-                  mb={4} // Thêm margin bottom cho khoảng cách
+                  mb={4}
                   onChange={handleChangePassword}
-                  onKeyDown={handleKeyDown} // Xử lý phím Enter
+                  onKeyDown={handleKeyDown}
                 />
                 {loginAttempts >= 5 && (
-                  <>
-                    <ReCAPTCHA
-                      sitekey="6LdAwXQqAAAAAK2fIAzIWCiaPsev2dm8_KBr6aOp"
-                      onChange={handleCaptchaChange}
-                    />
-                    <Text fontSize="lg" mt={2}>
-                      Mã xác thực:{" "}
-                      <span style={{ textDecoration: "line-through" }}>
-                        {randomCode}
-                      </span>
-                    </Text>
-                    <Input
-                      type="text"
-                      placeholder="Nhập mã xác thực"
-                      value={userEnteredCode}
-                      onChange={handleUserEnteredCodeChange}
-                      mb={4} // Thêm margin bottom cho khoảng cách
-                    />
-                  </>
+                  <ReCAPTCHA
+                    sitekey="6LdAwXQqAAAAAK2fIAzIWCiaPsev2dm8_KBr6aOp"
+                    hl="en"
+                    onChange={handleCaptchaChange}
+                  />
                 )}
                 <Button
                   type="submit"
@@ -273,15 +246,13 @@ export const Login = () => {
                   color={"white"}
                   fontWeight={500}
                   size="lg"
-                  _hover={{ bg: "#2572d6" }}
-                  fontSize={20}
                 >
-                  Đăng Nhập
+                  Log In
                 </Button>
               </form>
               <Divider />
               <Text color="#1877f2" cursor="pointer" onClick={openModal} mt={4}>
-                Quên tài khoản?
+                Forgot account?
               </Text>
               <Flex justify={"center"} mt={6}>
                 <Signup />
@@ -291,27 +262,35 @@ export const Login = () => {
         </Box>
       </Grid>
 
-      {/* Modal cho tính năng quên mật khẩu */}
+      {/* Modal for Forgot Password */}
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Quên mật khẩu</ModalHeader>
+          <ModalHeader>Forgot Password</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text mb={2}>Nhập địa chỉ email của bạn:</Text>
+            <Text mb={2}>Enter your email address:</Text>
             <Input
               type="email"
               placeholder="Email"
               value={forgetEmail}
               onChange={(e) => setForgetEmail(e.target.value)}
+              mb={4}
+            />
+
+            <Text mb={2}>Enter your date of birth:</Text>
+            <Input
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
             />
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" onClick={handleForgetPassword}>
-              Gửi email
+              Send Email
             </Button>
             <Button variant="ghost" onClick={closeModal}>
-              Hủy
+              Cancel
             </Button>
           </ModalFooter>
         </ModalContent>

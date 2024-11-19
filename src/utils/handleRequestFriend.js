@@ -1,4 +1,4 @@
-import { addFriend, addRequest, deleteRequestById, deleteRequestBySenderIdAndReceiverId, getRequestBySenderAndReceiver, removeFriend } from "./getData";
+import { addFriend, addRequest, deleteRequestById, deleteRequestBySenderIdAndReceiverId, getRequestBySenderAndReceiver, removeFriend ,addFriendAndDeleteRequest} from "./getData";
 
 // Hàm xử lý khi nhấn "Thêm bạn bè"
 export const handleSendRequest = async (currentUserId, friendId, setFriendStatus, setIsUpdateFriends) => {
@@ -13,15 +13,23 @@ export const handleSendRequest = async (currentUserId, friendId, setFriendStatus
 // *****************
 //gọi hàm addFriendAndDeleteRequest để đồng bộ
 export const handleAcceptRequest = async (currentUserId, friendId, setFriendStatus, setIsUpdateFriends) => {
-    const resGetReq = await getRequestBySenderAndReceiver(currentUserId, friendId);
-    console.log("request"+resGetReq);
-    // if (resGetReq) {
-    //     const response = await addFriendAndDeleteRequest(currentUserId, friendId,resGetReq[0]?.id);
-    //     if (response) {
-    //         setFriendStatus("friend");
-    //         if (setIsUpdateFriends) setIsUpdateFriends(prev => !prev);
-    //     }
-    // }
+    const resGetReq = await getRequestBySenderAndReceiver(friendId,currentUserId);
+    if (resGetReq && resGetReq.length > 0) {
+        const response = await addFriendAndDeleteRequest(currentUserId, friendId,resGetReq[0]?.id);
+        if (response ==204 ) {
+            setFriendStatus("friend");
+            if (setIsUpdateFriends) setIsUpdateFriends(prev => !prev);
+        }else{
+            console.error("error serve");
+        }
+    }
+    else if(resGetReq.length == 0){
+        alert("user deleted request");
+        setFriendStatus("notFriend");
+        if (setIsUpdateFriends) setIsUpdateFriends(prev => !prev);
+    }else{
+        console.error("error serve");
+    }
 };
 
 // Hàm xử lý khi từ chối lời mời kết bạn
