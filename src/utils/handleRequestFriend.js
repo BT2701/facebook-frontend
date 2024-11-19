@@ -13,7 +13,7 @@ export const handleSendRequest = async (currentUserId, friendId, setFriendStatus
 // *****************
 //gọi hàm addFriendAndDeleteRequest để đồng bộ
 export const handleAcceptRequest = async (currentUserId, friendId, setFriendStatus, setIsUpdateFriends) => {
-    const resGetReq = await getRequestBySenderAndReceiver(friendId,currentUserId);
+    const resGetReq = await getRequestBySenderAndReceiver(currentUserId,friendId);
     if (resGetReq && resGetReq.length > 0) {
         const response = await addFriendAndDeleteRequest(currentUserId, friendId,resGetReq[0]?.id);
         if (response ==204 ) {
