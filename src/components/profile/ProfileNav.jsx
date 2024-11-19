@@ -163,10 +163,15 @@ export const ProfileNav = () => {
                                         )}
                                         {friendStatus === "waiting" && (
                                             <>
-                                                <Button colorScheme="green" onClick={onOpen}>
-                                                    Waiting for response
+                                                <Button 
+                                                    colorScheme="blue" 
+                                                    onClick={() => handleRemoveRequestv2(currentUser, user?.id, setFriendStatus, setIsRefreshFriends, onClose)} ml={3}>
+                                                    Cancel Request
                                                 </Button>
-                                                <AlertDialog
+                                                {/* <Button colorScheme="green" onClick={onOpen}>
+                                                    Waiting for response
+                                                </Button> */}
+                                                {/* <AlertDialog
                                                     isOpen={isOpen}
                                                     leastDestructiveRef={cancelRef}
                                                     onClose={onClose}
@@ -189,17 +194,23 @@ export const ProfileNav = () => {
                                                             </AlertDialogFooter>
                                                         </AlertDialogContent>
                                                     </AlertDialogOverlay>
-                                                </AlertDialog>
+                                                </AlertDialog> */}
                                             </>
                                         )}
                                         {friendStatus === "requestFriend" && (
                                             <>
-                                                <Button colorScheme="green" onClick={() => handleAcceptRequestv2(currentUser, user?.id, setFriendStatus, setIsRefreshFriends)}>
-                                                    Accept
+                                                <Button 
+                                                    colorScheme="blue" 
+                                                    onClick={() => handleAcceptRequestv2(currentUser, user?.id, setFriendStatus, setIsRefreshFriends)}>
+                                                    Confirm
                                                 </Button>
-                                                <Button colorScheme="red" onClick={() => handleCancelRequestv2(currentUser, user?.id, setFriendStatus, setIsRefreshFriends, onClose)} ml={2}>
-                                                    Refuse
+                                                <Button 
+                                                    onClick={() => handleCancelRequestv2(currentUser, user?.id, setFriendStatus, setIsRefreshFriends, onClose)} ml={2}
+                                                    _hover={{ bg: "#d3d3d3" }}
+                                                >
+                                                    Cancel
                                                 </Button>
+                                        
                                             </>
                                         )}
                                     </>
