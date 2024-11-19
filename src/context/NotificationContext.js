@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 import axios from 'axios';
 import { useUser } from "./UserContext";
 import { useChatConn } from './ChatConnContext';
+import { handleAcceptRequest, handleCancelRequest, handleRemoveRequest, handleSendRequest } from '../utils/handleRequestFriend';
 
 export const NotificationContext = createContext();
 
@@ -12,10 +13,32 @@ export const NotificationProvider = ({ children }) => {
     const { currentUser } = useUser();
     const { chatConn } = useChatConn();
 
+    const handleSendRequestv2 = (currentUserId ,friendId, setFriendStatus, setIsUpdateFriends) => {
+        handleSendRequest (currentUserId , friendId, setFriendStatus, setIsUpdateFriends);
+        createNotification(friendId, 0, 'sent you a friend request', 3);
+    };
+    const handleAcceptRequestv2 = (currentUserId ,friendId, setFriendStatus, setIsUpdateFriends) => {
+        handleAcceptRequest (currentUserId , friendId, setFriendStatus, setIsUpdateFriends);
+        createNotification(friendId, 0, 'accepted your friend request', 4);
+        console.log('currentUserId:', currentUserId, 'friendId:', friendId);
+        deleteNotification(friendId, currentUserId , 0, 3);
+    };
+    const handleCancelRequestv2 = (currentUserId ,friendId, setFriendStatus, setIsUpdateFriends, onClose) => {
+        handleCancelRequest (currentUserId , friendId, setFriendStatus, setIsUpdateFriends, onClose);
+        console.log('currentUserId:', currentUserId, 'friendId:', friendId);
+        deleteNotification(friendId,currentUserId , 0, 3);
+    };
+    const handleRemoveRequestv2 = (currentUserId ,friendId, setFriendStatus, setIsUpdateFriends, onClose) => {
+        handleRemoveRequest (currentUserId , friendId, setFriendStatus, setIsUpdateFriends, onClose);
+        console.log('currentUserId:', currentUserId, 'friendId:', friendId);
+        deleteNotification(currentUserId ,friendId, 0, 3);
+    };
 
-    const deleteNotification = (receiver, post = null, action) => {
+    const deleteNotification = (user = null, receiver, post = null, action) => {
         const postId = post || 0;
-        axios.delete(`${process.env.REACT_APP_API_URL}/notification/delete/${currentUser}/${receiver}/${postId}/${action}`)
+        const user1 = user || currentUser;
+        console.log('Deleting notification:', user1, receiver, postId, action);
+        axios.delete(`${process.env.REACT_APP_API_URL}/notification/delete/${user1}/${receiver}/${postId}/${action}`)
             .then(response => {
                 console.log('Notification deleted:', response.data);
                 if (chatConn) {
@@ -29,7 +52,7 @@ export const NotificationProvider = ({ children }) => {
 
 
     const createNotification = (receiverId, postId = null, contentStr, action) => {
-        const post = postId;
+        const post = postId || 0;
         if (post === null) {
             post = 0;
         }
@@ -59,7 +82,7 @@ export const NotificationProvider = ({ children }) => {
             });
     }
     return (
-        <NotificationContext.Provider value={{ receiver, setReceiver, post, setPost, content, setContent, createNotification, deleteNotification }}>
+        <NotificationContext.Provider value={{ receiver, setReceiver, post, setPost, content, setContent, createNotification, deleteNotification, handleAcceptRequestv2, handleSendRequestv2, handleCancelRequestv2, handleRemoveRequestv2 }}>
             {children}
         </NotificationContext.Provider>
     );

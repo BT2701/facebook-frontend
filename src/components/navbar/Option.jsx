@@ -18,9 +18,12 @@ import {
   SettingsIcon,
   TriangleDownIcon,
 } from "@chakra-ui/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Notifications from "../notification/Notification";
 import ChatMenu from "./ChatMenu";
+import { useUser } from "../../context/UserContext.js";
+import { useEffect, useState } from "react";
+import { getUserById } from "../../utils/getData.js";
 
 const Item = ({ iconName, title }) => {
   return (
@@ -31,6 +34,24 @@ const Item = ({ iconName, title }) => {
 };
 
 export const Option = () => {
+  const { currentUser } = useUser();
+  const [user, setUser] = useState({});
+  const nav = useNavigate();
+
+  useEffect(() => {
+    const getUser = async () => {
+        const userId = currentUser;
+
+        if (userId && userId !== -1) {
+            const response = await getUserById(userId);
+            setUser(response.data);
+            console.log(response);
+        }
+    };
+
+    getUser();
+  }, [currentUser])
+
   return (
     <>
       {/* Profile Avatar */}
@@ -45,12 +66,12 @@ export const Option = () => {
           >
             <Avatar
               size="sm"
-              name={`${"firstName"} ${"lastName"}`}
+              name={user?.name || ""}
               ml={-1}
               mr={2}
-              src={`uploadImgs/${"pic"}`}
+              src={user?.avt || ""}
             />
-            <TagLabel>{"firstName"}</TagLabel>
+            <TagLabel>{user?.name || ""}</TagLabel>
           </Tag>
         </Link>
       </Center>
@@ -72,9 +93,15 @@ export const Option = () => {
           />
           <MenuList w="360px" boxShadow="2xl">
             <VStack gap={2} fontSize={17}>
-              <MenuItem icon={<Avatar name="John Doe" size="lg" />}>
+              <MenuItem 
+                onClick={() => {
+                  nav("/profile");
+                }} 
+                 
+                icon={<Avatar src={user?.avt || ""} name={user?.name || ""} size="lg" />}
+              >
                 <Text fontSize={20} fontWeight={500}>
-                  John Doe
+                  {user?.name || ""}
                 </Text>
                 <Text fontSize={14} color="grey">
                   See your profile

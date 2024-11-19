@@ -10,6 +10,8 @@ import "./feed.css";
 import axios from "axios";
 import { useNotification } from "../../../context/NotificationContext";
 import confirmDialog from '../../sharedComponents/confirmDialog';
+import { useNavigate } from "react-router-dom";
+
 export const Feed = ({
     postId,
     profilePic,
@@ -26,7 +28,8 @@ export const Feed = ({
     posts,
     updateComments,
     updatePostInfor,
-    updateCommentInfor
+    updateCommentInfor,
+    // userId
 }) => {
     const [comments, setComments] = useState(commentList); // Stores comments
     const [newCommentContent, setNewComment] = useState(""); // New comment input
@@ -136,7 +139,7 @@ export const Feed = ({
                     )
                 );
             }
-            deleteNotification(userCreatePost, postId, 1);
+            deleteNotification(null, userCreatePost, postId, 1);
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
@@ -354,7 +357,7 @@ export const Feed = ({
         }
     }
 
-
+    const nav = useNavigate();
 
     return (
         <Box w="100%" my="7px" position={"relative"}>
@@ -362,10 +365,20 @@ export const Feed = ({
             <div className="feed" id={postId}>
                 {/* Feed Header */}
                 <div className="feed__top">
-                    <Avatar src={profilePic} className="feed__avatar" />
-                    <div className="feed__topInfo">
-                        <h3 style={{ marginBottom: "0px" }}>{userName}</h3>
-                        <span>{timeStamp}</span>
+                    <div
+                        onClick={() => {
+                            nav("/profile?id=" + userCreatePost)
+                        }}
+                        style={{
+                            display: "flex",
+                            cursor: "pointer"
+                        }}
+                    >
+                        <Avatar src={profilePic} className="feed__avatar" />
+                        <div className="feed__topInfo">
+                            <h3 style={{ marginBottom: "0px" }}>{userName}</h3>
+                            <span>{timeStamp}</span>
+                        </div>
                     </div>
                     {currentUserId === userCreatePost && (
                         <Menu>

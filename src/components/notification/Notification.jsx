@@ -22,6 +22,7 @@ import { fetchDataForNotification, getUserById, markAllAsReadNotification, markA
 import { useUser } from "../../context/UserContext";
 import PostRedirect from "./PostRedirect";
 import { useChatConn } from "../../context/ChatConnContext";
+import { useNavigate } from "react-router-dom";
 
 
 const NotificationItem = ({ avatarSrc, title, message, time, is_read, onClick }) => (
@@ -67,8 +68,7 @@ const Notifications = () => {
     const [openDialog, setOpenDialog] = useState(false);
     const [feedId, setFeedId] = useState(null);
     const { chatConn } = useChatConn();
-
-
+    const nav = useNavigate();
 
     const fetchUser = async (id) => {
         const user = await getUserById(id);
@@ -117,16 +117,19 @@ const Notifications = () => {
             console.error('Error marking all as read:', error);
         }
     };
-    const markAsRead = async (id, feedId, action) => {
+    const markAsRead = async (id, feedId, action, user) => {
         try {
             await markAsReadNotification(id);
             setReadNotification(1);
             if (action === 1 || action === 2) {
-                setFeedId(feedId);
-                setOpenDialog(true);
+                if (!feedId) return; //bài viết không tồn tại rồi xóa
+                else {
+                    setFeedId(feedId);
+                    setOpenDialog(true);
+                }
             }
-            else if (action === 3) {
-                window.location.href = `/friends`;
+            else if (action === 3 || action === 4) {
+                nav(`/profile?id=${user}`);
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -193,7 +196,7 @@ const Notifications = () => {
                                         message={notification.content}
                                         time={formatTimeFromDatabase(notification.timeline)}
                                         is_read={notification.is_read}
-                                        onClick={() => markAsRead(notification.id, notification.post, notification.action_n)}
+                                        onClick={() => markAsRead(notification.id, notification.post, notification.action_n, notification.user)}
                                     />
                                 ))
                             )}
