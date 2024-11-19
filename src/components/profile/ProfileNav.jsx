@@ -58,6 +58,7 @@ export const ProfileNav = () => {
             const urlParams = new URLSearchParams(location.search);
             const userId = urlParams.get('id');
 
+            if (userId === currentUser) return;
             // console.log(1)
             const resGetReq3 = await getFriendByUserId1AndUserId2(currentUser, userId);
             // console.log(resGetReq3);
