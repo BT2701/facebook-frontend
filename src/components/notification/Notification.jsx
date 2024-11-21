@@ -69,6 +69,8 @@ const Notifications = () => {
     const [feedId, setFeedId] = useState(null);
     const { chatConn } = useChatConn();
     const nav = useNavigate();
+    const [userId, setUserId] = useState({});
+    const [actionId, setActionId] = useState({});
 
     const fetchUser = async (id) => {
         const user = await getUserById(id);
@@ -121,10 +123,12 @@ const Notifications = () => {
         try {
             await markAsReadNotification(id);
             setReadNotification(1);
-            if (action === 1 || action === 2) {
+            if (action === 1 || action === 2 || action === 5) {
                 if (!feedId) return; //bài viết không tồn tại rồi xóa
                 else {
                     setFeedId(feedId);
+                    setUserId(user);
+                    setActionId(action);
                     setOpenDialog(true);
                 }
             }
@@ -209,6 +213,8 @@ const Notifications = () => {
                 open={openDialog}
                 onClose={() => setOpenDialog(false)}
                 currentUser={currentUser}
+                user={userId}
+                action={actionId}
             />
         </Center>
     );

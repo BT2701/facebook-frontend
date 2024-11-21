@@ -143,9 +143,9 @@ export const markAsReadNotification = async (id) => {
 };
 
 // story
-export const fetchDataForStory = async () => {
+export const fetchDataForStory = async (userId) => {
   try {
-    const response = await axios.get(`${process.env.REACT_APP_API_URL}/story`);
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/story?userId=${userId}`);
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);

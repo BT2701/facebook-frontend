@@ -11,6 +11,7 @@ import axios from "axios";
 import { useNotification } from "../../../context/NotificationContext";
 import confirmDialog from '../../sharedComponents/confirmDialog';
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../../../context/UserContext";
 
 export const Feed = ({
     postId,
@@ -20,7 +21,7 @@ export const Feed = ({
     timeStamp,
     content,
     likedByCurrentUser,
-    likeCount,
+    likeCount,  // khuyến khích thay đổi thành reactionList để đọc được người dùng
     commentList,
     currentUserId,
     userCreatePost,
@@ -42,6 +43,7 @@ export const Feed = ({
     const toast = useToast();
     const [isDeleting, setIsDeleting] = useState(false);
     const { createNotification, deleteNotification } = useNotification();
+    const { friendList } = useUser();
 
     const handleLikeClicked = async () => {
         currentUserLiked ? handleUnLike() : handleLike();
@@ -349,6 +351,12 @@ export const Feed = ({
                 });
                 const updatePosts = posts.filter((post) => post.id !== postDeleteId);
                 setPosts(updatePosts);
+                friendList.forEach(friend => {
+                    if (friend.id !== currentUserId) {
+                        deleteNotification(currentUserId, friend.id,  postDeleteId, 5);
+                    }
+                });
+                
             } else {
                 console.error("Error deleting post");
             }
