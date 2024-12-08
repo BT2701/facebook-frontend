@@ -18,6 +18,8 @@ import {
 import { useState } from "react";
 import axios from "axios";
 import { CloseIcon } from "@chakra-ui/icons";
+import { useUser } from "../../../context/UserContext";
+import { useNotification } from "../../../context/NotificationContext";
 
 export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditContent, postEditImage, currentUserId, setLastPostId, updatePostInfor }) => {
     const [postContent, setPostContent] = useState(postEditContent ? postEditContent : "");
@@ -26,6 +28,9 @@ export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditCont
     const [discriptionActionToImage, setDiscriptionActionToImage] = useState(0);
     const toast = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const { friendList } = useUser();
+    const { createNotification, deleteNotification } = useNotification();
+
     const handlePostSubmit = async () => {
 
         if (!postContent.trim() && !image) {
@@ -90,6 +95,11 @@ export const CreatePost = ({ setPosts, isOpen, onClose, postEditId, postEditCont
                             })
                         }
                     })
+                    friendList.forEach(friend => {
+                        if (friend.id !== currentUserId) {
+                            createNotification(friend.id, postCreated.id, 'created a new post', 5);
+                        }
+                    });
             }
         } catch (error) {
             setIsLoading(false);

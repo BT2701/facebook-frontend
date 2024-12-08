@@ -9,7 +9,9 @@ import { CreatePost } from "./CreatePost";
 import "./feed.css";
 import axios from "axios";
 import { useNotification } from "../../../context/NotificationContext";
+import confirmDialog from '../../sharedComponents/confirmDialog';
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../../../context/UserContext";
 
 export const Feed = ({
     postId,
@@ -19,7 +21,7 @@ export const Feed = ({
     timeStamp,
     content,
     likedByCurrentUser,
-    likeCount,
+    likeCount,  // khuyến khích thay đổi thành reactionList để đọc được người dùng
     commentList,
     currentUserId,
     userCreatePost,
@@ -28,7 +30,7 @@ export const Feed = ({
     updateComments,
     updatePostInfor,
     updateCommentInfor,
-    userId
+    // userId
 }) => {
     const [comments, setComments] = useState(commentList); // Stores comments
     const [newCommentContent, setNewComment] = useState(""); // New comment input
@@ -41,6 +43,7 @@ export const Feed = ({
     const toast = useToast();
     const [isDeleting, setIsDeleting] = useState(false);
     const { createNotification, deleteNotification } = useNotification();
+    const { friendList } = useUser();
 
     const handleLikeClicked = async () => {
         currentUserLiked ? handleUnLike() : handleLike();
@@ -49,42 +52,75 @@ export const Feed = ({
     const handleLike = async () => {
         const likeData = {
             UserId: currentUserId,
-            Timeline: new Date().toISOString(), // Update to the current timestamp
+            Timeline: new Date().toISOString(), // Current timestamp
             PostId: postId,
         };
 
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/reaction`, likeData, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const response = await axios.post(
+                `${process.env.REACT_APP_API_URL}/reaction`,
+                likeData,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    validateStatus: (status) => {
+                        // Resolve only if the status code is within the range of 2xx or any specific ones you want to handle
+                        return status >= 200 && status < 300; // This ensures only 2xx status codes trigger success response
+                    }
+                }
+            );
+            console.log(response.status);
 
-            // Check if the response indicates success
+            // Handle different response statuses
             if (response.status === 200) {
                 // Optimistically update the UI
                 setCurrentUserLiked(true);
-                setNumberLiked((prev) => prev + 1); // Update local like count
+                setNumberLiked((prev) => prev + 1); // Increment the local like count
 
-                // Update posts state with the new like information
+                // Update posts state to reflect the like
                 setPosts((prevPosts) =>
                     prevPosts.map((post) =>
                         post.id === postId
-                            ? { ...post, likedByCurrentUser: true, reactions: { $values: Array.from({ length: numberLiked + 1 }) } } // Increment the likes
+                            ? {
+                                ...post,
+                                likedByCurrentUser: true,
+                                reactions: {
+                                    $values: Array.from({ length: numberLiked + 1 }),
+                                }, // Increment like count
+                            }
                             : post
                     )
                 );
-            } else {
-                console.error("Error liking post");
             }
+
+            // Trigger notification creation
             createNotification(userCreatePost, postId, "Liked your post", 1);
         } catch (error) {
             console.error("Error: ", error);
-            // Optional: revert optimistic update if there's an error
-            setCurrentUserLiked(false);
-            setNumberLiked((prev) => prev - 1); // Decrement local count if there was an error
+            // Optional: revert optimistic UI updates if there's an error
+            // setCurrentUserLiked(false);
+            if (error.status === 404) {
+                toast({
+                    title: "Error",
+                    description: "The post does not exist.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            else {
+                toast({
+                    title: "Error",
+                    description: "Sorry! The system encountered an error during the process.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
         }
     };
+
 
     const handleUnLike = async () => {
         try {
@@ -104,15 +140,30 @@ export const Feed = ({
                         post.id === postId ? { ...post, likedByCurrentUser: false, reactions: { $values: Array.from({ length: numberLiked - 1 }) } } : post
                     )
                 );
-            } else {
-                console.error("Error unliking post");
             }
             deleteNotification(null, userCreatePost, postId, 1);
         } catch (error) {
             console.error("Error: ", error);
             // Optional: revert optimistic update if there's an error
-            setCurrentUserLiked(true);
-            setNumberLiked((prev) => prev + 1); // Increment local count if there was an error
+            // setCurrentUserLiked(true);
+            if (error.status === 404) {
+                toast({
+                    title: "Error",
+                    description: "The post does not exist.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            else {
+                toast({
+                    title: "Error",
+                    description: "Sorry! The system encountered an error during the process.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
         }
     };
 
@@ -120,7 +171,7 @@ export const Feed = ({
         if (!newCommentContent.trim()) {
             toast({
                 title: "Error",
-                description: "Nội dung comment không được để trống",
+                description: "Comment content cannot be empty.",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
@@ -149,13 +200,29 @@ export const Feed = ({
                     updateComments(postId, updatedComments); // Call update function
                 })
 
-            } else {
-                console.error("Error submitting comment");
             }
             createNotification(userCreatePost, postId, "Commented your post", 2);
 
         } catch (error) {
             console.error("Error: ", error);
+            if (error.status === 404) {
+                toast({
+                    title: "Error",
+                    description: "The post does not exist.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            else {
+                toast({
+                    title: "Error",
+                    description: "Sorry! The system encountered an error during the process.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
         }
     };
 
@@ -165,20 +232,40 @@ export const Feed = ({
             const commentToEdit = comments.find((comment) => comment.id === commentId);
             setEditedContentComment(commentToEdit.content);
         } else if (action === "delete") {
-            const confirmDelete = window.confirm("Bạn muốn xóa comment?");
-            if (!confirmDelete) return;
-
             try {
+                const confirmDelete = await confirmDialog(
+                    'Permanently delete comment?',// Tiêu đề
+                    'The comment will be permanently deleted and cannot be recovered.',// Nội dung
+                    'warning' // Icon (có thể sử dụng 'warning', 'info', 'success', 'error', 'question')
+                );
+                if (!confirmDelete) return;
                 const response = await axios.delete(`${process.env.REACT_APP_API_URL}/comment/${commentId}`);
                 if (response.status === 204) {
                     const updatedComments = comments?.filter((comment) => comment.id !== commentId);
                     setComments(updatedComments);
                     updateComments(postId, updatedComments); // Call update function
-                } else {
-                    console.error("Error deleting comment");
                 }
             } catch (error) {
                 console.error("Error: ", error);
+                console.log(error.status);
+                if (error.status === 404) {
+                    toast({
+                        title: "Error",
+                        description: "The post does not exist.",
+                        status: "error",
+                        duration: 3000,
+                        isClosable: true,
+                    });
+                }
+                else {
+                    toast({
+                        title: "Error",
+                        description: "Sorry! The system encountered an error during the process.",
+                        status: "error",
+                        duration: 3000,
+                        isClosable: true,
+                    });
+                }
             }
         }
     };
@@ -187,7 +274,7 @@ export const Feed = ({
         if (!editedContentComment.trim()) {
             toast({
                 title: "Error",
-                description: "Nội dung comment không được để trống",
+                description: "Comment content cannot be empty.",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
@@ -216,17 +303,38 @@ export const Feed = ({
                 setComments(updatedComments);
                 setEditingCommentId(null);
                 updateComments(postId, updatedComments); // Call update function
-            } else {
-                console.error("Error updating comment");
             }
         } catch (error) {
             console.error("Error: ", error);
+            console.log(error.status);
+            if (error.status === 404) {
+                toast({
+                    title: "Error",
+                    description: "The post does not exist.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            else {
+                toast({
+                    title: "Error",
+                    description: "Sorry! The system encountered an error during the process.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
         }
     };
 
 
     const handleDeletePost = async (postDeleteId) => {
-        const confirmDelete = window.confirm("Bạn muốn xóa post?");
+        const confirmDelete = await confirmDialog(
+            'Permanently delete post?', // Tiêu đề
+            'The post will be permanently deleted and cannot be recovered.', // Nội dung
+            'warning' // Icon (có thể sử dụng 'warning', 'info', 'success', 'error', 'question')
+        );
         if (!confirmDelete) return;
 
         try {
@@ -243,6 +351,12 @@ export const Feed = ({
                 });
                 const updatePosts = posts.filter((post) => post.id !== postDeleteId);
                 setPosts(updatePosts);
+                friendList.forEach(friend => {
+                    if (friend.id !== currentUserId) {
+                        deleteNotification(currentUserId, friend.id,  postDeleteId, 5);
+                    }
+                });
+                
             } else {
                 console.error("Error deleting post");
             }
@@ -261,7 +375,7 @@ export const Feed = ({
                 <div className="feed__top">
                     <div
                         onClick={() => {
-                            nav("/profile?id=" + userId)
+                            nav("/profile?id=" + userCreatePost)
                         }}
                         style={{
                             display: "flex",

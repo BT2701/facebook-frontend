@@ -28,9 +28,6 @@ This project is a frontend application for Facebook, built using Create React Ap
     - [`npm test`](#npm-test)
     - [`npm run build`](#npm-run-build)
     - [`npm run eject`](#npm-run-eject)
-    - [`npm test`](#npm-test-1)
-    - [`npm run build`](#npm-run-build-1)
-    - [`npm run eject`](#npm-run-eject-1)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -52,21 +49,30 @@ This project is a frontend application for Facebook, built using Create React Ap
   
 <table width:100>
         <tr>
-            <td><img src="img_readme/Login.gif" alt="Login"></td>
-            <td><img src="img_readme/Homepage.gif" alt="Homepage"></td>
+            <td><img src="README_IMG/f1.gif" alt="Login"></td>
+            <td><img src="README_IMG/f2.gif" alt="Homepage"></td>
         </tr>
         <tr>
-            <td><img src="img_readme/product.gif" alt="product"></td>
-            <td><img src="img_readme/profile.gif" alt="profile"></td>
+            <td><img src="README_IMG/f3.gif" alt="product"></td>
+            <td><img src="README_IMG/f4.gif" alt="profile"></td>
         </tr>
         <tr>
-            <td><img src="img_readme/cart.gif" alt="cart"></td>
-            <td><img src="img_readme/history.gif" alt="history"></td>
+            <td><img src="README_IMG/f5.gif" alt="cart"></td>
+            <td><img src="README_IMG/f6.gif" alt="history"></td>
         </tr>
         <tr>
-            <td><img src="img_readme/contact.gif" alt="contact"></td>
+            <td><img src="README_IMG/f7.gif" alt="contact"></td>
+            <td><img src="README_IMG/f8.gif" alt="Login"></td>        
+        </tr>
+        <tr>
+            <td><img src="README_IMG/f9.gif" alt="Login"></td>
+            <td><img src="README_IMG/f10.png" alt="Homepage"></td>
+        </tr>
+        <tr>
+            <td><img src="README_IMG/f11.gif" alt="product"></td>
             <td></td>
         </tr>
+        
 </table>
 
 ## Technologies

@@ -3,7 +3,7 @@ import { loadData } from "../../utils/localstore";
 import { EditProfile } from "./EditProfile";
 import { AiFillHeart } from "react-icons/ai";
 import { MdMapsHomeWork, MdPlace, MdSkateboarding, MdAccountBalance, MdSchool } from "react-icons/md";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Homecenter } from "../homepage/homecenter/Homecenter";
 import { Feed } from "../homepage/homecenter/Feed";
 import { Heroku } from "../../utils/herokuLink";
@@ -47,20 +47,73 @@ export const Post = () => {
     const { currentUser } = useUser();
     const [user, setUser] = useOutletContext();
     const [posts, setPosts] = useState([]);
+    const [lastPostId, setLastPostId] = useState(0);
+    // const [hasMore, setHasMore] = useState(true); // Track if there are more posts
+    const postsPerPage = 3;
+
+    const fetchPosts = async () => {
+        // if (!hasMore) return;
+        try {
+            const response = await axios.get(`http://localhost:8001/api/post/${currentUser}/${user?.id}?lastPostId=${lastPostId}&limit=${postsPerPage}`)
+            const fetchedPosts = await Promise.all(
+                response.data.$values.map((post) =>
+                    updatePostInfor(post.userId, post)
+                )
+            );
+            const uniquePosts = fetchedPosts.filter(
+                (newPost) => !posts.some((existingPost) => existingPost.id === newPost.id)
+            );
+            setLastPostId(fetchedPosts[fetchedPosts.length - 1].id);
+            setPosts((prev) => {
+                const newPrev = prev.filter((p) => p.userId === user.id)
+
+                return [...newPrev, ...uniquePosts];
+            });
+            if (fetchedPosts.length < postsPerPage) {
+                // setHasMore(false); // No more posts to load
+            }
+        } catch (error) {
+            console.error("Error fetching posts:", error);
+        }
+    };
+
 
     useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/post/${currentUser}/${user?.id}?lastPostId=${100}&limit=100`)
-                setPosts(response.data.$values);
-                console.log(response)
-            } catch (error) {
-                console.error("Error fetching posts:", error);
-            }
-        };
-
+        console.log("this is user ", user);
+        console.log("this is post for user ", user);
+        console.log("this is currentUser ", currentUser);
+        console.log("this is post for curUser ", user);
         fetchPosts();
-    }, [user])
+    }, [user, currentUser])
+
+
+    // Handle scrolling to load more posts
+    const handleScroll = useCallback(() => {
+        const bottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+        if (bottom) {
+            fetchPosts();
+        }
+    }, [lastPostId]);
+    // // Add event listener for scrolling
+    useEffect(() => {
+        window.addEventListener("scroll", handleScroll);
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, [handleScroll]);
+//     useEffect(() => {
+//         const fetchPosts = async () => {
+//             try {
+//                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/post/${currentUser}/${user?.id}?lastPostId=${100}&limit=100`)
+//                 setPosts(response.data.$values);
+//                 console.log(response)
+//             } catch (error) {
+//                 console.error("Error fetching posts:", error);
+//             }
+//         };
+
+//         fetchPosts();
+//     }, [user])
 
     const convertToViDate = (dateStr) => {
         const date = new Date(dateStr);
@@ -161,13 +214,13 @@ export const Post = () => {
                             {
                                 (user && posts?.length > 0) ? (
                                     posts.map((post, index) => (
-                                        <div key={index}>
+                                        <div key={post.id}>
                                             <Feed
                                                 postId={post.id}
-                                                profilePic={user?.avt}
+                                                profilePic={post.profilePic}
                                                 content={post.content}
                                                 timeStamp={formatTimeFromDatabase(post.timeline)}
-                                                userName={user?.name}
+                                                userName={post.profileName}
                                                 postImage={post.image}
                                                 likedByCurrentUser={post.likedByCurrentUser}
                                                 likeCount={post.reactions.$values.length}
@@ -179,13 +232,17 @@ export const Post = () => {
                                                 updateComments={updateCommentsForPost}
                                                 updatePostInfor={updatePostInfor}
                                                 updateCommentInfor={updateCommentInfor}
-                                                userId={post?.userId}
+                                            // userId={post?.userId}
                                             />
                                         </div>
                                     ))
+
                                 ) : (
                                     <p>Loading posts...</p>
-                                )}
+                                )
+
+                            }
+
                         </Box>
                     </Grid>
                 </Box>

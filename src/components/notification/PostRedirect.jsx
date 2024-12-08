@@ -3,11 +3,17 @@ import { Feed } from '../homepage/homecenter/Feed';
 import { fetchDataForPostId, getUserById } from '../../utils/getData';
 import formatTimeFromDatabase from '../sharedComponents/formatTimeFromDatabase';
 import './postRedirect.css';
+import {useToast } from "@chakra-ui/react";
+import { useNotification } from '../../context/NotificationContext';
 
-const PostRedirect = ({ feedId, open, onClose, currentUser }) => {
+const PostRedirect = ({ feedId, open, onClose, currentUser, user, action }) => {
     const [post, setPost] = useState({});
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState(null); // State to handle error messages
+    const toast = useToast();
+    const { createNotification, deleteNotification } = useNotification();
+
 
     const updatePostInfo = async (userId, post) => {
         try {
@@ -51,27 +57,45 @@ const PostRedirect = ({ feedId, open, onClose, currentUser }) => {
     };
     const updateCommentsForPost = (postId, updatedComments) => {
         setPosts((prevPosts) =>
-          prevPosts.map((post) =>
-            post.id === postId ? { ...post, comments: { $values: updatedComments } } : post
-          )
+            prevPosts.map((post) =>
+                post.id === postId ? { ...post, comments: { $values: updatedComments } } : post
+            )
         );
-      };
+    };
 
-      useEffect(() => {
+    useEffect(() => {
         const fetchData = async () => {
-            setLoading(true); 
+            setLoading(true);
+            setErrorMessage(null); // Reset error message on new fetch
+
             try {
                 const response = await fetchDataForPostId(feedId, currentUser);
                 const data = await response.data;
-                const p = await updatePostInfo(data.userId, data);
-                setPost(p || {}); 
+                if (data) {
+                    const p = await updatePostInfo(data.userId, data);
+                    setPost(p || {});
+                } else {
+                    setErrorMessage('Post does not exist');
+                    if (action === 5) {
+                        deleteNotification(currentUser, user, feedId, action);
+                    }
+                    else {
+                        deleteNotification(user, currentUser, feedId, action);
+                    }
+                }
             } catch (error) {
                 console.error('Lỗi khi lấy dữ liệu:', error);
-            } finally {
-                setLoading(false); 
+                setErrorMessage('An error occurred while loading the post');
+                if (action === 5) {
+                    deleteNotification(currentUser, user, feedId, action);
+                }
+                else {
+                    deleteNotification(user, currentUser, feedId, action);
+                }            } finally {
+                setLoading(false);
             }
         };
-    
+
         if (open) {
             fetchData();
         }
@@ -80,6 +104,19 @@ const PostRedirect = ({ feedId, open, onClose, currentUser }) => {
     if (!open) return null;
     if (loading) {
         return <div>Loading...</div>;
+    }
+    if (errorMessage) {
+        if (!toast.isActive("error-toast")) {
+            toast({
+                id: "error-toast",
+                title: "Not Found!",
+                description: errorMessage,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+        return null;
     }
 
     return (

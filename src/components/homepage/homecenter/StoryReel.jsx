@@ -4,47 +4,63 @@ import "./storyReel.css";
 import CreateStory from "./CreateStory";
 import { FaArrowRight, FaArrowLeft } from 'react-icons/fa';
 import axios from "axios";
-import { fetchDataForStory, getUserById } from "../../../utils/getData";
+import { fetchDataForStory, getFriendsByUserId, getUserById } from "../../../utils/getData";
 import { useUser } from "../../../context/UserContext";
 import ImagePreviewDialog from "./ImagePreviewDialog";
 
 export const StoryReel = () => {
     const [stories, setStories] = useState([]);
     const [users, setUsers] = useState({});
-    const { currentUser } = useUser();
+    const { currentUser, setFriendList } = useUser();
     const [visibleStoriesCount, setVisibleStoriesCount] = useState(4);
     const [startIndex, setStartIndex] = useState(0);
     const [previewImage, setPreviewImage] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0); // Thêm state để lưu tiến trình tải lên
     const [isUploading, setIsUploading] = useState(false); // Trạng thái để kiểm tra đang tải lên
-
+    const [friends, setFriends] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetchDataForStory();
-                const storiesData = response.data.$values;
-
-                // Fetch user data for each story
-                const userPromises = storiesData.map(story => getUserById(story.userId));
-                const usersData = await Promise.all(userPromises);
-
-                // Create a user map for quick lookup
-                const usersMap = usersData.reduce((acc, user) => {
-                    acc[user.data.id] = user.data;
+                // Lấy danh sách bạn bè
+                const friendsResponse = await getFriendsByUserId(currentUser);
+                const friendsData = friendsResponse.data; // Đây là mảng các đối tượng user
+                setFriendList(friendsData);
+                // Tạo danh sách userId của currentUser và bạn bè
+                const allUserIds = [currentUser, ...friendsData.map(friend => friend.id)];
+                console.log('allUserIds:', allUserIds);
+                // Gọi API lấy stories của từng userId
+                const storyPromises = allUserIds.map(userId => fetchDataForStory(userId));
+                const storyResponses = await Promise.all(storyPromises);
+                // Gộp tất cả stories
+                const allStories = storyResponses
+                    .filter(response => response && response.data && response.data.$values) // Lọc bỏ các response không hợp lệ
+                    .map(response => response.data.$values)
+                    .flat();
+    
+                // Tạo map user để tra cứu nhanh thông tin người dùng
+                const usersMap = friendsData.reduce((acc, friend) => {
+                    acc[friend.id] = friend;
                     return acc;
                 }, {});
-
-                setStories(storiesData);
+    
+                // Thêm thông tin của currentUser vào map
+                const currentUserResponse = await getUserById(currentUser);
+                usersMap[currentUser] = currentUserResponse.data;
+    
+                // Cập nhật state
+                setStories(allStories);
                 setUsers(usersMap);
+                setFriends(friendsData);
             } catch (error) {
-                console.error('Error fetching data:', error);
+                console.error("Error fetching data:", error);
             }
         };
-
+    
         fetchData();
-    }, []);
+    }, [currentUser]);
+    
 
 
     const handleSeeMore = () => {

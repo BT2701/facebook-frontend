@@ -19,12 +19,7 @@ const CustomCard = ({ data }) => {
     const { currentUser } = useUser();
     const { createNotification, deleteNotification } = useNotification();
     const nav = useNavigate();
-
-
-
-    // ******************************************************************
     const userId = currentUser; // Lấy ID người dùng
-    // *********************************************************************
     // Cập nhật hasData khi dữ liệu thay đổi
     useEffect(() => {
         console.log("Data in CustomCard:", data); // In ra dữ liệu nhận được
@@ -60,9 +55,13 @@ const CustomCard = ({ data }) => {
         try {
             // Gọi hàm xử lý xác nhận ở đây (ví dụ, API call)
             const response = await addRequest(userId, data.Info.id); // Giả sử có một hàm xác nhận yêu cầu
-            if (response) { // Nếu thành công
-                setIdSendRequest(response.id)
+            if (response.status == 200) { // Nếu thành công
+                setIdSendRequest(response.data.id)
                 createNotification(data.Info.id, 0, 'sent you a friend request', 3);
+            }else if(response.status == 409){
+                alert("người này đã gửi yêu cầu kết bạn đến bạn vui lòng tải lại trang để chấp nhận");
+            }else{
+                alert("có lỗi ở máy chủ");
             }
         } catch (error) {
             console.error("Error confirming request:", error);

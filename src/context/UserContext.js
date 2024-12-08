@@ -4,9 +4,10 @@ const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [friendList, setFriendList] = useState([]);
 
   return (
-    <UserContext.Provider value={{ currentUser, setCurrentUser }}>
+    <UserContext.Provider value={{ currentUser, setCurrentUser, friendList, setFriendList }}>
       {children}
     </UserContext.Provider>
   );
